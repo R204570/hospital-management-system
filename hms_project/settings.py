@@ -13,7 +13,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'hospital-management-system-yhsp.onrender.com',  # Your Render domain
     'localhost',
-    '127.0.0.1'
+    '0.0.0.0'
 ]
 
 # Application definition
