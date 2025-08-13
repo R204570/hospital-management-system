@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admission Request #{{ admission_request.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-clipboard-check"></i> Admission Request #{{ admission_request.id }}
+                    </h4>
+                    <div>
+                        {% if admission_request.status == 'pending' %}
+                            <span class="badge bg-warning">{{ admission_request.get_status_display }}</span>
+                        {% elif admission_request.status == 'approved' %}
+                            <span class="badge bg-success">{{ admission_request.get_status_display }}</span>
+                        {% elif admission_request.status == 'rejected' %}
+                            <span class="badge bg-danger">{{ admission_request.get_status_display }}</span>
+                        {% else %}
+                            <span class="badge bg-primary">{{ admission_request.get_status_display }}</span>
+                        {% endif %}
+
+                        {% if admission_request.priority == 'high' %}
+                            <span class="badge bg-danger ms-2">{{ admission_request.get_priority_display }}</span>
+                        {% elif admission_request.priority == 'medium' %}
+                            <span class="badge bg-warning ms-2">{{ admission_request.get_priority_display }}</span>
+                        {% else %}
+                            <span class="badge bg-success ms-2">{{ admission_request.get_priority_display }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Patient Information -->
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-person"></i> Patient Information</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Name:</strong></td>
+                                    <td>{{ admission_request.patient.full_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    <td>{{ admission_request.patient.phone }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Age:</strong></td>
+                                    <td>{{ admission_request.patient.age }} years</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Gender:</strong></td>
+                                    <td>{{ admission_request.patient.get_gender_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Blood Group:</strong></td>
+                                    <td>{{ admission_request.patient.blood_group|default:"Not specified" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Request Information -->
+                        <div class="col-md-6">
+                            <h5><i class="bi bi-clipboard"></i> Request Information</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Requesting Doctor:</strong></td>
+                                    <td>{{ admission_request.requesting_doctor.get_full_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Created:</strong></td>
+                                    <td>{{ admission_request.created_at|date:"M d, Y g:i A" }}</td>
+                                </tr>
+                                {% if admission_request.reviewed_by %}
+                                <tr>
+                                    <td><strong>Reviewed By:</strong></td>
+                                    <td>{{ admission_request.reviewed_by.get_full_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Reviewed At:</strong></td>
+                                    <td>{{ admission_request.reviewed_at|date:"M d, Y g:i A" }}</td>
+                                </tr>
+                                {% endif %}
+                                {% if admission_request.completed_at %}
+                                <tr>
+                                    <td><strong>Completed At:</strong></td>
+                                    <td>{{ admission_request.completed_at|date:"M d, Y g:i A" }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Medical Information -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5><i class="bi bi-heart-pulse"></i> Medical Information</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Primary Diagnosis</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>{{ admission_request.primary_diagnosis }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% if admission_request.secondary_diagnosis %}
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Secondary Diagnosis</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>{{ admission_request.secondary_diagnosis }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if admission_request.treatment_plan %}
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Treatment Plan</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>{{ admission_request.treatment_plan }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <hr>
+
+                    <!-- Preferences -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h5><i class="bi bi-gear"></i> Preferences</h5>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Preferred Room Type:</strong></td>
+                                    <td>{{ admission_request.get_preferred_room_type_display|default:"No preference" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Preferred Floor:</strong></td>
+                                    <td>{{ admission_request.preferred_floor|default:"No preference" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        {% if admission_request.special_requirements %}
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Special Requirements</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>{{ admission_request.special_requirements }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if admission_request.notes %}
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Additional Notes</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>{{ admission_request.notes }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if admission_request.review_notes %}
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">Review Notes</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p>{{ admission_request.review_notes }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <hr>
+
+                    <!-- Actions -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <a href="{% url 'admission_request_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to List
+                            </a>
+                            
+                            {% if user.is_nurse and admission_request.status == 'pending' %}
+                                <a href="{% url 'admission_request_process' admission_request.id %}" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> Process Request
+                                </a>
+                            {% elif user.is_nurse and admission_request.status == 'approved' %}
+                                <a href="{% url 'admission_request_assign_room' admission_request.id %}" class="btn btn-success">
+                                    <i class="bi bi-house-door"></i> Assign Room
+                                </a>
+                            {% endif %}
+
+                            {% if admission_request.patient_admission %}
+                                <a href="{% url 'admission_detail' admission_request.patient_admission.id %}" class="btn btn-info">
+                                    <i class="bi bi-eye"></i> View Admission
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

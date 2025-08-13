@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Room {{ room.room_number }} Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Room {{ room.room_number }}</h2>
+            <p class="text-muted">{{ room.get_specialization_display }} (Floor {{ room.floor }})</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'room_update' room.id %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Edit Room
+            </a>
+            <a href="{% url 'bed_create_for_room' room.id %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add Bed
+            </a>
+            <a href="{% url 'room_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Rooms
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Room Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <th style="width: 40%">Room Number:</th>
+                            <td>{{ room.room_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Floor:</th>
+                            <td>{{ room.floor }}</td>
+                        </tr>
+                        <tr>
+                            <th>Specialization:</th>
+                            <td>{{ room.get_specialization_display }}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th>
+                            <td>
+                                {% if room.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Total Beds:</th>
+                            <td>{{ beds|length }}</td>
+                        </tr>
+                        <tr>
+                            <th>Available Beds:</th>
+                            <td>{{ beds|length|sub:beds|filter:"is_occupied"|length }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Bed Occupancy</h5>
+                </div>
+                <div class="card-body">
+                    <div class="progress" style="height: 30px;">
+                        {% with occupied_count=beds|filter:"is_occupied"|length %}
+                        {% with total_count=beds|length %}
+                        {% if total_count > 0 %}
+                        {% with percentage=occupied_count|mul:100|divide:total_count %}
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: {{ percentage }}%"
+                            aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ occupied_count }} / {{ total_count }} ({{ percentage }}%)
+                        </div>
+                        {% endwith %}
+                        {% endif %}
+                        {% endwith %}
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Beds in This Room</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for bed in beds %}
+                <div class="col-md-3 mb-4">
+                    <div class="card {% if bed.is_occupied %}border-danger{% else %}border-success{% endif %}">
+                        <div class="card-header {% if bed.is_occupied %}bg-danger text-white{% else %}bg-success text-white{% endif %}">
+                            <h6 class="mb-0">{{ bed.bed_number }}</h6>
+                        </div>
+                        <div class="card-body">
+                            <p>
+                                <strong>Status:</strong>
+                                {% if bed.is_occupied %}
+                                <span class="badge bg-danger">Occupied</span>
+                                {% else %}
+                                <span class="badge bg-success">Available</span>
+                                {% endif %}
+                            </p>
+                            
+                            {% if bed.is_occupied and bed.current_admission %}
+                            <div class="mb-2">
+                                <strong>Patient:</strong><br>
+                                {{ bed.current_admission.patient.full_name }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Admitted:</strong><br>
+                                {{ bed.current_admission.admission_date|date:"M d, Y" }}
+                            </div>
+                            <div class="mb-2">
+                                <strong>Doctor:</strong><br>
+                                Dr. {{ bed.current_admission.admitting_doctor.get_full_name }}
+                            </div>
+                            {% endif %}
+                            
+                            <p class="small text-muted">
+                                Last sanitized: {{ bed.last_sanitized|date:"M d, Y H:i" }}
+                            </p>
+                            
+                            <div class="mt-3">
+                                <a href="{% url 'bed_update' bed.id %}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                
+                                {% if not bed.is_occupied %}
+                                <a href="{% url 'admission_create' %}?bed={{ bed.id }}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-person-plus"></i> Admit
+                                </a>
+                                {% else %}
+                                <a href="{% url 'admission_detail' bed.current_admission.id %}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-clipboard-data"></i> Details
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        No beds have been added to this room yet.
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

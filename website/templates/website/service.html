@@ -1,0 +1,662 @@
+{% load static %}
+<!doctype html>
+<html class="no-js" lang="zxx">
+    <head>
+        <!-- Meta Tags -->
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="keywords" content="Site keywords here">
+		<meta name="description" content="">
+		<meta name='copyright' content=''>
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		
+		<!-- Title -->
+        <title>Smart Care</title>
+		
+		<!-- Favicon -->
+        <link rel="icon" href="{% static 'img/favicon.png' %}">
+		
+		<!-- Google Fonts -->
+		<link href="https://fonts.googleapis.com/css?family=Poppins:200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i&display=swap" rel="stylesheet">
+
+		<!-- Bootstrap CSS -->
+		<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+		<!-- Nice Select CSS -->
+		<link rel="stylesheet" href="{% static 'css/nice-select.css' %}">
+		<!-- Font Awesome CSS -->
+        <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+		<!-- icofont CSS -->
+        <link rel="stylesheet" href="{% static 'css/icofont.css' %}">
+		<!-- Slicknav -->
+		<link rel="stylesheet" href="{% static 'css/slicknav.min.css' %}">
+		<!-- Owl Carousel CSS -->
+        <link rel="stylesheet" href="{% static 'css/owl-carousel.css' %}">
+		<!-- Datepicker CSS -->
+		<link rel="stylesheet" href="{% static 'css/datepicker.css' %}">
+		<!-- Animate CSS -->
+        <link rel="stylesheet" href="{% static 'css/animate.min.css' %}">
+		<!-- Magnific Popup CSS -->
+        <link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+		
+		<!-- Medipro CSS -->
+        <link rel="stylesheet" href="{% static 'css/normalize.css' %}">
+        <link rel="stylesheet" href="{% static 'style.css' %}">
+        <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+		
+		<!-- Mobile Header Login CSS -->
+		<style>
+			/* Mobile Login Button - custom styling */
+			.mobile-header-login {
+				display: none;
+				position: fixed;
+				top: 5px;
+				right: 20px;
+				z-index: 999;
+				transition: top 0.3s ease, right 0.3s ease;
+			}
+			
+			.mobile-header-login.scrolled {
+				top: 138px;
+				right: 45px;
+			}
+			
+			/* Custom styling for mobile LOGIN button */
+			.mobile-header-login .btn {
+				background: #1d1e1e !important;
+				color: #fcfcfc !important;
+				padding: 8px 15px;
+				border-radius: 5px;
+				font-size: 12px;
+				font-weight: 500;
+				text-transform: uppercase;
+				border: 2px solid #1A76D1;
+				transition: all 0.3s ease;
+			}
+			
+			.mobile-header-login .btn:hover {
+				background: transparent !important;
+				color: #d5d8db !important;
+				border-color: #1A76D1;
+			}
+			
+			/* Show ONLY on mobile devices (max-width: 991px) */
+			@media (max-width: 991px) {
+				.mobile-header-login {
+					display: block !important;
+				}
+			}
+			
+			/* Hide on desktop completely */
+			@media (min-width: 992px) {
+				.mobile-header-login {
+					display: none !important;
+				}
+			}
+			
+			/* Responsive adjustments */
+			@media (max-width: 480px) {
+				.mobile-header-login .btn {
+					padding: 6px 10px;
+					font-size: 11px;
+				}
+			}
+		</style>
+		<script>
+			window.addEventListener('scroll', function () {
+				const loginBtn = document.querySelector('.mobile-header-login');
+				
+				if (!loginBtn) return;
+				
+				// Make sure it's only applied on mobile
+				if (window.innerWidth <= 991) {
+					if (window.scrollY > 50) {
+						loginBtn.classList.add('scrolled');
+					} else {
+						loginBtn.classList.remove('scrolled');
+					}
+				} else {
+					loginBtn.classList.remove('scrolled'); // Safety cleanup on resize
+				}
+			});
+		</script>
+		
+    </head>
+    <body>
+	
+		<!-- Preloader -->
+        <div class="preloader">
+            <div class="loader">
+                <div class="loader-outter"></div>
+                <div class="loader-inner"></div>
+
+                <div class="indicator"> 
+                    <svg width="16px" height="12px">
+                        <polyline id="back" points="1 6 4 6 6 11 10 1 12 6 15 6"></polyline>
+                        <polyline id="front" points="1 6 4 6 6 11 10 1 12 6 15 6"></polyline>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <!-- End Preloader -->
+	
+		<!-- Header Area -->
+		<header class="header" >
+			<!-- Topbar -->
+			<div class="topbar">
+				<div class="container">
+					<div class="row">
+						<div class="col-lg-6 col-md-5 col-12">
+							<!-- Contact -->
+							<ul class="top-link">
+								<li><a href="{% url 'website:about' %}">About</a></li>
+								<li><a href="{% url 'website:doctors' %}">Doctors</a></li>
+								<li><a href="{% url 'website:contact' %}">Contact</a></li>
+								<li><a href="#">FAQ</a></li>
+							</ul>
+							<!-- End Contact -->
+						</div>
+						<div class="col-lg-6 col-md-7 col-12">
+							<!-- Top Contact -->
+							<ul class="top-contact">
+								<li><i class="fa fa-phone"></i>+91 1234 56789</li>
+								<li><i class="fa fa-envelope"></i>support@smartcare.com</li>
+							</ul>
+							<!-- End Top Contact -->
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- End Topbar -->
+			<!-- Header Inner -->
+			<div class="header-inner">
+				<div class="container">
+					<div class="inner">
+						<div class="row">
+							<div class="col-lg-3 col-md-3 col-12">
+								<!-- Start Logo -->
+								<div class="logo" style="margin-top:0px;">
+									<a href="{% url 'website:index' %}"><img src="{% static 'img/logo.png' %}" alt="#"></a>
+								</div>
+								<!-- End Logo -->
+								<!-- Mobile Login Button -->
+								<div class="mobile-header-login">
+									<a href="/users/" class="btn">LOGIN</a>
+								</div>
+								<!-- Mobile Nav -->
+								<div class="mobile-nav"></div>
+								<!-- End Mobile Nav -->
+							</div>
+							<div class="col-lg-7 col-md-9 col-12">
+								<!-- Main Menu -->
+								<div class="main-menu">
+									<nav class="navigation">
+										<ul class="nav menu">
+											<li ><a href="{% url 'website:index' %}">Home </a>
+											</li>
+											<li><a href="{% url 'website:doctors' %}">Doctors </a></li>
+											<li class="active"><a href="{% url 'website:service' %}">Services </a></li>
+											<li><a href="{% url 'website:about' %}">About Us </a>
+											</li>
+											<li><a href="{% url 'website:blog' %}">Blogs </a>
+											</li>
+											<li><a href="{% url 'website:contact' %}">Contact Us</a></li>
+										</ul>
+									</nav>
+								</div>
+								<!--/ End Main Menu -->
+							</div>
+							<div class="col-lg-2 col-12">
+								<div class="get-quote">
+									<a href="{% url 'website:appointment_inquiry' %}" class="btn">Book Appointment
+									</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--/ End Header Inner -->
+		</header>
+		<!-- End Header Area -->
+		
+		<!-- Breadcrumbs -->
+		<div class="breadcrumbs overlay" style="background-image: url('{% static 'img/bread-bg.jpg' %}')">
+			<div class="container">
+				<div class="bread-inner">
+					<div class="row">
+						<div class="col-12">
+							<h2>Services</h2>
+							<ul class="bread-list">
+								<li><a href="{% url 'website:index' %}">Home</a></li>
+								<li><i class="icofont-simple-right"></i></li>
+								<li class="active">Services</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- End Breadcrumbs -->
+	<!--code start-->
+	
+		<!-- Start service -->
+		<section class="services section">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="section-title">
+							<h2>We Offer Different Services To Improve Your Health</h2>
+							<img src="{% static 'img/section-img.png' %}" alt="#">
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-lg-4 col-md-6 col-12">
+						<!-- Start Single Service -->
+						<div class="single-service">
+							<i class="icofont icofont-prescription"></i>
+							<h4><a href="{% url 'website:service' %}">General Treatment</a></h4>
+							<p>General treatment involves a comprehensive approach to managing health, focusing on preventive care, accurate diagnosis, and effective management of illnesses. </p>	
+						</div>
+						<!-- End Single Service -->
+					</div>
+					<div class="col-lg-4 col-md-6 col-12">
+						<!-- Start Single Service -->
+						<div class="single-service">
+							<i class="icofont icofont-tooth"></i>
+							<h4><a href="{% url 'website:service' %}">Teeth Treatment</a></h4>
+							<p>Teeth treatments include routine cleanings to remove plaque and tartar, fillings for cavities, and root canals to address infected teeth. Preventive care, such as fluoride treatments and sealants, helps protect against decay.</p>	
+						</div>
+						<!-- End Single Service -->
+					</div>
+					<div class="col-lg-4 col-md-6 col-12">
+						<!-- Start Single Service -->
+						<div class="single-service">
+							<i class="icofont icofont-heart-alt"></i>
+							<h4><a href="{% url 'website:service' %}">Cardiology Treatment</a></h4>
+							<p>Cardiology treatments include lifestyle modifications, such as diet and exercise, to improve heart health. Medications may be prescribed to manage hypertension, cholesterol levels, or arrhythmias. </p>	
+						</div>
+						<!-- End Single Service -->
+					</div>
+					<div class="col-lg-4 col-md-6 col-12">
+						<!-- Start Single Service -->
+						<div class="single-service">
+							<i class="icofont icofont-listening"></i>
+							<h4><a href="{% url 'website:service' %}">Ear Treatment</a></h4>
+							<p>ar treatments include comprehensive hearing evaluations to assess auditory health, wax removal to alleviate blockage, and management of ear infections to prevent complications.</p>	
+						</div>
+						<!-- End Single Service -->
+					</div>
+					<div class="col-lg-4 col-md-6 col-12">
+						<!-- Start Single Service -->
+						<div class="single-service">
+							<i class="icofont icofont-eye-alt"></i>
+							<h4><a href="{% url 'website:service' %}">Eye Treatment</a></h4>
+							<p>Eye treatments encompass routine eye exams to assess vision and overall eye health, prescription glasses or contact lenses to correct refractive errors, and treatments for conditions like dry eye syndrome.</p>	
+						</div>
+						<!-- End Single Service -->
+					</div>
+					<div class="col-lg-4 col-md-6 col-12">
+						<!-- Start Single Service -->
+						<div class="single-service">
+							<i class="icofont icofont-blood"></i>
+							<h4><a href="{% url 'website:service' %}">Orthopedic Treatment</a></h4>
+							<p>Orthopedic treatment involves the diagnosis and management of musculoskeletal disorders, which include injuries and diseases affecting bones, joints, and muscles. </p>	
+						</div>
+						<!-- End Single Service -->
+					</div>
+				</div>
+			</div>
+		</section>
+		<!--/ End service -->
+		<div class="section-title">
+			<h2>Reports About Services We Provided To Some Of Our Patients</h2>
+
+			<img src="{% static 'img/section-img.png' %}" alt="#">
+		</div>
+	<!--code end-->
+		<!-- Start Portfolio Details Area -->
+		<section class="pf-details section">
+			<div class="container">
+				<div class="row">
+					<div class="col-12">
+						<div class="inner-content">
+							<div class="image-slider">
+								<div class="pf-details-slider">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+								</div>
+							</div>
+							<div class="date">
+								<ul>
+									<li><span>Category :</span> Orthopedic Treatment</li>
+									<li><span>Date :</span> September 15, 2022</li>
+									<li><span>Client :</span> Ravi Kumar</li>
+									<li><span>Age :</span> 42</li>
+								</ul>
+							</div>
+							<div class="body-text">
+								<h3>Patient Name: Mr. Ravi Kumar
+								</h3>
+								<p>Patient Details:Ravi Kumar, a 42-year-old male, recently underwent orthopedic treatment at SmartCare Hospital following a severe knee injury sustained during a sports accident. After a thorough assessment by our expert orthopedic team, which included X-rays and an MRI scan, it was determined that Ravi had suffered from a torn anterior cruciate ligament (ACL) along with damage to the meniscus in his right knee. He was promptly scheduled for an arthroscopic surgery to repair the ligament and address the meniscal tear. 
+								</p>
+								<p> The surgery was successful, and Ravi's post-operative recovery was closely monitored. He received physical therapy to improve mobility and strengthen the muscles around the knee. As of his discharge, Ravi was advised on a comprehensive rehabilitation plan, which includes stretching exercises and strength training to ensure full recovery and prevent future injuries. He is expected to make a full recovery within 6-8 months, gradually returning to his normal activities with the help of our specialized orthopedic care team.
+								</p>
+							
+								<div class="share">
+									<h4>Share Now -</h4>
+									<ul>
+										<li><a href="#"><i class="fa fa-facebook-official" aria-hidden="true"></i></a></li>
+										<li><a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
+										<li><a href="#"><i class="fa fa-linkedin" aria-hidden="true"></i></a></li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<!-- End Portfolio Details Area -->
+		 <!-- Start Portfolio Details Area -->
+		<section class="pf-details section">
+			<div class="container">
+				<div class="row">
+					<div class="col-12">
+						<div class="inner-content">
+							<div class="image-slider">
+								<div class="pf-details-slider">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+								</div>
+							</div>
+							<div class="date">
+								<ul>
+									<li><span>Category :</span> Ear Treatment</li>
+									<li><span>Date :</span> May 30, 2022</li>
+									<li><span>Client :</span> Meera Patel</li>
+									<li><span>Age :</span> 32</li>
+								</ul>
+							</div>
+							<div class="body-text">
+								<h3>Patient Name: Ms. Meera Patel
+								</h3>
+								<p>Patient Details: Ms. Meera Patel, a 32-year-old patient, recently underwent ear treatment at SmartCare Hospital for severe tinnitus and hearing loss. She had been experiencing a persistent ringing sound in her right ear, which was interfering with her daily life and sleep. An in-depth examination by our ENT specialists revealed she was suffering from noise-induced hearing loss and associated tinnitus due to prolonged exposure to loud environments .
+								</p>
+								<p>Meera's treatment involved a combination of sound therapy and a customized hearing aid, designed to reduce the perception of the ringing and restore her hearing balance. She also received counseling on ear protection and lifestyle adjustments to prevent further hearing damage. Throughout her recovery, Meera has been diligently following the audiologist's advice, and her symptoms have significantly improved. A follow-up appointment is scheduled in a month to evaluate her progress and make any necessary adjustments to her treatment plan.
+								</p>
+							
+								<div class="share">
+									<h4>Share Now -</h4>
+									<ul>
+										<li><a href="#"><i class="fa fa-facebook-official" aria-hidden="true"></i></a></li>
+										<li><a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
+										<li><a href="#"><i class="fa fa-linkedin" aria-hidden="true"></i></a></li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<!-- End Portfolio Details Area -->
+		 <!-- Start Portfolio Details Area -->
+		<section class="pf-details section">
+			<div class="container">
+				<div class="row">
+					<div class="col-12">
+						<div class="inner-content">
+							<div class="image-slider">
+								<div class="pf-details-slider">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+								</div>
+							</div>
+							<div class="date">
+								<ul>
+									<li><span>Category :</span> Eye Treatment</li>
+									<li><span>Date :</span> March 25, 2020</li>
+									<li><span>Client :</span> Diya Patel</li>
+									<li><span>Age :</span> 19</li>
+								</ul>
+							</div>
+							<div class="body-text">
+								<h3>Patient Name: Ms. Diya Patel
+								</h3>
+								<p>Patient Details: Ms. Diya Patel, a 19-year-old patient, recently visited SmartCare Hospital with complaints of blurred vision and recurring eye strain that had been disrupting her daily activities and study routine. Our ophthalmology team conducted a comprehensive eye examination, revealing a refractive error that required immediate corrective intervention. Based on her condition, a personalized treatment plan was developed, which included advanced laser correction surgery. The procedure was performed with precision using state-of-the-art technology, allowing for a swift and minimally invasive experience that kept Diya comfortable and reassured throughout. 
+								</p>
+								<p>Post-surgery, Diya experienced a remarkable improvement in her vision, with significant clarity restored and eye strain reduced. Our team has provided her with a tailored post-operative care plan, including medication and eye exercises, to support her recovery. She has also been scheduled for follow-up visits to ensure steady progress and the best long-term results. Diya's positive response to the treatment highlights our commitment to exceptional, patient-centered care at SmartCare Hospital.
+								</p>
+							
+								<div class="share">
+									<h4>Share Now -</h4>
+									<ul>
+										<li><a href="#"><i class="fa fa-facebook-official" aria-hidden="true"></i></a></li>
+										<li><a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
+										<li><a href="#"><i class="fa fa-linkedin" aria-hidden="true"></i></a></li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<!-- End Portfolio Details Area -->
+		 <!-- Start Portfolio Details Area -->
+		<section class="pf-details section">
+			<div class="container">
+				<div class="row">
+					<div class="col-12">
+						<div class="inner-content">
+							<div class="image-slider">
+								<div class="pf-details-slider">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+								</div>
+							</div>
+							<div class="date">
+								<ul>
+									<li><span>Category :</span> Teeth Treatment</li>
+									<li><span>Date :</span> March 25, 2020</li>
+									<li><span>Client :</span> Dev Shah</li>
+									<li><span>Age :</span> 27</li>
+								</ul>
+							</div>
+							<div class="body-text">
+								<h3>Patient Name: Mr. Dev Shah
+								</h3>
+								<p>Patient Details: Mr. Dev Shah, a 27-year-old patient, recently visited SmartCare Hospital for dental treatment after experiencing persistent tooth sensitivity and occasional gum discomfort. Upon examination, the dental team identified areas of concern, including two severely decayed molars and signs of gingivitis. The initial stage of treatment involved a thorough deep cleaning to remove plaque and tartar buildup, particularly around the affected teeth and gums. This was followed by a root canal procedure on one of the damaged molars to alleviate pain and save the tooth structure. Additionally, several minor cavities were treated with fillings, and a fluoride application was administered to strengthen his enamel and prevent further decay. 
+								</p>
+								<p>After the treatment, Dev reported immediate relief from sensitivity and discomfort, noticing a marked improvement in his overall gum health. To maintain his oral health and avoid future issues, he received a personalized care plan that includes daily flossing, the use of an anti-sensitivity toothpaste, and regular check-ups. The dental team has scheduled a follow-up appointment in four weeks to monitor his recovery and ensure his gums remain healthy. Dev's cooperation throughout the procedures contributed significantly to the smooth progress of his treatment, and his commitment to following the recommended hygiene practices will support long-term oral wellness.
+								</p>
+							
+								<div class="share">
+									<h4>Share Now -</h4>
+									<ul>
+										<li><a href="#"><i class="fa fa-facebook-official" aria-hidden="true"></i></a></li>
+										<li><a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
+										<li><a href="#"><i class="fa fa-linkedin" aria-hidden="true"></i></a></li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<!-- End Portfolio Details Area -->
+		 <!-- Start Portfolio Details Area -->
+		<section class="pf-details section">
+			<div class="container">
+				<div class="row">
+					<div class="col-12">
+						<div class="inner-content">
+							<div class="image-slider">
+								<div class="pf-details-slider">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+									<img src="{% static 'img/call-bg.jpg' %}" alt="#">
+								</div>
+							</div>
+							<div class="date">
+								<ul>
+									<li><span>Category :</span> Heart Surgery</li>
+									<li><span>Date :</span> April 20, 2019</li>
+									<li><span>Client :</span> Rajesh Patel</li>
+									<li><span>Age :</span> 54</li>
+								</ul>
+							</div>
+							<div class="body-text">
+								<h3>Patient Name: Mr. Rajesh Patel
+								</h3>
+								<p>Patient Details: Mr. Rajesh Patel, a 54-year-old resident of Ahmedabad, was recently admitted to SmartCare Hospital's Cardiology Department after experiencing chest discomfort and fatigue over the past few weeks. Following an initial assessment, he was diagnosed with severe coronary artery disease, necessitating a coronary artery bypass graft (CABG) surgery. The procedure was successfully performed by our skilled cardiology team, using minimally invasive techniques to ensure a quicker recovery and minimal postoperative complications. 
+								</p>
+								<p>Post-surgery, Mr. Patel was moved to our state-of-the-art cardiac intensive care unit, where he was closely monitored for any signs of arrhythmia or infection. During his stay, he was provided with advanced, personalized cardiac care, which included blood pressure monitoring, blood oxygen levels, and regular ECG readings. Mr. Mehta also participated in our post-operative cardiac rehabilitation program designed to aid in his physical and emotional recovery, focusing on safe exercises and dietary counseling to maintain a heart-healthy lifestyle. After four days of observation and care, he was discharged with a customized follow-up plan, including telemedicine check-ins and scheduled cardiac assessments. 
+								</p>
+							
+								<div class="share">
+									<h4>Share Now -</h4>
+									<ul>
+										<li><a href="#"><i class="fa fa-facebook-official" aria-hidden="true"></i></a></li>
+										<li><a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
+										<li><a href="#"><i class="fa fa-linkedin" aria-hidden="true"></i></a></li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<!-- End Portfolio Details Area -->
+		
+		<!-- Footer Area -->
+		<footer id="footer" class="footer ">
+			<!-- Footer Top -->
+			<div class="footer-top">
+				<div class="container">
+					<div class="row">
+						<div class="col-lg-3 col-md-6 col-12">
+							<div class="single-footer">
+								<h2>About Us</h2>
+								<p>Our Hospital Management System streamlines operations, enhances patient care, and ensures efficient management of medical facilities. </p>
+								<!-- Social -->
+								<ul class="social">
+									<li><a href="#"><i class="icofont-facebook"></i></a></li>
+									<li><a href="#"><i class="icofont-google-plus"></i></a></li>
+									<li><a href="#"><i class="icofont-twitter"></i></a></li>
+									<li><a href="#"><i class="icofont-vimeo"></i></a></li>
+									<li><a href="#"><i class="icofont-pinterest"></i></a></li>
+								</ul>
+								<!-- End Social -->
+							</div>
+						</div>
+						<div class="col-lg-3 col-md-6 col-12">
+							<div class="single-footer f-link">
+								<h2>Quick Links</h2>
+								<div class="row">
+									<div class="col-lg-6 col-md-6 col-12">
+										<ul>
+											<li><a href="{% url 'website:index' %}"><i class="fa fa-caret-right" aria-hidden="true"></i>Home</a></li>
+											<li><a href="{% url 'website:about' %}"><i class="fa fa-caret-right" aria-hidden="true"></i>About Us</a></li>
+											<li><a href="{% url 'website:service' %}"><i class="fa fa-caret-right" aria-hidden="true"></i>Services</a></li>
+											<li><a href="#"><i class="fa fa-caret-right" aria-hidden="true"></i>FAQ</a></li>
+											<li><a href="{% url 'website:contact' %}"><i class="fa fa-caret-right" aria-hidden="true"></i>Contact US</a></li>	
+										</ul>
+									</div>
+									
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-3 col-md-6 col-12">
+							<div class="single-footer">
+								<h2>Open Hours</h2>
+								<p>For Emergency Cases Open 24/7</p>
+								<ul class="time-sidual">
+									<li class="day">Monday - Friday <span>8.00-20.00</span></li>
+									<li class="day">Saturday <span>9.00-18.30</span></li>
+									<li class="day">Monday - Thusday <span>9.00-15.00</span></li>
+								</ul>
+							</div>
+						</div>
+						<div class="col-lg-3 col-md-6 col-12">
+							<div class="single-footer">
+								<h2>Newsletter</h2>
+								<p>subscribe to our Smartcare to get allour news in your inbox.. </p>
+								<form action="#" method="get" target="_blank" class="newsletter-inner">
+									<input name="email" placeholder="Email Address" class="common-input" onfocus="this.placeholder = ''"
+										onblur="this.placeholder = 'Your email address'" required="" type="email">
+									<button class="button" aria-label="Subscribe to newsletter"><i class="icofont icofont-paper-plane"></i></button>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--/ End Footer Top -->
+			<!-- Copyright -->
+			<div class="copyright">
+				<div class="container">
+					<div class="row">
+						<div class="col-lg-12 col-md-12 col-12">
+							<div class="copyright-content">
+								<p>© Copyright 2024  |  All Rights Reserved by smartcare</a> </p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--/ End Copyright -->
+		</footer>
+		<!--/ End Footer Area -->
+		
+		<!-- jquery Min JS -->
+		<script src="{% static 'js/jquery.min.js' %}"></script>
+		<!-- jquery Migrate JS -->
+		<script src="{% static 'js/jquery-migrate-3.0.0.js' %}"></script>
+		<!-- jquery Ui JS -->
+		<script src="{% static 'js/jquery-ui.min.js' %}"></script>
+		<!-- Easing JS -->
+		<script src="{% static 'js/easing.js' %}"></script>
+		<!-- Color JS -->
+		<script src="{% static 'js/colors.js' %}"></script>
+		<!-- Popper JS -->
+		<script src="{% static 'js/popper.min.js' %}"></script>
+		<!-- Bootstrap Datepicker JS -->
+		<script src="{% static 'js/bootstrap-datepicker.js' %}"></script>
+		<!-- Jquery Nav JS -->
+		<script src="{% static 'js/jquery.nav.js' %}"></script>
+		<!-- Slicknav JS -->
+		<script src="{% static 'js/slicknav.min.js' %}"></script>
+		<!-- Scrollup JS -->
+		<script src="{% static 'js/jquery.scrollup.min.js' %}"></script>
+		<!-- Niceselect JS -->
+		<script src="{% static 'js/niceselect.js' %}"></script>
+		<!-- Tilt Jquery JS -->
+		<script src="{% static 'js/tilt.jquery.min.js' %}"></script>
+		<!-- Owl Carousel JS -->
+		<script src="{% static 'js/owl-carousel.js' %}"></script>
+		<!-- counterup JS -->
+		<script src="{% static 'js/jquery.counterup.min.js' %}"></script>
+		<!-- Steller JS -->
+		<script src="{% static 'js/steller.js' %}"></script>
+		<!-- Wow JS -->
+		<script src="{% static 'js/wow.min.js' %}"></script>
+		<!-- Magnific Popup JS -->
+		<script src="{% static 'js/jquery.magnific-popup.min.in' %}"></script>
+		<!-- Counter Up CDN JS -->
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/waypoints/2.0.3/waypoints.min.js"></script>
+		<!-- Gmaps JS -->
+		<script src="{% static 'js/gmaps.min.js' %}"></script>
+		<!-- Bootstrap JS -->
+		<script src="{% static 'js/bootstrap.min.js' %}"></script>
+		<!-- Main JS -->
+		<script src="{% static 'js/main.js' %}"></script>
+    </body>
+</html> 

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Administer Medication{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-capsule me-2"></i>Administer Medication
+        </h2>
+        <a href="{% url 'nurse_prescription_detail' record.id %}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Prescription
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="row mb-4">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        Medication Administration for {{ record.patient.full_name }}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5 class="mb-3">Patient Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Patient ID:</strong> {{ record.patient.patient_id }}</p>
+                                <p><strong>Name:</strong> {{ record.patient.full_name }}</p>
+                                <p><strong>Age:</strong> {{ record.patient.age }} years</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Gender:</strong> {{ record.patient.get_gender_display }}</p>
+                                <p><strong>Blood Group:</strong> {{ record.patient.blood_group }}</p>
+                                <p><strong>Allergies:</strong> {{ record.patient.allergies|default:"None" }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="mb-3">Prescription</h5>
+                        <div class="prescription-box p-3 border rounded bg-light">
+                            <pre class="mb-0" style="white-space: pre-wrap;">{{ record.prescription }}</pre>
+                        </div>
+                    </div>
+
+                    <form action="{% url 'nurse_medication_administration' record.id %}" method="post">
+                        {% csrf_token %}
+                        <h5 class="mb-3">Administration Details</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="medication_name" class="form-label">Medication Name</label>
+                                <input type="text" class="form-control" id="medication_name" name="medication_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dose_given" class="form-label">Dose Given</label>
+                                <input type="text" class="form-control" id="dose_given" name="dose_given" placeholder="e.g., 500mg, 10ml" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Administration Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any additional information or patient reaction"></textarea>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            By submitting this form, you confirm that you have administered the medication to the patient according to the prescribed instructions.
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>Confirm Administration
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

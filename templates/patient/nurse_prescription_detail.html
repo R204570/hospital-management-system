@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Prescription Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-prescription2 me-2"></i>Prescription Details
+        </h2>
+        <a href="{% url 'nurse_prescription_list' %}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Prescriptions
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="row mb-4">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <!-- Medical Record Details -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Medical Record Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Patient Information</h5>
+                            <p><strong>Patient Name:</strong> {{ record.patient.full_name }}</p>
+                            <p><strong>Patient ID:</strong> {{ record.patient.patient_id }}</p>
+                            <p><strong>Age:</strong> {{ record.patient.age }} years</p>
+                            <p><strong>Gender:</strong> {{ record.patient.get_gender_display }}</p>
+                            <p><strong>Blood Group:</strong> {{ record.patient.blood_group }}</p>
+                            <p><strong>Allergies:</strong> {{ record.patient.allergies|default:"None" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Record Details</h5>
+                            <p><strong>Record Date:</strong> {{ record.report_date|date:"F d, Y H:i" }}</p>
+                            <p><strong>Doctor:</strong> Dr. {{ record.doctor.get_full_name }}</p>
+                            <p><strong>Diagnosis:</strong> {{ record.diagnosis }}</p>
+                            {% if record.blood_pressure or record.temperature or record.weight %}
+                            <p><strong>Vitals:</strong> 
+                                {% if record.blood_pressure %}BP: {{ record.blood_pressure }}, {% endif %}
+                                {% if record.temperature %}Temp: {{ record.temperature }}°C, {% endif %}
+                                {% if record.weight %}Weight: {{ record.weight }} kg{% endif %}
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="mb-3">Prescription</h5>
+                        <div class="prescription-box p-3 border rounded bg-light">
+                            <pre class="mb-0" style="white-space: pre-wrap;">{{ record.prescription }}</pre>
+                        </div>
+                    </div>
+
+                    {% if record.treatment_plan %}
+                    <div class="mb-4">
+                        <h5 class="mb-3">Treatment Plan</h5>
+                        <div class="border rounded p-3 bg-light">
+                            <p>{{ record.treatment_plan|linebreaks }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if record.notes %}
+                    <div>
+                        <h5 class="mb-3">Administration Log</h5>
+                        <div class="border rounded p-3 bg-light">
+                            <p>{{ record.notes|linebreaks }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-5">
+            <!-- Medication Administration -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Administer Medication</h6>
+                </div>
+                <div class="card-body">
+                    <form action="{% url 'nurse_medication_administration' record.id %}" method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="medication_name" class="form-label">Medication Name</label>
+                            <input type="text" class="form-control" id="medication_name" name="medication_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="dose_given" class="form-label">Dose Given</label>
+                            <input type="text" class="form-control" id="dose_given" name="dose_given" placeholder="e.g., 500mg, 10ml" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any additional information or patient reaction"></textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Record Administration
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Available Medications -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Available Medications</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for medicine in medicines|slice:":10" %}
+                        <a href="#" class="list-group-item list-group-item-action medication-item" 
+                           data-name="{{ medicine.name }} ({{ medicine.strength }})" 
+                           onclick="selectMedication('{{ medicine.name }} ({{ medicine.strength }})')">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ medicine.name }}</h6>
+                                <small>{{ medicine.stock_quantity }} in stock</small>
+                            </div>
+                            <p class="mb-1">{{ medicine.strength }} - {{ medicine.dosage_form }}</p>
+                        </a>
+                        {% empty %}
+                        <div class="list-group-item text-center text-muted py-3">No medications available</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    function selectMedication(name) {
+        document.getElementById('medication_name').value = name;
+        // Focus on the dose field
+        document.getElementById('dose_given').focus();
+        // Prevent the default link behavior
+        return false;
+    }
+    
+    // Add click handler to medication items
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.medication-item').forEach(function(item) {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                selectMedication(this.getAttribute('data-name'));
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %} 

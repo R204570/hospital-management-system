@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Doctor Leave Requests{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>
+                <i class="fas fa-calendar-minus text-primary me-2"></i>
+                Doctor Leave Requests
+            </h2>
+            <p class="text-muted">Review and approve leave requests from doctors</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="statusFilter" class="form-label">Status</label>
+                    <select name="status" id="statusFilter" class="form-select">
+                        <option value="">All Statuses</option>
+                        {% for status_code, status_name in status_choices %}
+                            <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>
+                                {{ status_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="doctorFilter" class="form-label">Doctor</label>
+                    <select name="doctor" id="doctorFilter" class="form-select">
+                        <option value="">All Doctors</option>
+                        {% for doctor in doctors %}
+                            <option value="{{ doctor.id }}" {% if doctor_filter == doctor.id|stringformat:"i" %}selected{% endif %}>
+                                Dr. {{ doctor.get_full_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter me-2"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'admin_leave_requests' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i> Clear
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Leave Requests</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if leave_requests %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Doctor</th>
+                                <th>Date Range</th>
+                                <th>Time</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for leave in leave_requests %}
+                                <tr>
+                                    <td>Dr. {{ leave.doctor.get_full_name }}</td>
+                                    <td>
+                                        {% if leave.start_date == leave.end_date %}
+                                            {{ leave.start_date }}
+                                        {% else %}
+                                            {{ leave.start_date }} to {{ leave.end_date }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ leave.start_time }} - {{ leave.end_time }}</td>
+                                    <td>
+                                        <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ leave.reason }}">
+                                            {{ leave.reason }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if leave.status == 'PENDING' %}
+                                            <span class="badge bg-warning">Pending Approval</span>
+                                        {% elif leave.status == 'APPROVED' %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif leave.status == 'REJECTED' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% elif leave.status == 'CANCELLED' %}
+                                            <span class="badge bg-secondary">Cancelled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ leave.created_at|date:"M d, Y" }}</td>
+                                    <td class="text-center">
+                                        {% if leave.status == 'PENDING' %}
+                                            <a href="{% url 'review_leave_request' leave.id %}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-check-circle me-1"></i> Review
+                                            </a>
+                                        {% else %}
+                                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#detailsModal{{ leave.id }}">
+                                                <i class="fas fa-info-circle me-1"></i> Details
+                                            </button>
+                                            
+                                            <div class="modal fade" id="detailsModal{{ leave.id }}" tabindex="-1" aria-labelledby="detailsModalLabel{{ leave.id }}" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="detailsModalLabel{{ leave.id }}">Leave Request Details</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <dl class="row">
+                                                                <dt class="col-sm-4">Doctor:</dt>
+                                                                <dd class="col-sm-8">Dr. {{ leave.doctor.get_full_name }}</dd>
+                                                                
+                                                                <dt class="col-sm-4">Date Range:</dt>
+                                                                <dd class="col-sm-8">
+                                                                    {% if leave.start_date == leave.end_date %}
+                                                                        {{ leave.start_date }}
+                                                                    {% else %}
+                                                                        {{ leave.start_date }} to {{ leave.end_date }}
+                                                                    {% endif %}
+                                                                </dd>
+                                                                
+                                                                <dt class="col-sm-4">Time:</dt>
+                                                                <dd class="col-sm-8">{{ leave.start_time }} - {{ leave.end_time }}</dd>
+                                                                
+                                                                <dt class="col-sm-4">Status:</dt>
+                                                                <dd class="col-sm-8">{{ leave.get_status_display }}</dd>
+                                                                
+                                                                <dt class="col-sm-4">Submitted:</dt>
+                                                                <dd class="col-sm-8">{{ leave.created_at|date:"M d, Y H:i" }}</dd>
+                                                                
+                                                                <dt class="col-sm-4">Reviewed:</dt>
+                                                                <dd class="col-sm-8">
+                                                                    {% if leave.reviewed_at %}
+                                                                        {{ leave.reviewed_at|date:"M d, Y H:i" }}
+                                                                        {% if leave.reviewed_by %}
+                                                                            by {{ leave.reviewed_by.get_full_name }}
+                                                                        {% endif %}
+                                                                    {% else %}
+                                                                        Not yet reviewed
+                                                                    {% endif %}
+                                                                </dd>
+                                                                
+                                                                <dt class="col-sm-4">Reason:</dt>
+                                                                <dd class="col-sm-8">{{ leave.reason }}</dd>
+                                                                
+                                                                {% if leave.admin_notes %}
+                                                                    <dt class="col-sm-4">Admin Notes:</dt>
+                                                                    <dd class="col-sm-8">{{ leave.admin_notes|linebreaksbr }}</dd>
+                                                                {% endif %}
+                                                            </dl>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-4 text-center">
+                    <p class="mb-0"><i class="fas fa-calendar-minus text-muted me-2"></i> No leave requests found.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

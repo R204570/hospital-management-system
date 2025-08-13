@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Update Medical Record{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Update Medical Record</h2>
+            <div class="text-muted">
+                Patient: <strong>{{ patient.full_name }}</strong> (ID: {{ patient.patient_id }})
+            </div>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'view_medical_record' record.id %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Record
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Hidden patient field -->
+                {{ form.patient }}
+
+                <!-- Vital Signs -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">Vital Signs</h5>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        {{ form.blood_pressure|as_crispy_field }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        {{ form.sugar_level|as_crispy_field }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        {{ form.temperature|as_crispy_field }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        {{ form.weight|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.blood_test_results|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.xray_image|as_crispy_field }}
+                    </div>
+                </div>
+
+                <!-- Clinical Information -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">Clinical Information</h5>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.symptoms|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.diagnosis|as_crispy_field }}
+                    </div>
+                </div>
+
+                <!-- Treatment and Medications -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">Treatment & Medications</h5>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.treatment_plan|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.prescription|as_crispy_field }}
+                    </div>
+                </div>
+
+                <!-- Additional Information -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">Additional Information</h5>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.precautions|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.diet|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.exercise|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.follow_up_date|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.notes|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12 text-end">
+                        <a href="{% url 'view_medical_record' record.id %}" class="btn btn-secondary me-2">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Update Record
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,488 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block extra_css %}
+<style>
+    .bed-search-container,
+    .patient-search-container {
+        position: relative;
+    }
+    
+    #bed-suggestions,
+    #patient-suggestions {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .bed-suggestion,
+    .patient-suggestion {
+        border: none;
+        text-align: left;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        transition: background-color 0.15s ease-in-out;
+    }
+    
+    .bed-suggestion:hover,
+    .patient-suggestion:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .bed-suggestion:focus,
+    .patient-suggestion:focus {
+        background-color: #e9ecef;
+        outline: none;
+    }
+    
+    #selected-bed-info,
+    #selected-patient-info {
+        border: 1px solid #198754;
+        background-color: #d1e7dd;
+    }
+    
+    .form-label.required::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .patient-suggestion .patient-details {
+        display: block;
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block title %}
+{% if is_emergency %}Emergency Admission{% else %}Admit Patient{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            {% if is_emergency %}
+            <h2 class="text-danger">
+                <i class="bi bi-exclamation-triangle"></i> Emergency Patient Admission
+            </h2>
+            {% else %}
+            <h2>
+                {% if patient %}
+                Admit {{ patient.full_name }}
+                {% else %}
+                Admit Patient
+                {% endif %}
+            </h2>
+            {% endif %}
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'admission_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Admissions
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if is_emergency %}
+                <div class="alert alert-danger mb-4">
+                    <h5 class="alert-heading">Emergency Admission Guidelines</h5>
+                    <p>Use this form for patients requiring immediate admission to the hospital in emergency situations:</p>
+                    <ul>
+                        <li>Heart attacks or severe cardiac symptoms → Cardiology (3rd Floor)</li>
+                        <li>Broken bones or severe trauma → Orthopedics (2nd Floor)</li>
+                        <li>Cancer-related emergencies → Oncology (4th & 5th Floor)</li>
+                        <li>Other medical emergencies → General Medicine (1st Floor)</li>
+                    </ul>
+                    <p class="mb-0">A doctor will be automatically assigned based on the specialty and availability.</p>
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <!-- Patient Information -->
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2 mb-3">Patient Information</h5>
+                        {% if patient %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex">
+                                    {% if patient.profile_picture %}
+                                    <div class="me-3">
+                                        <img src="{{ patient.profile_picture.url }}" alt="{{ patient.full_name }}" 
+                                             class="img-fluid rounded-circle" style="width: 64px; height: 64px;">
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <h5 class="mb-1">{{ patient.full_name }}</h5>
+                                        <p class="mb-0 text-muted">ID: {{ patient.patient_id }}</p>
+                                        <p class="mb-0 text-muted">
+                                            {{ patient.age }} years, {{ patient.get_gender_display }}
+                                            {% if patient.blood_group %}
+                                            | {{ patient.blood_group }}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{ form.patient }}
+                        {% else %}
+                        <div class="mb-3">
+                            <div class="patient-search-container">
+                                <label for="patient-search-input" class="form-label required">Patient</label>
+                                {{ form.patient_search }}
+                                <div id="patient-suggestions" class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto; display: none;"></div>
+                                <select id="id_patient" name="patient" style="display: none;">
+                                    {% for choice in form.patient.field.choices %}
+                                        <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div id="selected-patient-info" class="mt-2 p-2 rounded" style="display: none;">
+                                    <small class="text-success fw-medium">✓ Selected patient: <span id="selected-patient-text"></span></small>
+                                </div>
+                                <div class="form-text">
+                                    <small class="text-muted">Type to search for patients by name, patient ID, or phone number</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Assignment Information -->
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2 mb-3">Assignment Information</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.admitting_doctor|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="bed-search-container">
+                                    <label for="bed-search-input" class="form-label required">Bed Assignment</label>
+                                    {{ form.bed_search }}
+                                                                    <div id="bed-suggestions" class="list-group position-absolute w-100" style="z-index: 1000; max-height: 200px; overflow-y: auto; display: none;"></div>
+                                <select id="id_bed" name="bed" style="display: none;">
+                                    {% for choice in form.bed.field.choices %}
+                                        <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+                                    {% endfor %}
+                                </select>
+                                    <div id="selected-bed-info" class="mt-2 p-2 rounded" style="display: none;">
+                                        <small class="text-success fw-medium">✓ Selected bed: <span id="selected-bed-text"></span></small>
+                                    </div>
+                                    <div class="form-text">
+                                        <small class="text-muted">Type to search for available beds by room number, floor, or department</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.admission_type|as_crispy_field }}
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            {{ form.is_critical }}
+                            <label class="form-check-label" for="{{ form.is_critical.id_for_label }}">
+                                Critical Condition (requires extra monitoring)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Medical Information -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">Medical Information</h5>
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        {{ form.primary_diagnosis|as_crispy_field }}
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        {{ form.notes|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12 text-end">
+                        <a href="{% url 'admission_list' %}" class="btn btn-secondary me-2">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        {% if is_emergency %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-exclamation-triangle"></i> Complete Emergency Admission
+                        </button>
+                        {% else %}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-hospital"></i> Admit Patient
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Show/hide fields based on admission type
+        $('#id_admission_type').on('change', function() {
+            var admissionType = $(this).val();
+            if (admissionType === 'EMERGENCY') {
+                $('#div_id_is_critical').show();
+            } else {
+                $('#div_id_is_critical').hide();
+            }
+        });
+        
+        // Trigger change event on page load
+        $('#id_admission_type').trigger('change');
+        
+        // Patient search functionality
+        const patientSearchInput = $('#patient-search-input');
+        const patientSuggestions = $('#patient-suggestions');
+        const patientSelect = $('#id_patient');
+        const selectedPatientInfo = $('#selected-patient-info');
+        const selectedPatientText = $('#selected-patient-text');
+        
+        let patientSearchTimeout;
+        
+        // AJAX Patient search functionality
+        patientSearchInput.on('input', function() {
+            const query = $(this).val().trim();
+            
+            // Clear previous timeout
+            clearTimeout(patientSearchTimeout);
+            
+            if (query.length < 2) {
+                patientSuggestions.hide().empty();
+                return;
+            }
+            
+            // Show loading indicator with spinner
+            patientSuggestions.html('<div class="list-group-item"><span class="search-spinner"></span>Searching patients...</div>').show();
+            
+            // Debounce search to avoid too many requests
+            patientSearchTimeout = setTimeout(function() {
+                $.ajax({
+                    url: '{% url "patient_search_api" %}',
+                    method: 'GET',
+                    data: { 'q': query },
+                    success: function(response) {
+                        patientSuggestions.empty();
+                        
+                        if (response.results.length > 0) {
+                            response.results.forEach(function(patient) {
+                                const parts = patient.text.split(' - ');
+                                const patientId = parts[0];
+                                const nameAndDetails = parts[1] || patient.text;
+                                
+                                const suggestionItem = $(`
+                                    <button type="button" class="list-group-item list-group-item-action patient-suggestion" 
+                                            data-patient-id="${patient.id}" data-patient-text="${patient.text}">
+                                        <strong>${patientId}</strong> - ${nameAndDetails.split('(')[0].trim()}
+                                        <span class="patient-details">${nameAndDetails.includes('(') ? '(' + nameAndDetails.split('(')[1] : ''}</span>
+                                    </button>
+                                `);
+                                patientSuggestions.append(suggestionItem);
+                            });
+                            patientSuggestions.show();
+                        } else {
+                            patientSuggestions.html('<div class="list-group-item">No patients found</div>').show();
+                        }
+                    },
+                    error: function() {
+                        patientSuggestions.html('<div class="list-group-item text-danger">Error searching patients</div>').show();
+                    }
+                });
+            }, 300); // 300ms delay
+        });
+        
+        // Handle patient selection
+        $(document).on('click', '.patient-suggestion', function() {
+            const patientId = $(this).data('patient-id');
+            const patientText = $(this).data('patient-text');
+            
+            // Set the hidden select value
+            patientSelect.val(patientId);
+            
+            // Update the search input
+            patientSearchInput.val(patientText);
+            
+            // Show selected patient info
+            selectedPatientText.text(patientText);
+            selectedPatientInfo.show();
+            
+            // Hide suggestions
+            patientSuggestions.hide();
+        });
+        
+        // Bed search functionality
+        const bedSearchInput = $('#bed-search-input');
+        const bedSuggestions = $('#bed-suggestions');
+        const bedSelect = $('#id_bed');
+        const selectedBedInfo = $('#selected-bed-info');
+        const selectedBedText = $('#selected-bed-text');
+        
+        let bedSearchTimeout;
+        
+        // AJAX Bed search functionality
+        bedSearchInput.on('input', function() {
+            const query = $(this).val().trim();
+            
+            // Clear previous timeout
+            clearTimeout(bedSearchTimeout);
+            
+            if (query.length < 1) {
+                bedSuggestions.hide().empty();
+                return;
+            }
+            
+            // Show loading indicator with spinner
+            bedSuggestions.html('<div class="list-group-item"><span class="search-spinner"></span>Searching beds...</div>').show();
+            
+            // Debounce search to avoid too many requests
+            bedSearchTimeout = setTimeout(function() {
+                $.ajax({
+                    url: '{% url "bed_search_api" %}',
+                    method: 'GET',
+                    data: { 'q': query },
+                    success: function(response) {
+                        bedSuggestions.empty();
+                        
+                        if (response.results.length > 0) {
+                            response.results.forEach(function(bed) {
+                                const parts = bed.text.split(' - ');
+                                const bedNumber = parts[0];
+                                const roomAndDetails = parts[1] || bed.text;
+                                
+                                const suggestionItem = $(`
+                                    <button type="button" class="list-group-item list-group-item-action bed-suggestion" 
+                                            data-bed-id="${bed.id}" data-bed-text="${bed.text}">
+                                        <strong>${bedNumber}</strong> - ${roomAndDetails.split('(')[0].trim()}
+                                        <span class="bed-details">${roomAndDetails.includes('(') ? '(' + roomAndDetails.split('(')[1] : ''}</span>
+                                    </button>
+                                `);
+                                bedSuggestions.append(suggestionItem);
+                            });
+                            bedSuggestions.show();
+                        } else {
+                            bedSuggestions.html('<div class="list-group-item">No available beds found</div>').show();
+                        }
+                    },
+                    error: function() {
+                        bedSuggestions.html('<div class="list-group-item text-danger">Error searching beds</div>').show();
+                    }
+                });
+            }, 300); // 300ms delay
+        });
+        
+        // Handle bed selection
+        $(document).on('click', '.bed-suggestion', function() {
+            const bedId = $(this).data('bed-id');
+            const bedText = $(this).data('bed-text');
+            
+            // Set the hidden select value
+            bedSelect.val(bedId);
+            
+            // Update the search input
+            bedSearchInput.val(bedText);
+            
+            // Show selected bed info
+            selectedBedText.text(bedText);
+            selectedBedInfo.show();
+            
+            // Hide suggestions
+            bedSuggestions.hide();
+        });
+        
+        // Hide suggestions when clicking outside
+        $(document).on('click', function(e) {
+            // Hide bed suggestions
+            if (!bedSearchInput.is(e.target) && !bedSuggestions.is(e.target) && bedSuggestions.has(e.target).length === 0) {
+                bedSuggestions.hide();
+            }
+            // Hide patient suggestions
+            if (!patientSearchInput.is(e.target) && !patientSuggestions.is(e.target) && patientSuggestions.has(e.target).length === 0) {
+                patientSuggestions.hide();
+            }
+        });
+        
+        // Clear selections on focus
+        bedSearchInput.on('focus', function() {
+            if (bedSelect.val()) {
+                selectedBedInfo.show();
+            }
+        });
+        
+        patientSearchInput.on('focus', function() {
+            if (patientSelect.val()) {
+                selectedPatientInfo.show();
+            }
+        });
+        
+        // Handle form submission validation
+        $('form').on('submit', function(e) {
+            let hasErrors = false;
+            
+            // Check if patient is selected (only if patient search field exists)
+            if (patientSearchInput.length && !patientSelect.val()) {
+                e.preventDefault();
+                alert('Please select a patient before submitting the form.');
+                patientSearchInput.focus();
+                hasErrors = true;
+            }
+            
+            // Check if bed is selected
+            if (!hasErrors && !bedSelect.val()) {
+                e.preventDefault();
+                alert('Please select a bed before submitting the form.');
+                bedSearchInput.focus();
+                hasErrors = true;
+            }
+            
+            return !hasErrors;
+        });
+        
+        // Initialize patient search if there's a pre-selected patient
+        if (patientSelect.val()) {
+            // For AJAX search, we need to get the patient text from the server or form data
+            const selectedPatientOption = patientSelect.find('option:selected');
+            if (selectedPatientOption.length && selectedPatientOption.val() && selectedPatientOption.text()) {
+                patientSearchInput.val(selectedPatientOption.text());
+                selectedPatientText.text(selectedPatientOption.text());
+                selectedPatientInfo.show();
+            }
+        }
+        
+        // Initialize bed search if there's a pre-selected bed
+        if (bedSelect.val()) {
+            // For AJAX search, we need to get the bed text from the server or form data
+            const selectedBedOption = bedSelect.find('option:selected');
+            if (selectedBedOption.length && selectedBedOption.val() && selectedBedOption.text()) {
+                bedSearchInput.val(selectedBedOption.text());
+                selectedBedText.text(selectedBedOption.text());
+                selectedBedInfo.show();
+            }
+        }
+    });
+</script>
+{% endblock %} 

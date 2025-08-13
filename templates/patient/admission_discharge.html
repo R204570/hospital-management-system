@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Discharge Patient{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Discharge Patient</h2>
+            <p class="text-muted">
+                {{ admission.patient.full_name }} - 
+                Admitted on {{ admission.admission_date|date:"F j, Y" }} at {{ admission.admission_date|time:"g:i A" }}
+            </p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'admission_detail' admission.id %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Admission
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <h4 class="alert-heading">Confirm Discharge</h4>
+                <p>
+                    You are about to discharge <strong>{{ admission.patient.full_name }}</strong>
+                    from Room {{ admission.bed.room.room_number }}, Bed {{ admission.bed.bed_number }}.
+                </p>
+                <p>
+                    This will mark the patient as discharged, free up the bed, and record the 
+                    discharge time. This action cannot be undone.
+                </p>
+                <hr>
+                <p class="mb-0">
+                    Please ensure all necessary medical procedures are completed and 
+                    discharge instructions have been given to the patient.
+                </p>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Patient Information</h5>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">Name:</th>
+                            <td>{{ admission.patient.full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>ID:</th>
+                            <td>{{ admission.patient.patient_id }}</td>
+                        </tr>
+                        <tr>
+                            <th>Admission Date:</th>
+                            <td>{{ admission.admission_date|date:"F j, Y" }} at {{ admission.admission_date|time:"g:i A" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Duration:</th>
+                            <td>{{ admission.admission_date|timesince }}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="col-md-6">
+                    <h5>Room & Doctor Information</h5>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th width="30%">Room:</th>
+                            <td>Room {{ admission.bed.room.room_number }} ({{ admission.bed.room.get_specialization_display }})</td>
+                        </tr>
+                        <tr>
+                            <th>Bed:</th>
+                            <td>{{ admission.bed.bed_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Doctor:</th>
+                            <td>Dr. {{ admission.admitting_doctor.get_full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Diagnosis:</th>
+                            <td>{{ admission.diagnosis }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <form method="post" class="text-center">
+                {% csrf_token %}
+                <div class="d-grid gap-2 col-6 mx-auto">
+                    <button type="submit" class="btn btn-lg btn-success">
+                        <i class="bi bi-box-arrow-right"></i> Confirm Discharge
+                    </button>
+                    <a href="{% url 'admission_detail' admission.id %}" class="btn btn-lg btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

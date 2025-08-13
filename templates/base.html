@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}Smart Care{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Hospital Theme CSS -->
+    <link rel="stylesheet" href="{% load static %}{% static 'css/hospital-theme.css' %}?v=2">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #3F51B5;
+            --secondary-color: #FF5722;
+            --bg-light: #f8f9fa;
+            --sidebar-width: 250px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+        }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 999;
+            background: var(--primary-color);
+            color: #fff;
+            transition: all 0.3s;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar .sidebar-header {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar ul li a {
+            padding: 15px;
+            display: block;
+            color: #fff;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar ul li a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 3px solid var(--secondary-color);
+        }
+        
+        .sidebar ul li a.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 3px solid var(--secondary-color);
+        }
+        
+        .sidebar ul li a i {
+            margin-right: 10px;
+        }
+        
+        .content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            min-height: 100vh;
+            transition: all 0.3s;
+        }
+        
+        .top-navbar {
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        
+        .card {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #303F9F;
+            border-color: #303F9F;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #E64A19;
+            border-color: #E64A19;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .content {
+                margin-left: 0;
+            }
+            
+            .content.shifted {
+                margin-left: var(--sidebar-width);
+            }
+        }
+        
+        /* Logout Modal Styles */
+        .logout-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease-out;
+        }
+        
+        .logout-modal-content {
+            position: relative;
+            background-color: #ffffff;
+            margin: 10% auto;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            animation: slideIn 0.3s ease-out;
+            overflow: hidden;
+        }
+        
+        .logout-modal-header {
+            padding: 32px 32px 16px 32px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .logout-icon {
+            font-size: 32px;
+            color: #ff6b6b;
+            margin-bottom: 16px;
+            display: block;
+        }
+        
+        .logout-modal-header h3 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .logout-modal-body {
+            padding: 24px 32px;
+            text-align: center;
+        }
+        
+        .logout-modal-body p {
+            margin: 0 0 8px 0;
+            color: #666;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        .logout-user-info {
+            font-weight: 600;
+            color: #2c3e50 !important;
+            font-size: 14px !important;
+        }
+        
+        .logout-modal-footer {
+            padding: 16px 32px 32px 32px;
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .btn-cancel, .btn-logout {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 80px;
+        }
+        
+        .btn-cancel {
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #e9ecef;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        
+        .btn-logout {
+            background-color: #ff6b6b;
+            color: white;
+        }
+        
+        .btn-logout:hover {
+            background-color: #ff5252;
+            transform: translateY(-1px);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateY(-20px) scale(0.9);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 480px) {
+            .logout-modal-content {
+                margin: 20% auto;
+                width: 95%;
+                max-width: none;
+            }
+            
+            .logout-modal-header,
+            .logout-modal-body,
+            .logout-modal-footer {
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            {% load static %}
+            <img src="{% static 'images/smartcare-logo.png' %}" alt="Smart Care Logo" class="logo" style="max-width: 100%; height: auto;">
+        </div>
+        
+        <ul class="list-unstyled">
+            {% block sidebar_content %}
+            
+            {% if user.is_admin %}
+            <!-- Admin Menu -->
+            <li>
+                <a href="{% url 'admin_dashboard' %}" class="{% if request.resolver_match.url_name == 'admin_dashboard' or request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i> Admin Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'user_list' %}" class="{% if request.resolver_match.url_name == 'user_list' %}active{% endif %}">
+                    <i class="fas fa-users"></i> User Management
+                </a>
+            </li>
+            {% endif %}
+            
+            {% if user.is_doctor %}
+            <!-- Doctor Menu -->
+            <li>
+                <a href="{% url 'doctor_dashboard' %}" class="{% if request.resolver_match.url_name == 'doctor_dashboard' or request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-stethoscope"></i> Doctor Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'appointment_list' %}" class="{% if request.resolver_match.url_name == 'appointment_list' %}active{% endif %}">
+                    <i class="fas fa-calendar-alt"></i> Appointments
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'patient_list' %}" class="{% if request.resolver_match.url_name == 'patient_list' %}active{% endif %}">
+                    <i class="fas fa-user-injured"></i> Patients
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'admission_list' %}" class="{% if 'admission' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-bed"></i> Admitted Patients
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'doctor_leave_history' %}" class="{% if request.resolver_match.url_name == 'doctor_leave_history' %}active{% endif %}">
+                    <i class="fas fa-calendar-minus"></i> Leave Management
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'website:blog' %}" class="{% if 'blog' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-blog"></i> Blog
+                </a>
+            </li>
+            {% endif %}
+            
+            {% if user.is_receptionist %}
+            <!-- Receptionist Menu -->
+            <li>
+                <a href="{% url 'receptionist_dashboard' %}" class="{% if request.resolver_match.url_name == 'receptionist_dashboard' or request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-desktop"></i> Reception Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'patient_list' %}" class="{% if request.resolver_match.url_name == 'patient_list' %}active{% endif %}">
+                    <i class="fas fa-user-injured"></i> Patients
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'patient_register' %}" class="{% if request.resolver_match.url_name == 'patient_register' %}active{% endif %}">
+                    <i class="fas fa-user-plus"></i> Register Patient
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'appointment_list' %}" class="{% if request.resolver_match.url_name == 'appointment_list' %}active{% endif %}">
+                    <i class="fas fa-calendar-alt"></i> Appointments
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'book_appointment' %}" class="{% if request.resolver_match.url_name == 'book_appointment' %}active{% endif %}">
+                    <i class="fas fa-calendar-plus"></i> Book Appointment
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'inquiry_list' %}" class="{% if request.resolver_match.url_name == 'inquiry_list' or request.resolver_match.url_name == 'appointment_inquiry_detail' or request.resolver_match.url_name == 'contact_inquiry_detail' %}active{% endif %}">
+                    <i class="fas fa-question-circle"></i> Inquiries
+                </a>
+            </li>
+            {% endif %}
+            
+            {% if user.is_nurse %}
+            <!-- Nurse Menu -->
+            <li>
+                <a href="{% url 'nurse_dashboard' %}" class="{% if request.resolver_match.url_name == 'nurse_dashboard' or request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-procedures"></i> Nursing Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'patient_list' %}" class="{% if request.resolver_match.url_name == 'patient_list' %}active{% endif %}">
+                    <i class="fas fa-user-injured"></i> Patients
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'admission_list' %}" class="{% if 'admission' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-bed"></i> Admitted Patients
+                </a>
+            </li>
+            {% endif %}
+            
+            <!-- Pharmacy Menu -->
+            {% if user.is_pharmacist %}
+            <li>
+                <a href="{% url 'pharmacy_dashboard' %}" class="{% if request.resolver_match.url_name == 'pharmacy_dashboard' or request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-pills"></i> Pharmacy Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'medicine_list' %}" class="{% if request.resolver_match.url_name == 'medicine_list' %}active{% endif %}">
+                    <i class="fas fa-capsule"></i> Medicine Inventory
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'prescription_list' %}" class="{% if request.resolver_match.url_name == 'prescription_list' %}active{% endif %}">
+                    <i class="fas fa-prescription"></i> Prescriptions
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'purchase_list' %}" class="{% if request.resolver_match.url_name == 'purchase_list' %}active{% endif %}">
+                    <i class="fas fa-shopping-cart"></i> Purchases
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'sale_list' %}" class="{% if request.resolver_match.url_name == 'sale_list' %}active{% endif %}">
+                    <i class="fas fa-cash-register"></i> Sales
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'supplier_list' %}" class="{% if request.resolver_match.url_name == 'supplier_list' %}active{% endif %}">
+                    <i class="fas fa-truck"></i> Suppliers
+                </a>
+            </li>
+            {% endif %}
+            
+            <!-- Common Menu Items -->
+            <li>
+                <a href="{% url 'profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                    <i class="fas fa-user-circle"></i> My Profile
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'logout' %}" onclick="showLogoutModal(event)">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
+            {% endblock %}
+        </ul>
+    </nav>
+    
+    <!-- Page Content -->
+    <div class="content">
+        <div class="container-fluid">
+            <!-- Top Navigation Bar -->
+            <div class="top-navbar d-flex justify-content-between align-items-center">
+                <button id="sidebarToggle" class="btn d-md-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+                
+                <div>
+                    <h4 class="mb-0">{% block page_title %}Dashboard{% endblock %}</h4>
+                </div>
+                
+                <div class="d-flex align-items-center">
+                    <!-- Notification Bell for Receptionists -->
+                    {% if user.is_receptionist or user.is_admin %}
+                    <div class="dropdown me-3">
+                        <button class="btn btn-outline-secondary position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell"></i>
+                            <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                                0
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificationDropdown" style="width: 350px; max-height: 400px; overflow-y: auto;">
+                            <li>
+                                <h6 class="dropdown-header d-flex justify-content-between align-items-center">
+                                    <span>Recent Inquiries</span>
+                                    <a href="{% url 'inquiry_list' %}" class="text-primary small">View All</a>
+                                </h6>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <div id="notification-list">
+                                <li class="text-center py-3">
+                                    <span class="text-muted">No new inquiries</span>
+                                </li>
+                            </div>
+                        </ul>
+                    </div>
+                    {% endif %}
+                
+                <div class="dropdown">
+                    <button class="btn dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}?v={{ user.pk }}" alt="Profile" class="rounded-circle me-1" style="width: 30px; height: 30px; object-fit: cover;">
+                        {% else %}
+                        <i class="fas fa-user-circle me-1"></i>
+                        {% endif %}
+                        {{ user.get_full_name|default:user.username }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-user me-2"></i> Profile</a></li>
+                        <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="fas fa-key me-2"></i> Change Password</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}" onclick="showLogoutModal(event)"><i class="fas fa-sign-out-alt me-2"></i> Logout</a></li>
+                    </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Messages -->
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Main Content -->
+            <div class="main-content">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Custom Logout Confirmation Modal -->
+    <div id="logoutModal" class="logout-modal">
+        <div class="logout-modal-content">
+            <div class="logout-modal-header">
+                <i class="fas fa-sign-out-alt logout-icon"></i>
+                <h3>Confirm Logout</h3>
+            </div>
+            <div class="logout-modal-body">
+                <p>Are you sure you want to logout?</p>
+                <p class="logout-user-info">{{ user.get_full_name|default:user.username }}</p>
+            </div>
+            <div class="logout-modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeLogoutModal()">Cancel</button>
+                <button type="button" class="btn-logout" onclick="confirmLogout()">Logout</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS and Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.min.js"></script>
+    
+    <!-- jQuery (for convenience) -->
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>
+    
+    <!-- Cropper.js for image cropping -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        $(document).ready(function() {
+            // Sidebar toggle
+            $('#sidebarToggle').on('click', function() {
+                $('.sidebar').toggleClass('show');
+                $('.content').toggleClass('shifted');
+            });
+            
+            // Close sidebar on small screens when clicking outside
+            $(document).on('click', function(e) {
+                if ($(window).width() < 768) {
+                    if (!$(e.target).closest('.sidebar').length && !$(e.target).closest('#sidebarToggle').length) {
+                        $('.sidebar').removeClass('show');
+                        $('.content').removeClass('shifted');
+                    }
+                }
+            });
+            
+            // Close modal when clicking outside
+            $('#logoutModal').on('click', function(e) {
+                if (e.target === this) {
+                    closeLogoutModal();
+                }
+            });
+            
+            // Handle escape key
+            $(document).on('keydown', function(e) {
+                if (e.key === 'Escape' && $('#logoutModal').is(':visible')) {
+                    closeLogoutModal();
+                }
+            });
+        });
+        
+        // Show logout modal
+        function showLogoutModal(event) {
+            event.preventDefault();
+            $('#logoutModal').fadeIn(200);
+            $('body').css('overflow', 'hidden'); // Prevent scrolling
+        }
+        
+        // Close logout modal
+        function closeLogoutModal() {
+            $('#logoutModal').fadeOut(200);
+            $('body').css('overflow', ''); // Restore scrolling
+        }
+        
+        // Confirm logout and redirect
+        function confirmLogout() {
+            window.location.href = "{% url 'logout' %}";
+        }
+        
+
+    </script>
+    
+    {% if user.is_receptionist or user.is_admin %}
+    <script>
+        // Notification Bell Functions
+        function fetchNotifications() {
+            $.ajax({
+                url: '/appointment/notifications/',
+                type: 'GET',
+                headers: {
+                    'X-CSRFToken': $('[name=csrfmiddlewaretoken]').val() || $('meta[name=csrf-token]').attr('content') || '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    console.log('Notifications response:', response);
+                    updateNotificationBell(response);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching notifications:', xhr.status, xhr.responseText);
+                    if (xhr.status === 403) {
+                        console.error('Authentication failed - redirecting to dashboard');
+                    }
+                }
+            });
+        }
+        
+        function updateNotificationBell(data) {
+            const badge = $('#notification-badge');
+            const notificationList = $('#notification-list');
+            
+            if (data.unread_count > 0) {
+                badge.text(data.unread_count).show();
+                
+                // Update dropdown content
+                let html = '';
+                data.inquiries.forEach(function(inquiry) {
+                    let typeIcon, typeColor, detailUrl, clickHandler;
+                    
+                    if (inquiry.inquiry_type === 'email_reply') {
+                        typeIcon = 'fa-reply';
+                        typeColor = 'text-warning';
+                        // Go to the related inquiry page
+                        detailUrl = inquiry.related_inquiry_type === 'appointment' 
+                            ? '/appointment/inquiry/appointment/' + inquiry.related_inquiry_id + '/'
+                            : '/appointment/inquiry/contact/' + inquiry.related_inquiry_id + '/';
+                        clickHandler = 'markEmailReplySeen(' + inquiry.id + ')';
+                    } else {
+                        typeIcon = inquiry.inquiry_type === 'appointment' ? 'fa-calendar' : 'fa-envelope';
+                        typeColor = inquiry.inquiry_type === 'appointment' ? 'text-primary' : 'text-success';
+                        detailUrl = inquiry.inquiry_type === 'appointment' 
+                            ? '/appointment/inquiry/appointment/' + inquiry.id + '/'
+                            : '/appointment/inquiry/contact/' + inquiry.id + '/';
+                        clickHandler = 'markAsSeen(' + inquiry.id + ', \'' + inquiry.inquiry_type + '\')';
+                    }
+                    
+                    html += '<li>' +
+                        '<a class="dropdown-item py-2" href="' + detailUrl + '" onclick="' + clickHandler + '">' +
+                            '<div class="d-flex">' +
+                                '<div class="flex-shrink-0">' +
+                                    '<i class="fas ' + typeIcon + ' ' + typeColor + '"></i>' +
+                                '</div>' +
+                                '<div class="flex-grow-1 ms-3">' +
+                                    '<div class="fw-bold">' + inquiry.name + '</div>' +
+                                    '<div class="small text-muted">' + (inquiry.subject || inquiry.department) + '</div>' +
+                                    '<div class="small text-muted">' + inquiry.time_ago + '</div>' +
+                                '</div>' +
+                            '</div>' +
+                        '</a>' +
+                    '</li>';
+                });
+                notificationList.html(html);
+            } else {
+                badge.hide();
+                notificationList.html('<li class="text-center py-3"><span class="text-muted">No new inquiries</span></li>');
+            }
+        }
+        
+        function markAsSeen(inquiryId, inquiryType) {
+            $.ajax({
+                url: '/appointment/mark-inquiry-seen/',
+                type: 'POST',
+                data: {
+                    'inquiry_id': inquiryId,
+                    'inquiry_type': inquiryType,
+                    'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+                },
+                success: function(response) {
+                    // Refresh notifications after marking as seen
+                    setTimeout(fetchNotifications, 500);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error marking inquiry as seen:', error);
+                }
+            });
+        }
+        
+        function markEmailReplySeen(replyId) {
+            console.log('markEmailReplySeen called with ID:', replyId);
+            console.log('CSRF token:', $('[name=csrfmiddlewaretoken]').val() || $('meta[name=csrf-token]').attr('content') || '{{ csrf_token }}');
+            
+            $.ajax({
+                url: '/appointment/mark-email-reply-seen/',
+                type: 'POST',
+                data: {
+                    'reply_id': replyId,
+                    'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val() || $('meta[name=csrf-token]').attr('content') || '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    console.log('markEmailReplySeen success:', response);
+                    // Refresh notifications after marking as seen
+                    setTimeout(fetchNotifications, 500);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error marking email reply as seen:', xhr.status, xhr.responseText);
+                    alert('Error marking reply as seen: ' + (xhr.responseJSON ? xhr.responseJSON.error : xhr.responseText));
+                }
+            });
+        }
+        
+
+        
+        // Initialize notifications on page load
+        $(document).ready(function() {
+            fetchNotifications();
+            
+            // Refresh notifications every 30 seconds
+            setInterval(fetchNotifications, 30000);
+        });
+    </script>
+    {% endif %}
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

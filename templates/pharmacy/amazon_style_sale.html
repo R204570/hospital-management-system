@@ -1,0 +1,776 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Sale | HMS{% endblock %}
+
+{% block extra_css %}
+<style>
+    #search-suggestions {
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 1050;
+        width: 100%;
+        position: absolute;
+        box-shadow: 0 5px 10px rgba(0,0,0,.2);
+    }
+    
+    #search-suggestions .dropdown-item {
+        white-space: normal;
+        padding: 10px 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    #search-suggestions .dropdown-item:hover {
+        background-color: #f8f9fa;
+        color: #212529;
+    }
+    
+    #search-suggestions .dropdown-item.active {
+        background-color: #0d6efd;
+        color: white;
+    }
+    
+    .medicine-card {
+        transition: transform 0.2s;
+        cursor: pointer;
+    }
+    
+    .medicine-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4>New Sale / Checkout</h4>
+                <a href="{% url 'sale_list' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-2"></i> Back to Sales
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left side - Cart -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Shopping Cart</h6>
+                    <span class="badge bg-primary" id="cart-count">0</span>
+                </div>
+                <div class="card-body">
+                    <!-- Search bar for medicines -->
+                    <div class="mb-4">
+                        <div class="input-group">
+                            <input type="text" id="medicine-search" class="form-control" placeholder="Search for medicine by name or generic name..." autocomplete="off">
+                            <button class="btn btn-primary" id="search-btn" type="button">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                        <div id="search-suggestions" class="dropdown-menu w-100" style="display: none;"></div>
+                    </div>
+                    
+                    <!-- Search results -->
+                    <div id="search-results" class="mb-4" style="display: none;">
+                        <h6 class="border-bottom pb-2 mb-3">Search Results</h6>
+                        <div id="results-container" class="row"></div>
+                    </div>
+                    
+                    <!-- Cart items -->
+                    <form id="sale-form" method="post" action="{% url 'add_sale' %}">
+                        {% csrf_token %}
+                        
+                        <div id="cart-items">
+                            <div class="text-center py-5" id="empty-cart-message">
+                                <i class="bi bi-cart3 fs-1 text-muted"></i>
+                                <p class="mt-3 text-muted">Your cart is empty</p>
+                                <p class="text-muted">Search for medicines to add them to your cart</p>
+                            </div>
+                            
+                            <div id="cart-items-container"></div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Recently viewed medicines -->
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recently Viewed</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="recently-viewed">
+                        <!-- This will be populated with JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right side - Customer info and payment -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Customer Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="customer-type" class="form-label">Customer Type</label>
+                        <select class="form-select" id="customer-type" name="customer_type">
+                            <option value="WALKIN">Walk-in Customer</option>
+                            <option value="PATIENT">Hospital Patient</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3 patient-selector" style="display: none;">
+                        <label for="patient" class="form-label">Select Patient</label>
+                        <select class="form-select" id="patient" name="patient">
+                            <option value="">Select Patient</option>
+                            {% for patient in patients %}
+                            <option value="{{ patient.id }}">{{ patient.get_full_name }} (ID: {{ patient.id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="customer-name" class="form-label">Customer Name</label>
+                        <input type="text" class="form-control" id="customer-name" name="customer_name" placeholder="Optional for walk-in customers">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Order Summary</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">$0.00</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <label for="discount" class="form-label mb-0">Discount:</label>
+                        <div class="input-group" style="width: 120px;">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="discount" name="discount" value="0" min="0" step="0.01">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Tax (5%):</span>
+                        <span id="tax">$0.00</span>
+                        <input type="hidden" name="tax" id="tax-input" value="0">
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-4">
+                        <span class="fw-bold">Total:</span>
+                        <span class="fw-bold fs-5" id="total">$0.00</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="payment-method" class="form-label">Payment Method</label>
+                        <select class="form-select" id="payment-method" name="payment_method">
+                            {% for value, text in payment_methods %}
+                            <option value="{{ value }}">{{ text }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2"></textarea>
+                    </div>
+                    
+                    <button type="button" id="complete-sale-btn" class="btn btn-success w-100" disabled>
+                        <i class="bi bi-check2-circle me-2"></i> Complete Sale
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Medicine card template (hidden) -->
+<template id="medicine-card-template">
+    <div class="col-md-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="card-title medicine-name">Medicine Name</h6>
+                <p class="card-text text-muted small medicine-generic-name">Generic Name</p>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold medicine-price">$0.00</span>
+                    <span class="badge bg-info medicine-stock">Stock: 0</span>
+                </div>
+                <div class="d-grid">
+                    <button type="button" class="btn btn-primary btn-sm add-to-cart-btn">
+                        <i class="bi bi-cart-plus me-1"></i> Add to Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Cart item template (hidden) -->
+<template id="cart-item-template">
+    <div class="cart-item mb-3 border rounded p-3 position-relative">
+        <button type="button" class="btn-close position-absolute top-0 end-0 m-2 remove-item-btn"></button>
+        <input type="hidden" name="medicine_id[]" class="medicine-id-input">
+        <div class="row">
+            <div class="col-md-5">
+                <p class="mb-1 fw-bold cart-item-name">Medicine Name</p>
+                <p class="mb-2 text-muted small cart-item-generic">Generic Name</p>
+                <div class="prescription-warning alert alert-warning py-1 px-2 d-inline-block small" style="display: none;">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Requires prescription
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="mb-2">
+                    <label class="form-label small">Unit Price</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">$</span>
+                        <input type="number" name="unit_price[]" class="form-control unit-price" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="mb-2">
+                    <label class="form-label small">Quantity</label>
+                    <input type="number" name="quantity[]" class="form-control form-control-sm quantity" min="1" value="1">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="mb-2">
+                    <label class="form-label small">Subtotal</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">$</span>
+                        <input type="text" class="form-control item-subtotal" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-8">
+                <div class="mb-2">
+                    <label class="form-label small">Instructions</label>
+                    <input type="text" name="instructions[]" class="form-control form-control-sm" placeholder="e.g., Take 1 tablet twice daily after meals">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-2">
+                    <label class="form-label small">Discount</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">$</span>
+                        <input type="number" name="item_discount[]" class="form-control item-discount" min="0" value="0" step="0.01">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- Recently viewed item template (hidden) -->
+<template id="recently-viewed-template">
+    <div class="col-md-3 mb-3">
+        <div class="card h-100">
+            <div class="card-body p-2 text-center">
+                <p class="card-title mb-1 small fw-bold recently-viewed-name">Medicine Name</p>
+                <p class="card-text mb-2 fs-6 recently-viewed-price">$0.00</p>
+                <button class="btn btn-sm btn-outline-primary w-100 add-to-cart-btn">
+                    <i class="bi bi-cart-plus"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // DOM Elements
+        const medicineSearch = document.getElementById('medicine-search');
+        const searchBtn = document.getElementById('search-btn');
+        const searchResults = document.getElementById('search-results');
+        const resultsContainer = document.getElementById('results-container');
+        const suggestionsContainer = document.getElementById('search-suggestions');
+        const cartItemsContainer = document.getElementById('cart-items-container');
+        const emptyCartMessage = document.getElementById('empty-cart-message');
+        const customerTypeSelect = document.getElementById('customer-type');
+        const patientSelector = document.querySelector('.patient-selector');
+        const completeSaleBtn = document.getElementById('complete-sale-btn');
+        const saleForm = document.getElementById('sale-form');
+        const recentlyViewedContainer = document.getElementById('recently-viewed');
+        
+        // Templates
+        const medicineCardTemplate = document.getElementById('medicine-card-template');
+        const cartItemTemplate = document.getElementById('cart-item-template');
+        const recentlyViewedTemplate = document.getElementById('recently-viewed-template');
+        
+        // State
+        const cart = [];
+        const recentlyViewed = [];
+        const allMedicines = JSON.parse('{{ medicines_json|escapejs }}');
+        let searchTimeout;
+        let currentFocus = -1;
+        
+        // Display/hide patient selector based on customer type
+        customerTypeSelect.addEventListener('change', function() {
+            if (this.value === 'PATIENT') {
+                patientSelector.style.display = 'block';
+            } else {
+                patientSelector.style.display = 'none';
+            }
+        });
+        
+        // Autocomplete functionality
+        medicineSearch.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            // Clear previous timeout
+            clearTimeout(searchTimeout);
+            
+            // Reset current focus
+            currentFocus = -1;
+            
+            // Hide suggestions if query is empty
+            if (query.length < 2) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+            
+            // Set a timeout to avoid too many requests
+            searchTimeout = setTimeout(function() {
+                // Make AJAX request to search API
+                fetch(`/pharmacy/medicines/search/?query=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Clear previous suggestions
+                        suggestionsContainer.innerHTML = '';
+                        
+                        // If no results, hide suggestions
+                        if (data.results.length === 0) {
+                            suggestionsContainer.style.display = 'none';
+                            return;
+                        }
+                        
+                        // Add each result to suggestions
+                        data.results.forEach(medicine => {
+                            const item = document.createElement('a');
+                            item.href = '#';
+                            item.className = 'dropdown-item';
+                            
+                            // Format suggestion with medicine details
+                            let itemText = `<strong>${medicine.name}</strong>`;
+                            if (medicine.generic_name) {
+                                itemText += ` (${medicine.generic_name})`;
+                            }
+                            if (medicine.strength) {
+                                itemText += ` - ${medicine.strength}`;
+                            }
+                            itemText += ` | ${medicine.category}`;
+                            
+                            item.innerHTML = itemText;
+                            
+                            // Add click event to select suggestion
+                            item.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                medicineSearch.value = medicine.name;
+                                suggestionsContainer.style.display = 'none';
+                                
+                                // Find full medicine details from allMedicines
+                                const selectedMedicine = allMedicines.find(m => m.id === medicine.id);
+                                if (selectedMedicine) {
+                                    displaySearchResults([selectedMedicine]);
+                                }
+                            });
+                            
+                            suggestionsContainer.appendChild(item);
+                        });
+                        
+                        // Show suggestions
+                        suggestionsContainer.style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching search suggestions:', error);
+                    });
+            }, 300); // 300ms delay
+        });
+        
+        // Add keyboard navigation
+        medicineSearch.addEventListener('keydown', function(e) {
+            const items = suggestionsContainer.getElementsByTagName('a');
+            
+            if (!items.length) return;
+            
+            // Down arrow
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentFocus++;
+                addActive(items);
+            } 
+            // Up arrow
+            else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentFocus--;
+                addActive(items);
+            } 
+            // Enter key
+            else if (e.key === 'Enter' && suggestionsContainer.style.display === 'block') {
+                e.preventDefault();
+                if (currentFocus > -1) {
+                    // Simulate click on active item
+                    if (items[currentFocus]) {
+                        items[currentFocus].click();
+                    }
+                } else {
+                    // If no item is selected, perform regular search
+                    performSearch();
+                }
+            } 
+            // Escape key
+            else if (e.key === 'Escape') {
+                suggestionsContainer.style.display = 'none';
+                currentFocus = -1;
+            }
+        });
+        
+        // Function to add active class to items
+        function addActive(items) {
+            // First remove active from any items
+            removeActive(items);
+            
+            // Adjust focus if out of bounds
+            if (currentFocus >= items.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = items.length - 1;
+            
+            // Add active class
+            if (items[currentFocus]) {
+                items[currentFocus].classList.add('active');
+                // Scroll into view if needed
+                items[currentFocus].scrollIntoView({ block: 'nearest' });
+            }
+        }
+        
+        // Function to remove active class from items
+        function removeActive(items) {
+            for (let i = 0; i < items.length; i++) {
+                items[i].classList.remove('active');
+            }
+        }
+        
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!medicineSearch.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                suggestionsContainer.style.display = 'none';
+                currentFocus = -1;
+            }
+        });
+        
+        // Original search functionality
+        searchBtn.addEventListener('click', performSearch);
+        medicineSearch.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter' && suggestionsContainer.style.display !== 'block') {
+                performSearch();
+            }
+        });
+        
+        function performSearch() {
+            const query = medicineSearch.value.trim().toLowerCase();
+            if (query.length < 2) return;
+            
+            const results = allMedicines.filter(medicine => 
+                medicine.name.toLowerCase().includes(query) || 
+                (medicine.generic_name && medicine.generic_name.toLowerCase().includes(query))
+            );
+            
+            displaySearchResults(results);
+        }
+        
+        function displaySearchResults(results) {
+            resultsContainer.innerHTML = '';
+            
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<div class="col-12 text-center py-3"><p class="text-muted">No medicines found matching your search</p></div>';
+                searchResults.style.display = 'block';
+                return;
+            }
+            
+            results.forEach(medicine => {
+                const medicineCard = medicineCardTemplate.content.cloneNode(true);
+                
+                medicineCard.querySelector('.medicine-name').textContent = medicine.name;
+                
+                // Show generic name and strength together for better dosage information
+                const genericText = medicine.generic_name || '';
+                const strengthText = medicine.strength ? ` - ${medicine.strength}` : '';
+                medicineCard.querySelector('.medicine-generic-name').textContent = `${genericText}${strengthText}`;
+                
+                medicineCard.querySelector('.medicine-price').textContent = `$${medicine.selling_price}`;
+                
+                const stockSpan = medicineCard.querySelector('.medicine-stock');
+                stockSpan.textContent = `Stock: ${medicine.stock_quantity}`;
+                
+                if (medicine.stock_quantity <= 0) {
+                    stockSpan.classList.remove('bg-info');
+                    stockSpan.classList.add('bg-danger');
+                    const addBtn = medicineCard.querySelector('.add-to-cart-btn');
+                    addBtn.disabled = true;
+                    addBtn.textContent = 'Out of Stock';
+                    addBtn.classList.remove('btn-primary');
+                    addBtn.classList.add('btn-secondary');
+                } else if (medicine.stock_quantity <= medicine.reorder_level) {
+                    stockSpan.classList.remove('bg-info');
+                    stockSpan.classList.add('bg-warning');
+                }
+                
+                const addBtn = medicineCard.querySelector('.add-to-cart-btn');
+                addBtn.addEventListener('click', function() {
+                    addToCart(medicine);
+                    addToRecentlyViewed(medicine);
+                });
+                
+                resultsContainer.appendChild(medicineCard);
+            });
+            
+            searchResults.style.display = 'block';
+        }
+        
+        // Cart functionality
+        function addToCart(medicine) {
+            // Check if medicine is already in cart
+            const existingItem = cart.find(item => item.id === medicine.id);
+            
+            if (existingItem) {
+                // Increment quantity if already in cart
+                existingItem.quantity++;
+                updateCartDisplay();
+            } else {
+                // Add new item to cart
+                cart.push({
+                    id: medicine.id,
+                    name: medicine.name,
+                    generic_name: medicine.generic_name || '',
+                    strength: medicine.strength || '',
+                    price: medicine.selling_price,
+                    quantity: 1,
+                    discount: 0,
+                    requires_prescription: medicine.requires_prescription,
+                    max_quantity: medicine.stock_quantity
+                });
+                
+                updateCartDisplay();
+            }
+            
+            updateCartCount();
+            calculateTotals();
+            updateCompleteButtonState();
+        }
+        
+        function updateCartDisplay() {
+            cartItemsContainer.innerHTML = '';
+            
+            if (cart.length === 0) {
+                emptyCartMessage.style.display = 'block';
+                return;
+            }
+            
+            emptyCartMessage.style.display = 'none';
+            
+            cart.forEach((item, index) => {
+                const cartItem = cartItemTemplate.content.cloneNode(true);
+                
+                cartItem.querySelector('.cart-item-name').textContent = item.name;
+                
+                // Display generic name and strength together for better dosage information
+                const genericText = item.generic_name || '';
+                const strengthText = item.strength ? ` - ${item.strength}` : '';
+                cartItem.querySelector('.cart-item-generic').textContent = `${genericText}${strengthText}`;
+                
+                cartItem.querySelector('.medicine-id-input').value = item.id;
+                cartItem.querySelector('.unit-price').value = item.price;
+                
+                const quantityInput = cartItem.querySelector('.quantity');
+                quantityInput.value = item.quantity;
+                quantityInput.max = item.max_quantity;
+                
+                const itemSubtotal = (item.price * item.quantity) - item.discount;
+                cartItem.querySelector('.item-subtotal').value = itemSubtotal.toFixed(2);
+                
+                // Show prescription warning if required
+                if (item.requires_prescription) {
+                    cartItem.querySelector('.prescription-warning').style.display = 'block';
+                }
+                
+                // Set up event listeners
+                const removeBtn = cartItem.querySelector('.remove-item-btn');
+                removeBtn.addEventListener('click', function() {
+                    removeFromCart(index);
+                });
+                
+                const itemQuantity = cartItem.querySelector('.quantity');
+                itemQuantity.addEventListener('change', function() {
+                    updateItemQuantity(index, parseInt(this.value));
+                });
+                
+                const itemDiscount = cartItem.querySelector('.item-discount');
+                itemDiscount.value = item.discount;
+                itemDiscount.addEventListener('change', function() {
+                    updateItemDiscount(index, parseFloat(this.value) || 0);
+                });
+                
+                cartItemsContainer.appendChild(cartItem);
+            });
+        }
+        
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartDisplay();
+            updateCartCount();
+            calculateTotals();
+            updateCompleteButtonState();
+        }
+        
+        function updateItemQuantity(index, quantity) {
+            const item = cart[index];
+            
+            // Validate quantity
+            if (quantity < 1) {
+                quantity = 1;
+            } else if (quantity > item.max_quantity) {
+                quantity = item.max_quantity;
+                alert(`Only ${item.max_quantity} units available in stock.`);
+            }
+            
+            item.quantity = quantity;
+            updateCartDisplay();
+            calculateTotals();
+        }
+        
+        function updateItemDiscount(index, discount) {
+            cart[index].discount = discount;
+            updateCartDisplay();
+            calculateTotals();
+        }
+        
+        function updateCartCount() {
+            const cartCount = document.getElementById('cart-count');
+            cartCount.textContent = cart.length;
+        }
+        
+        // Recently viewed functionality
+        function addToRecentlyViewed(medicine) {
+            // Remove if already in list
+            const existingIndex = recentlyViewed.findIndex(item => item.id === medicine.id);
+            if (existingIndex !== -1) {
+                recentlyViewed.splice(existingIndex, 1);
+            }
+            
+            // Add to front of list
+            recentlyViewed.unshift({
+                id: medicine.id,
+                name: medicine.name,
+                price: medicine.selling_price,
+                stock_quantity: medicine.stock_quantity
+            });
+            
+            // Keep only the last 8 items
+            if (recentlyViewed.length > 8) {
+                recentlyViewed.pop();
+            }
+            
+            updateRecentlyViewedDisplay();
+        }
+        
+        function updateRecentlyViewedDisplay() {
+            recentlyViewedContainer.innerHTML = '';
+            
+            recentlyViewed.forEach(item => {
+                const recentlyViewedItem = recentlyViewedTemplate.content.cloneNode(true);
+                
+                recentlyViewedItem.querySelector('.recently-viewed-name').textContent = item.name;
+                recentlyViewedItem.querySelector('.recently-viewed-price').textContent = `$${item.price}`;
+                
+                const addBtn = recentlyViewedItem.querySelector('.add-to-cart-btn');
+                
+                if (item.stock_quantity <= 0) {
+                    addBtn.disabled = true;
+                    addBtn.textContent = 'Out of Stock';
+                    addBtn.classList.remove('btn-outline-primary');
+                    addBtn.classList.add('btn-secondary');
+                } else {
+                    addBtn.addEventListener('click', function() {
+                        // Find full medicine object from allMedicines
+                        const medicine = allMedicines.find(med => med.id === item.id);
+                        if (medicine) {
+                            addToCart(medicine);
+                        }
+                    });
+                }
+                
+                recentlyViewedContainer.appendChild(recentlyViewedItem);
+            });
+        }
+        
+        // Calculate totals
+        function calculateTotals() {
+            let subtotal = 0;
+            
+            cart.forEach(item => {
+                subtotal += (item.price * item.quantity) - item.discount;
+            });
+            
+            const discountEl = document.getElementById('discount');
+            const discount = parseFloat(discountEl.value) || 0;
+            
+            const subtotalAfterDiscount = subtotal > discount ? subtotal - discount : 0;
+            const tax = subtotalAfterDiscount * 0.05; // 5%
+            const total = subtotalAfterDiscount + tax;
+            
+            // Update the display
+            document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+            document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
+            document.getElementById('tax-input').value = tax.toFixed(2);
+            document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+        }
+        
+        // Update order total when discount changes
+        document.getElementById('discount').addEventListener('input', calculateTotals);
+        
+        // Enable/disable complete sale button
+        function updateCompleteButtonState() {
+            completeSaleBtn.disabled = cart.length === 0;
+        }
+        
+        // Complete sale button click
+        completeSaleBtn.addEventListener('click', function() {
+            if (cart.length === 0) {
+                alert('Please add at least one medicine to the cart.');
+                return;
+            }
+            
+            // Check customer type and selection
+            if (customerTypeSelect.value === 'PATIENT' && !document.getElementById('patient').value) {
+                alert('Please select a patient.');
+                return;
+            }
+            
+            // Submit the form
+            saleForm.submit();
+        });
+        
+        // Initialization
+        updateCartDisplay();
+        updateCartCount();
+        calculateTotals();
+        updateCompleteButtonState();
+    });
+</script>
+{% endblock %} 

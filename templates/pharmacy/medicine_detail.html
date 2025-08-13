@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ medicine.name }} Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Medicine Details</h6>
+                    <div>
+                        <a href="{% url 'medicine_list' %}" class="btn btn-sm btn-outline-primary me-2">
+                            <i class="bi bi-arrow-left me-1"></i> Back to List
+                        </a>
+                        <a href="{% url 'edit_medicine' medicine.id %}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-pencil me-1"></i> Edit
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                    <div class="mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <!-- Medicine Main Details -->
+                            <div class="card mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Basic Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Name:</strong> {{ medicine.name }}</p>
+                                            {% if medicine.generic_name %}
+                                            <p><strong>Generic Name:</strong> {{ medicine.generic_name }}</p>
+                                            {% endif %}
+                                            <p><strong>Category:</strong> {{ medicine.category.name }}</p>
+                                            <p><strong>Dosage Form:</strong> {{ medicine.dosage_form|default:"N/A" }}</p>
+                                            <p><strong>Strength:</strong> {{ medicine.strength|default:"N/A" }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Manufacturer:</strong> 
+                                                {% if medicine.manufacturer %}
+                                                <span class="fw-bold">{{ medicine.manufacturer }}</span>
+                                                {% if medicine.manufacturer == 'Pfizer' %} <span class="text-muted">(USA)</span>
+                                                {% elif medicine.manufacturer == 'Johnson & Johnson' %} <span class="text-muted">(USA)</span>
+                                                {% elif medicine.manufacturer == 'Roche' %} <span class="text-muted">(Switzerland)</span>
+                                                {% elif medicine.manufacturer == 'Novartis' %} <span class="text-muted">(Switzerland)</span>
+                                                {% elif medicine.manufacturer == 'Merck & Co.' %} <span class="text-muted">(USA)</span>
+                                                {% elif medicine.manufacturer == 'GlaxoSmithKline' %} <span class="text-muted">(UK)</span>
+                                                {% elif medicine.manufacturer == 'Sanofi' %} <span class="text-muted">(France)</span>
+                                                {% elif medicine.manufacturer == 'Gilead Sciences' %} <span class="text-muted">(USA)</span>
+                                                {% elif medicine.manufacturer == 'AstraZeneca' %} <span class="text-muted">(UK)</span>
+                                                {% elif medicine.manufacturer == 'AbbVie' %} <span class="text-muted">(USA)</span>
+                                                {% elif medicine.manufacturer == 'Bayer' %} <span class="text-muted">(Germany)</span>
+                                                {% elif medicine.manufacturer == 'Eli Lilly' %} <span class="text-muted">(USA)</span>
+                                                {% elif medicine.manufacturer == 'Bristol-Myers Squibb' %} <span class="text-muted">(USA)</span>
+                                                {% elif medicine.manufacturer == 'Amgen' %} <span class="text-muted">(USA)</span>
+                                                {% elif medicine.manufacturer == 'Boehringer Ingelheim' %} <span class="text-muted">(Germany)</span>
+                                                {% elif medicine.manufacturer == 'Teva Pharmaceutical' %} <span class="text-muted">(Israel)</span>
+                                                {% elif medicine.manufacturer == 'Novo Nordisk' %} <span class="text-muted">(Denmark)</span>
+                                                {% elif medicine.manufacturer == 'Takeda Pharmaceutical' %} <span class="text-muted">(Japan)</span>
+                                                {% elif medicine.manufacturer == 'Biogen' %} <span class="text-muted">(USA)</span>
+                                                {% elif medicine.manufacturer == 'Allergan' %} <span class="text-muted">(Ireland)</span>
+                                                {% elif medicine.manufacturer == 'Sun Pharmaceutical' %} <span class="text-muted">(India)</span>
+                                                {% elif medicine.manufacturer == 'Cipla' %} <span class="text-muted">(India)</span>
+                                                {% elif medicine.manufacturer == 'Lupin Limited' %} <span class="text-muted">(India)</span>
+                                                {% elif medicine.manufacturer == 'Dr. Reddy\'s Laboratories' %} <span class="text-muted">(India)</span>
+                                                {% elif medicine.manufacturer == 'Astellas Pharma' %} <span class="text-muted">(Japan)</span>
+                                                {% elif medicine.manufacturer == 'Eisai' %} <span class="text-muted">(Japan)</span>
+                                                {% elif medicine.manufacturer == 'Daiichi Sankyo' %} <span class="text-muted">(Japan)</span>
+                                                {% elif medicine.manufacturer == 'CSL Limited' %} <span class="text-muted">(Australia)</span>
+                                                {% elif medicine.manufacturer == 'Grifols' %} <span class="text-muted">(Spain)</span>
+                                                {% elif medicine.manufacturer == 'Regeneron Pharmaceuticals' %} <span class="text-muted">(USA)</span>
+                                                {% endif %}
+                                                {% else %}
+                                                N/A
+                                                {% endif %}
+                                            </p>
+                                            <p><strong>Requires Prescription:</strong> {% if medicine.requires_prescription %}Yes{% else %}No{% endif %}</p>
+                                            <p><strong>Batch Number:</strong> {{ medicine.batch_number|default:"N/A" }}</p>
+                                            <p><strong>Expiry Date:</strong> 
+                                                {% if medicine.expiry_date %}
+                                                <span class="{% if medicine.is_expired %}text-danger fw-bold{% endif %}">
+                                                    {{ medicine.expiry_date|date:"F d, Y" }}
+                                                    {% if medicine.is_expired %} (EXPIRED){% endif %}
+                                                </span>
+                                                {% else %}
+                                                N/A
+                                                {% endif %}
+                                            </p>
+                                            <p><strong>Supplier:</strong> 
+                                                {% if medicine.supplier %}
+                                                {{ medicine.supplier.name }}
+                                                {% else %}
+                                                N/A
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {% if medicine.description %}
+                                    <div class="mt-3">
+                                        <p><strong>Description:</strong></p>
+                                        <p>{{ medicine.description }}</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Purchase History -->
+                            <div class="card mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Purchase History</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if purchases %}
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Supplier</th>
+                                                    <th>Quantity</th>
+                                                    <th>Unit Price</th>
+                                                    <th>Total</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in purchases %}
+                                                <tr>
+                                                    <td>{{ item.purchase.purchase_date|date:"M d, Y" }}</td>
+                                                    <td>{{ item.purchase.supplier.name }}</td>
+                                                    <td>{{ item.quantity }}</td>
+                                                    <td>${{ item.unit_price }}</td>
+                                                    <td>${{ item.total_price }}</td>
+                                                    <td>
+                                                        <span class="badge {% if item.purchase.status == 'RECEIVED' %}bg-success{% elif item.purchase.status == 'PENDING' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                                            {{ item.purchase.get_status_display }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted text-center py-3">No purchase history available.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Sales History -->
+                            <div class="card">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Sales History</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if sales %}
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Invoice</th>
+                                                    <th>Patient</th>
+                                                    <th>Quantity</th>
+                                                    <th>Unit Price</th>
+                                                    <th>Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in sales %}
+                                                <tr>
+                                                    <td>{{ item.sale.sale_date|date:"M d, Y" }}</td>
+                                                    <td>
+                                                        <a href="{% url 'sale_detail' item.sale.id %}">
+                                                            {{ item.sale.invoice_number }}
+                                                        </a>
+                                                    </td>
+                                                    <td>
+                                                        {% if item.sale.patient %}
+                                                        {{ item.sale.patient.full_name }}
+                                                        {% else %}
+                                                        <span class="text-muted">Walk-in</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ item.quantity }}</td>
+                                                    <td>${{ item.unit_price }}</td>
+                                                    <td>${{ item.total_price }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted text-center py-3">No sales history available.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-4">
+                            <!-- Stock Status Card -->
+                            <div class="card mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Stock Status</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="text-center mb-4">
+                                        {% if medicine.is_expired %}
+                                        <div class="alert alert-danger">
+                                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                            <strong>EXPIRED MEDICINE</strong>
+                                        </div>
+                                        {% elif medicine.is_low_stock %}
+                                        <div class="alert alert-warning">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                            <strong>LOW STOCK</strong>
+                                        </div>
+                                        {% else %}
+                                        <div class="alert alert-success">
+                                            <i class="bi bi-check-circle me-2"></i>
+                                            <strong>IN STOCK</strong>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span>Current Stock:</span>
+                                        <span class="fw-bold">{{ medicine.stock_quantity }} units</span>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span>Reorder Level:</span>
+                                        <span>{{ medicine.reorder_level }} units</span>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span>Status:</span>
+                                        <span>
+                                            {% if medicine.is_expired %}
+                                            <span class="badge bg-danger">Expired</span>
+                                            {% elif medicine.is_low_stock %}
+                                            <span class="badge bg-warning text-dark">Low Stock</span>
+                                            {% else %}
+                                            <span class="badge bg-success">In Stock</span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Price Information -->
+                            <div class="card mb-4">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Pricing Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span>Purchase Price:</span>
+                                        <span>${{ medicine.purchase_price }}</span>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span>Selling Price:</span>
+                                        <span class="fw-bold">${{ medicine.selling_price }}</span>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span>Markup:</span>
+                                        <span>
+                                            {% if medicine.purchase_price > 0 %}
+                                            {{ markup_percentage|floatformat:1 }}%
+                                            {% else %}
+                                            N/A
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span>Profit Margin:</span>
+                                        <span>
+                                            {% if medicine.purchase_price > 0 %}
+                                            {{ profit_margin|floatformat:1 }}%
+                                            {% else %}
+                                            N/A
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Quick Actions -->
+                            <div class="card">
+                                <div class="card-header py-3">
+                                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <a href="{% url 'add_purchase' %}" class="btn btn-info">
+                                            <i class="bi bi-cart-plus me-2"></i> Create Purchase Order
+                                        </a>
+                                        <a href="{% url 'add_sale' %}" class="btn btn-success">
+                                            <i class="bi bi-cash-stack me-2"></i> Create Sale
+                                        </a>
+                                        <a href="{% url 'edit_medicine' medicine.id %}" class="btn btn-primary">
+                                            <i class="bi bi-pencil me-2"></i> Edit Medicine
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Recent Medical Records{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 p-0">
+            {% include 'patient/medical_sidebar.html' with active_menu='recent_reports' %}
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-md-9 col-lg-10 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Recent Medical Records</h2>
+                <div class="d-flex">
+                    <div class="input-group me-2">
+                        <input type="text" id="recordSearch" class="form-control" placeholder="Search records...">
+                        <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                        <i class="fas fa-filter"></i> Filters
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Filters collapse section -->
+            <div class="collapse mb-4" id="filterCollapse">
+                <div class="card card-body">
+                    <form id="filterForm" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="dateFrom" class="form-label">Date From</label>
+                            <input type="date" class="form-control" id="dateFrom">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="dateTo" class="form-label">Date To</label>
+                            <input type="date" class="form-control" id="dateTo">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="patientFilter" class="form-label">Patient</label>
+                            <input type="text" class="form-control" id="patientFilter" placeholder="Patient name">
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <button type="reset" class="btn btn-outline-secondary me-2">Reset</button>
+                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Records table -->
+            {% if medical_records %}
+                <div class="table-responsive">
+                    <table class="table table-hover" id="recordsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Patient</th>
+                                <th>Diagnosis</th>
+                                <th>Vital Signs</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in medical_records %}
+                                <tr>
+                                    <td>{{ record.report_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if record.patient.profile_picture %}
+                                                <img src="{{ record.patient.profile_picture.url }}" alt="{{ record.patient.full_name }}" class="patient-avatar me-2">
+                                            {% else %}
+                                                <div class="patient-avatar-small me-2">
+                                                    {{ record.patient.first_name|first }}{{ record.patient.last_name|first }}
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-semibold">{{ record.patient.full_name }}</div>
+                                                <small class="text-muted">{{ record.patient.patient_id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 200px;">{{ record.diagnosis }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="vital-signs">
+                                            {% if record.blood_pressure %}
+                                                <span class="badge bg-light text-dark me-1" title="Blood Pressure">
+                                                    <i class="fas fa-heartbeat text-danger"></i> {{ record.blood_pressure }}
+                                                </span>
+                                            {% endif %}
+                                            
+                                            {% if record.temperature %}
+                                                <span class="badge bg-light text-dark me-1" title="Temperature">
+                                                    <i class="fas fa-thermometer-half text-warning"></i> {{ record.temperature }}°C
+                                                </span>
+                                            {% endif %}
+                                            
+                                            {% if record.weight %}
+                                                <span class="badge bg-light text-dark" title="Weight">
+                                                    <i class="fas fa-weight text-info"></i> {{ record.weight }} kg
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{% url 'view_medical_record' record_id=record.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'update_medical_record' record_id=record.id %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'medical_record_pdf' record_id=record.id %}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ record.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Delete Modal -->
+                                        <div class="modal fade" id="deleteModal{{ record.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ record.id }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="deleteModalLabel{{ record.id }}">Confirm Delete</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        Are you sure you want to delete the medical record for {{ record.patient.full_name }} from {{ record.report_date|date:"M d, Y" }}?
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <a href="{% url 'delete_medical_record' record_id=record.id %}" class="btn btn-danger">Delete</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">First</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">First</a>
+                            </li>
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">Last</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No medical records found.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .patient-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .patient-avatar-small {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #007bff;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+    }
+    
+    .vital-signs {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: normal;
+        font-size: 0.8rem;
+    }
+    
+    #recordsTable th, #recordsTable td {
+        vertical-align: middle;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Table search functionality
+        const searchInput = document.getElementById('recordSearch');
+        const recordsTable = document.getElementById('recordsTable');
+        const tableRows = recordsTable ? recordsTable.querySelectorAll('tbody tr') : [];
+        
+        searchInput?.addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            tableRows.forEach(row => {
+                const patientName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                const diagnosis = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                
+                if (patientName.includes(searchTerm) || diagnosis.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+        // Filter form functionality
+        const filterForm = document.getElementById('filterForm');
+        
+        filterForm?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            const patientFilter = document.getElementById('patientFilter').value.toLowerCase().trim();
+            
+            tableRows.forEach(row => {
+                const date = new Date(row.querySelector('td:nth-child(1)').textContent);
+                const patientName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                
+                let showRow = true;
+                
+                if (dateFrom && new Date(dateFrom) > date) {
+                    showRow = false;
+                }
+                
+                if (dateTo && new Date(dateTo) < date) {
+                    showRow = false;
+                }
+                
+                if (patientFilter && !patientName.includes(patientFilter)) {
+                    showRow = false;
+                }
+                
+                row.style.display = showRow ? '' : 'none';
+            });
+        });
+        
+        // Reset filters
+        filterForm?.addEventListener('reset', function() {
+            setTimeout(() => {
+                tableRows.forEach(row => {
+                    row.style.display = '';
+                });
+            }, 0);
+        });
+    });
+</script>
+{% endblock %} 

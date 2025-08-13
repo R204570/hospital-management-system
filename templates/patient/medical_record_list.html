@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Medical Records{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Medical Records</h6>
+                        <a href="{% url 'add_medical_record' %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add New Record
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Filters -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card shadow-none">
+                                <div class="card-header pb-0 bg-light">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">Filters</h6>
+                                        <button class="btn btn-sm btn-link text-dark p-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFilters" aria-expanded="false" aria-controls="collapseFilters">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="collapse" id="collapseFilters">
+                                    <div class="card-body">
+                                        <form method="get" id="filter-form">
+                                            <div class="row">
+                                                <div class="col-md-4 mb-3">
+                                                    <label for="patient" class="form-label">Patient</label>
+                                                    <select name="patient" id="patient" class="form-select">
+                                                        <option value="">All Patients</option>
+                                                        {% for patient in patients %}
+                                                        <option value="{{ patient.id }}" {% if request.GET.patient == patient.id|stringformat:"s" %}selected{% endif %}>
+                                                            {{ patient.get_full_name }}
+                                                        </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <label for="doctor" class="form-label">Doctor</label>
+                                                    <select name="doctor" id="doctor" class="form-select">
+                                                        <option value="">All Doctors</option>
+                                                        {% for doctor in doctors %}
+                                                        <option value="{{ doctor.id }}" {% if request.GET.doctor == doctor.id|stringformat:"s" %}selected{% endif %}>
+                                                            Dr. {{ doctor.get_full_name }}
+                                                        </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <label for="diagnosis" class="form-label">Diagnosis</label>
+                                                    <input type="text" name="diagnosis" id="diagnosis" class="form-control" value="{{ request.GET.diagnosis|default:'' }}" placeholder="Search diagnosis...">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-4 mb-3">
+                                                    <label for="date_from" class="form-label">Date From</label>
+                                                    <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request.GET.date_from|default:'' }}">
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <label for="date_to" class="form-label">Date To</label>
+                                                    <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request.GET.date_to|default:'' }}">
+                                                </div>
+                                                <div class="col-md-4 d-flex align-items-end">
+                                                    <div class="btn-group w-100">
+                                                        <button type="submit" class="btn btn-primary">
+                                                            <i class="fas fa-filter me-2"></i>Apply Filters
+                                                        </button>
+                                                        <a href="{% url 'medical_record_list' %}" class="btn btn-outline-secondary">
+                                                            <i class="fas fa-times me-2"></i>Clear
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if records %}
+                    <div class="table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Patient</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Doctor</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Date</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Diagnosis</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Vital Signs</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in records %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex px-2 py-1">
+                                            <div>
+                                                {% if record.patient.profile_picture %}
+                                                <img src="{{ record.patient.profile_picture.url }}" class="avatar avatar-sm me-3" alt="{{ record.patient.get_full_name }}">
+                                                {% else %}
+                                                <div class="avatar avatar-sm me-3 bg-gradient-primary">{{ record.patient.get_initials }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="d-flex flex-column justify-content-center">
+                                                <h6 class="mb-0 text-sm">{{ record.patient.get_full_name }}</h6>
+                                                <p class="text-xs text-secondary mb-0">ID: {{ record.patient.id }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">Dr. {{ record.doctor.get_full_name }}</p>
+                                        <p class="text-xs text-secondary mb-0">{{ record.doctor.specialization }}</p>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">{{ record.created_at|date:"F d, Y" }}</p>
+                                        <p class="text-xs text-secondary mb-0">{{ record.created_at|time:"h:i A" }}</p>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">{{ record.diagnosis|truncatechars:30 }}</p>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs text-secondary mb-0">BP: {{ record.blood_pressure }}</p>
+                                        <p class="text-xs text-secondary mb-0">Temp: {{ record.temperature }}°C</p>
+                                    </td>
+                                    <td class="align-middle">
+                                        <a href="{% url 'view_medical_record' record.id %}" class="btn btn-link text-info px-3 mb-0">
+                                            <i class="fas fa-eye text-info me-2"></i>View
+                                        </a>
+                                        <a href="{% url 'edit_medical_record' record.id %}" class="btn btn-link text-warning px-3 mb-0">
+                                            <i class="fas fa-edit text-warning me-2"></i>Edit
+                                        </a>
+                                        <a href="#" class="btn btn-link text-danger px-3 mb-0" data-bs-toggle="modal" data-bs-target="#deleteModal{{ record.id }}">
+                                            <i class="fas fa-trash text-danger me-2"></i>Delete
+                                        </a>
+                                        
+                                        <!-- Delete Modal -->
+                                        <div class="modal fade" id="deleteModal{{ record.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ record.id }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="deleteModalLabel{{ record.id }}">Confirm Deletion</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>Are you sure you want to delete the medical record for <strong>{{ record.patient.get_full_name }}</strong> from <strong>{{ record.created_at|date:"F d, Y" }}</strong>?</p>
+                                                        <p class="text-danger"><strong>This action cannot be undone.</strong></p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                        <form method="post" action="{% url 'delete_medical_record' record.id %}">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger">Delete Record</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if records.has_other_pages %}
+                    <div class="d-flex justify-content-center mt-4">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                {% if records.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ records.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in records.paginator.page_range %}
+                                {% if records.number == num %}
+                                <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                                {% elif num > records.number|add:'-3' and num < records.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a></li>
+                                {% endif %}
+                                {% endfor %}
+                                
+                                {% if records.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ records.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="text-center py-5">
+                        <img src="{% static 'img/illustrations/no-data.svg' %}" alt="No Records" style="max-width: 200px; opacity: 0.5;" class="mb-3">
+                        <h6 class="text-secondary">No medical records found</h6>
+                        <p class="text-sm text-secondary">
+                            {% if request.GET %}
+                            Try adjusting your filters or <a href="{% url 'medical_record_list' %}">clear all filters</a>.
+                            {% else %}
+                            Create your first medical record by clicking the "Add New Record" button.
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Initialize select2 for patient and doctor dropdowns
+        $('#patient, #doctor').select2({
+            theme: 'bootstrap-5',
+            width: '100%'
+        });
+        
+        // Auto-submit form when date range changes
+        $('#date_from, #date_to').change(function() {
+            if ($('#date_from').val() && $('#date_to').val()) {
+                $('#filter-form').submit();
+            }
+        });
+        
+        // Toggle filter collapse state
+        if ("{{ request.GET|length }}" > 0) {
+            $('#collapseFilters').addClass('show');
+        }
+    });
+</script>
+{% endblock %} 

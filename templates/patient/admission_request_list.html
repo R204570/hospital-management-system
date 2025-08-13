@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admission Requests{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-clipboard-check"></i> Admission Requests
+                    </h4>
+                    {% if user.is_doctor %}
+                    <div class="col-auto">
+                        <a href="{% url 'admission_request_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> New Request
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-body">
+                    <!-- Search and Filters -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Search & Filter Requests</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form method="get" class="row g-3">
+                                        <!-- Search Bar -->
+                                        <div class="col-md-6">
+                                            <label for="search" class="form-label">Search</label>
+                                            <input type="text" name="search" id="search" class="form-control" 
+                                                   placeholder="Search by patient name, ID, diagnosis, doctor..." 
+                                                   value="{{ search_query }}">
+                                        </div>
+
+                                        <!-- Status Filter -->
+                                        <div class="col-md-3">
+                                            <label for="status" class="form-label">Status</label>
+                                            <select name="status" id="status" class="form-select">
+                                                <option value="">All Status</option>
+                                                {% for value, label in status_choices %}
+                                                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                                                        {{ label }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        
+                                        <!-- Buttons Column - Aligned with form -->
+                                        <div class="col-md-3 d-flex align-items-end">
+                                            <div class="d-grid gap-2 d-md-flex">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="bi bi-search"></i> Search
+                                                </button>
+                                                <a href="{% url 'admission_request_list' %}" class="btn btn-outline-secondary">
+                                                    <i class="bi bi-x-circle"></i> Reset
+                                                </a>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Priority Filter -->
+                                        {% if user.is_nurse or user.is_admin %}
+                                        <div class="col-md-3">
+                                            <label for="priority" class="form-label">Priority</label>
+                                            <select name="priority" id="priority" class="form-select">
+                                                <option value="">All Priorities</option>
+                                                {% for value, label in priority_choices %}
+                                                    <option value="{{ value }}">{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        {% endif %}
+
+                                        <!-- Floor Filter for Admin/Receptionist -->
+                                        {% if user.is_admin or user.is_receptionist %}
+                                        <div class="col-md-3">
+                                            <label for="floor" class="form-label">Preferred Floor</label>
+                                            <select name="floor" id="floor" class="form-select">
+                                                <option value="">All Floors</option>
+                                                {% for floor_num, floor_name in floor_choices %}
+                                                <option value="{{ floor_num }}" {% if floor_filter|stringformat:"s" == floor_num|stringformat:"s" %}selected{% endif %}>
+                                                    {{ floor_name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        
+                                        <!-- Fill remaining columns when admin filters are present -->
+                                        <div class="col-md-6"></div>
+                                        {% else %}
+                                        <!-- Fill remaining columns when no admin filters -->
+                                        <div class="col-md-9"></div>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Requests Table -->
+                    {% if admission_requests %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Request #</th>
+                                    <th>Patient</th>
+                                    <th>Doctor</th>
+                                    <th>Primary Diagnosis</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in admission_requests %}
+                                <tr>
+                                    <td>
+                                        <strong>#{{ request.id }}</strong>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ request.patient.full_name }}</strong><br>
+                                            <small class="text-muted">{{ request.patient.phone_number }}</small>
+                                        </div>
+                                    </td>
+                                    <td>{{ request.requesting_doctor.get_full_name }}</td>
+                                    <td>{{ request.primary_diagnosis|truncatechars:50 }}</td>
+                                    <td>
+                                        {% if request.priority == 'high' %}
+                                            <span class="badge bg-danger">{{ request.get_priority_display }}</span>
+                                        {% elif request.priority == 'medium' %}
+                                            <span class="badge bg-warning">{{ request.get_priority_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ request.get_priority_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if request.status == 'pending' %}
+                                            <span class="badge bg-warning">{{ request.get_status_display }}</span>
+                                        {% elif request.status == 'approved' %}
+                                            <span class="badge bg-info">{{ request.get_status_display }}</span>
+                                        {% elif request.status == 'completed' %}
+                                            <span class="badge bg-success">{{ request.get_status_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">{{ request.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ request.created_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'admission_request_detail' request.id %}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                            
+                                            {% if user.is_nurse and request.status == 'pending' %}
+                                            <a href="{% url 'admission_request_process' request.id %}" 
+                                               class="btn btn-sm btn-outline-success">
+                                                <i class="bi bi-check-circle"></i> Process
+                                            </a>
+                                            {% endif %}
+                                            
+                                            {% if user.is_nurse and request.status == 'approved' %}
+                                            <a href="{% url 'admission_request_assign_room' request.id %}" 
+                                               class="btn btn-sm btn-outline-info">
+                                                <i class="bi bi-house-door"></i> Assign Room
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-clipboard-x display-1 text-muted"></i>
+                        <h4 class="mt-3">No Admission Requests Found</h4>
+                        <p class="text-muted">
+                            {% if user.is_doctor %}
+                                You haven't created any admission requests yet.
+                            {% else %}
+                                No admission requests are currently available.
+                            {% endif %}
+                        </p>
+                        {% if user.is_doctor %}
+                        <a href="{% url 'admission_request_create' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Create First Request
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

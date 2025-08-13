@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}View Medical Record{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Medical Record</h6>
+                            <p class="text-sm mb-0">
+                                <i class="fa fa-calendar text-info" aria-hidden="true"></i>
+                                <span class="font-weight-bold ms-1">{{ record.report_date|date:"F d, Y" }}</span>
+                            </p>
+                        </div>
+                        <div class="d-flex">
+                            <a href="{% url 'patient_detail' record.patient.id %}" class="btn btn-outline-secondary btn-sm me-2">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Patient
+                            </a>
+                            <a href="{% url 'medical_record_pdf' record.id %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-file-pdf me-2"></i>Export PDF
+                            </a>
+                            {% if perms.patient.change_medicalrecord and request.user == record.doctor %}
+                            <a href="{% url 'update_medical_record' record.id %}" class="btn btn-info btn-sm ms-2">
+                                <i class="fas fa-edit me-2"></i>Edit
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header pb-0">
+                                    <h6 class="mb-0">Patient Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        {% if record.patient.profile_picture %}
+                                        <img src="{{ record.patient.profile_picture.url }}" class="avatar avatar-lg me-3" alt="{{ record.patient.full_name }}">
+                                        {% else %}
+                                        <div class="avatar avatar-lg me-3 bg-gradient-primary">{{ record.patient.get_initials }}</div>
+                                        {% endif %}
+                                        <div>
+                                            <h6 class="mb-0">{{ record.patient.full_name }}</h6>
+                                            <p class="text-sm text-secondary mb-0">ID: {{ record.patient.patient_id }}</p>
+                                            <p class="text-sm text-secondary mb-0">
+                                                <i class="fas fa-envelope me-1"></i>{{ record.patient.email }}
+                                            </p>
+                                            <p class="text-sm text-secondary mb-0">
+                                                <i class="fas fa-phone me-1"></i>{{ record.patient.phone_number }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="text-sm mb-1"><strong>Gender:</strong> {{ record.patient.get_gender_display }}</p>
+                                            <p class="text-sm mb-1"><strong>Date of Birth:</strong> {{ record.patient.date_of_birth|date:"M d, Y" }}</p>
+                                            <p class="text-sm mb-1"><strong>Age:</strong> {{ record.patient.age }} years</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="text-sm mb-1"><strong>Blood Type:</strong> {{ record.patient.blood_type }}</p>
+                                            <p class="text-sm mb-1"><strong>Emergency Contact:</strong> {{ record.patient.emergency_contact_name }}</p>
+                                            <p class="text-sm mb-1"><strong>Contact Phone:</strong> {{ record.patient.emergency_contact_phone }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header pb-0">
+                                    <h6 class="mb-0">Doctor Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        {% if record.doctor.profile_picture %}
+                                        <img src="{{ record.doctor.profile_picture.url }}" class="avatar avatar-lg me-3" alt="Dr. {{ record.doctor.get_full_name }}">
+                                        {% else %}
+                                        <div class="avatar avatar-lg me-3 bg-gradient-info">{{ record.doctor.get_initials }}</div>
+                                        {% endif %}
+                                        <div>
+                                            <h6 class="mb-0">Dr. {{ record.doctor.get_full_name }}</h6>
+                                            <p class="text-sm text-secondary mb-0">{{ record.doctor.specialization }}</p>
+                                            <p class="text-sm text-secondary mb-0">
+                                                <i class="fas fa-envelope me-1"></i>{{ record.doctor.email }}
+                                            </p>
+                                            <p class="text-sm text-secondary mb-0">
+                                                <i class="fas fa-phone me-1"></i>{{ record.doctor.phone_number }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm mb-1"><strong>Qualification:</strong> {{ record.doctor.qualification }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header pb-0">
+                                    <h6 class="mb-0">Vital Signs</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="card bg-light mb-3">
+                                                <div class="card-body p-3 text-center">
+                                                    <div class="numbers">
+                                                        <p class="text-sm mb-0 text-capitalize font-weight-bold">Temperature</p>
+                                                        <h5 class="font-weight-bolder mb-0">
+                                                            {{ record.temperature }}°C
+                                                        </h5>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card bg-light mb-3">
+                                                <div class="card-body p-3 text-center">
+                                                    <div class="numbers">
+                                                        <p class="text-sm mb-0 text-capitalize font-weight-bold">Blood Pressure</p>
+                                                        <h5 class="font-weight-bolder mb-0">
+                                                            {{ record.blood_pressure }}
+                                                        </h5>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card bg-light mb-3">
+                                                <div class="card-body p-3 text-center">
+                                                    <div class="numbers">
+                                                        <p class="text-sm mb-0 text-capitalize font-weight-bold">Sugar Level</p>
+                                                        <h5 class="font-weight-bolder mb-0">
+                                                            {{ record.sugar_level }}
+                                                        </h5>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card bg-light mb-3">
+                                                <div class="card-body p-3 text-center">
+                                                    <div class="numbers">
+                                                        <p class="text-sm mb-0 text-capitalize font-weight-bold">Weight</p>
+                                                        <h5 class="font-weight-bolder mb-0">
+                                                            {{ record.weight }} kg
+                                                        </h5>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header pb-0">
+                                    <h6 class="mb-0">Clinical Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h6 class="text-sm font-weight-bold">Symptoms</h6>
+                                        <p>{{ record.symptoms|linebreaks }}</p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <h6 class="text-sm font-weight-bold">Diagnosis</h6>
+                                        <p>{{ record.diagnosis|linebreaks }}</p>
+                                    </div>
+                                    <div>
+                                        <h6 class="text-sm font-weight-bold">Blood Test Results</h6>
+                                        <p>{{ record.blood_test_results|linebreaks|default:"No blood test results recorded" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header pb-0">
+                                    <h6 class="mb-0">Treatment & Follow-up</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <h6 class="text-sm font-weight-bold">Treatment Plan</h6>
+                                        <p>{{ record.treatment_plan|linebreaks }}</p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <h6 class="text-sm font-weight-bold">Medications</h6>
+                                        <div class="card bg-light p-3">
+                                            {{ record.prescription|linebreaks }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h6 class="text-sm font-weight-bold">Next Appointment</h6>
+                                        {% if record.follow_up_date %}
+                                        <p>{{ record.follow_up_date|date:"F d, Y" }}</p>
+                                        {% else %}
+                                        <p>No follow-up appointment scheduled</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if record.xray_image %}
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header pb-0">
+                                    <h6 class="mb-0">X-Ray Image</h6>
+                                </div>
+                                <div class="card-body text-center">
+                                    <img src="{{ record.xray_image.url }}" alt="X-Ray Image" class="img-fluid" style="max-height: 400px;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header pb-0">
+                                    <h6 class="mb-0">Additional Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <h6 class="text-sm font-weight-bold">Precautions</h6>
+                                            <p>{{ record.precautions|linebreaks|default:"No precautions recorded" }}</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6 class="text-sm font-weight-bold">Diet</h6>
+                                            <p>{{ record.diet|linebreaks|default:"No diet instructions recorded" }}</p>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6 class="text-sm font-weight-bold">Exercise</h6>
+                                            <p>{{ record.exercise|linebreaks|default:"No exercise instructions recorded" }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header pb-0">
+                                    <h6 class="mb-0">Notes</h6>
+                                </div>
+                                <div class="card-body">
+                                    {{ record.notes|linebreaks|default:"No additional notes" }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

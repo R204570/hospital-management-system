@@ -1,0 +1,148 @@
+{% load static %}
+
+<div class="sidebar-medical">
+    <div class="sidebar-header">
+        <h4><i class="fas fa-notes-medical"></i> Medical Records</h4>
+    </div>
+    
+    <div class="sidebar-menu">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {% if active_menu == 'assigned_patients' %}active{% endif %}" href="{% url 'assigned_patients' %}">
+                    <i class="fas fa-user-injured"></i> Assigned Patients
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if active_menu == 'recent_reports' %}active{% endif %}" href="{% url 'recent_medical_records' %}">
+                    <i class="fas fa-file-medical"></i> Recent Reports
+                </a>
+            </li>
+            {% if request.user.is_doctor %}
+            <li class="nav-item">
+                <a class="nav-link {% if active_menu == 'create_report' %}active{% endif %}" href="{% url 'patient_list' %}">
+                    <i class="fas fa-plus-circle"></i> Create New Report
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    
+    <div class="sidebar-section mt-4">
+        <h5>Tools</h5>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'pdf_reports' %}">
+                    <i class="fas fa-file-pdf"></i> PDF Reports
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'patient_statistics' %}">
+                    <i class="fas fa-chart-bar"></i> Patient Statistics
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    {% if current_patient %}
+    <div class="sidebar-section mt-4">
+        <h5>Current Patient</h5>
+        <div class="patient-card">
+            <div class="d-flex align-items-center mb-2">
+                {% if current_patient.profile_picture %}
+                    <img src="{{ current_patient.profile_picture.url }}" alt="{{ current_patient.full_name }}" class="patient-avatar me-2">
+                {% else %}
+                    <div class="patient-avatar-placeholder me-2">
+                        {{ current_patient.first_name|first }}{{ current_patient.last_name|first }}
+                    </div>
+                {% endif %}
+                <div>
+                    <h6 class="mb-0">{{ current_patient.full_name }}</h6>
+                    <small class="text-muted">{{ current_patient.patient_id }}</small>
+                </div>
+            </div>
+            
+            <div class="patient-actions">
+                <a href="{% url 'patient_detail' pk=current_patient.id %}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-user-circle"></i> Profile
+                </a>
+                <a href="{% url 'create_medical_record' patient_id=current_patient.id %}" class="btn btn-sm btn-outline-success">
+                    <i class="fas fa-file-medical"></i> New Record
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .sidebar-medical {
+        background-color: #f8f9fa;
+        border-right: 1px solid #dee2e6;
+        padding: 1.5rem;
+        height: 100%;
+        min-height: calc(100vh - 56px);
+    }
+    
+    .sidebar-header {
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 1rem;
+    }
+    
+    .sidebar-menu .nav-link {
+        color: #495057;
+        padding: 0.5rem 0;
+    }
+    
+    .sidebar-menu .nav-link:hover {
+        color: #007bff;
+    }
+    
+    .sidebar-menu .nav-link.active {
+        color: #007bff;
+        font-weight: 500;
+    }
+    
+    .sidebar-menu .nav-link i {
+        width: 1.5rem;
+        text-align: center;
+        margin-right: 0.5rem;
+    }
+    
+    .sidebar-section {
+        border-top: 1px solid #dee2e6;
+        padding-top: 1rem;
+    }
+    
+    .patient-card {
+        background-color: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .patient-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .patient-avatar-placeholder {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #007bff;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+    }
+    
+    .patient-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+</style> 

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cancel Leave Request{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Cancel Leave Request
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h5 class="mb-3">Are you sure you want to cancel this leave request?</h5>
+                    
+                    <div class="border p-3 bg-light rounded mb-4">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-3">Date Range:</dt>
+                            <dd class="col-sm-9">
+                                {% if leave_request.start_date == leave_request.end_date %}
+                                    {{ leave_request.start_date }}
+                                {% else %}
+                                    {{ leave_request.start_date }} to {{ leave_request.end_date }}
+                                {% endif %}
+                            </dd>
+                            
+                            <dt class="col-sm-3">Time:</dt>
+                            <dd class="col-sm-9">{{ leave_request.start_time }} - {{ leave_request.end_time }}</dd>
+                            
+                            <dt class="col-sm-3">Reason:</dt>
+                            <dd class="col-sm-9">{{ leave_request.reason }}</dd>
+                            
+                            <dt class="col-sm-3">Submitted:</dt>
+                            <dd class="col-sm-9">{{ leave_request.created_at|date:"M d, Y H:i" }}</dd>
+                        </dl>
+                    </div>
+                    
+                    <p class="text-muted">
+                        Cancelling this request will permanently remove it from the pending requests. 
+                        You can submit a new request if needed.
+                    </p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex">
+                            <button type="submit" class="btn btn-danger me-2">
+                                <i class="fas fa-check me-2"></i> Yes, Cancel Request
+                            </button>
+                            <a href="{% url 'doctor_leave_history' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i> No, Go Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

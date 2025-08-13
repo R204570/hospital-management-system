@@ -1,0 +1,306 @@
+/* Hospital-Friendly Theme Overrides */
+
+/* Primary Healthcare Colors */
+:root {
+    --hospital-primary: #1e88e5;    /* Medical blue */
+    --hospital-secondary: #26a69a;  /* Healthcare teal */
+    --hospital-success: #4caf50;    /* Health green */
+    --hospital-warning: #ff9800;    /* Medical amber */
+    --hospital-danger: #f44336;     /* Medical red */
+    --hospital-light: #f8f9fa;      /* Clean white-gray */
+    --hospital-dark: #37474f;       /* Professional dark gray */
+}
+
+/* Improved Table Headers */
+.table-light {
+    background-color: var(--hospital-light) !important;
+    border-color: #dee2e6 !important;
+}
+
+.table-light th {
+    background-color: var(--hospital-primary) !important;
+    color: white !important;
+    font-weight: 600;
+    border-color: var(--hospital-primary) !important;
+}
+
+/* Card Headers */
+.card-header {
+    background-color: var(--hospital-light) !important;
+    border-bottom: 2px solid var(--hospital-primary) !important;
+}
+
+.card-header h5, .card-header h6 {
+    color: var(--hospital-primary) !important;
+    font-weight: 600;
+}
+
+/* Button Improvements */
+.btn-primary {
+    background-color: var(--hospital-primary) !important;
+    border-color: var(--hospital-primary) !important;
+}
+
+.btn-primary:hover {
+    background-color: #1565c0 !important;
+    border-color: #1565c0 !important;
+}
+
+.btn-outline-primary {
+    color: var(--hospital-primary) !important;
+    border-color: var(--hospital-primary) !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--hospital-primary) !important;
+    border-color: var(--hospital-primary) !important;
+    color: white !important;
+}
+
+.btn-info {
+    background-color: var(--hospital-secondary) !important;
+    border-color: var(--hospital-secondary) !important;
+}
+
+.btn-info:hover {
+    background-color: #00695c !important;
+    border-color: #00695c !important;
+    color: white !important;
+}
+
+/* Outline Button Hover Fixes - More Specific Selectors */
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: var(--hospital-primary) !important;
+    border-color: var(--hospital-primary) !important;
+    color: white !important;
+}
+
+.btn-outline-warning:hover,
+.btn-outline-warning:focus,
+.btn-outline-warning:active {
+    background-color: var(--hospital-warning) !important;
+    border-color: var(--hospital-warning) !important;
+    color: white !important;
+}
+
+.btn-outline-danger:hover,
+.btn-outline-danger:focus,
+.btn-outline-danger:active {
+    background-color: var(--hospital-danger) !important;
+    border-color: var(--hospital-danger) !important;
+    color: white !important;
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus,
+.btn-outline-success:active {
+    background-color: var(--hospital-success) !important;
+    border-color: var(--hospital-success) !important;
+    color: white !important;
+}
+
+.btn-outline-info:hover,
+.btn-outline-info:focus,
+.btn-outline-info:active {
+    background-color: var(--hospital-secondary) !important;
+    border-color: var(--hospital-secondary) !important;
+    color: white !important;
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus,
+.btn-outline-secondary:active {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: white !important;
+}
+
+/* Force text color for all button content including icons */
+.btn-outline-primary:hover *,
+.btn-outline-warning:hover *,
+.btn-outline-danger:hover *,
+.btn-outline-success:hover *,
+.btn-outline-info:hover *,
+.btn-outline-secondary:hover * {
+    color: white !important;
+}
+
+/* Super specific selectors to override Bootstrap */
+.btn-group .btn-outline-primary:hover,
+.btn-group .btn-outline-primary:focus,
+.btn-group .btn-outline-primary:active,
+.btn-group .btn-outline-primary.active {
+    background-color: var(--hospital-primary) !important;
+    border-color: var(--hospital-primary) !important;
+    color: white !important;
+}
+
+.btn-group .btn-outline-warning:hover,
+.btn-group .btn-outline-warning:focus,
+.btn-group .btn-outline-warning:active,
+.btn-group .btn-outline-warning.active {
+    background-color: var(--hospital-warning) !important;
+    border-color: var(--hospital-warning) !important;
+    color: white !important;
+}
+
+/* Even more specific for button group small buttons */
+.btn-group-sm .btn.btn-outline-primary:hover,
+.btn-group-sm .btn.btn-outline-primary:focus,
+.btn-group-sm .btn.btn-outline-primary:active {
+    background-color: var(--hospital-primary) !important;
+    border-color: var(--hospital-primary) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+.btn-group-sm .btn.btn-outline-warning:hover,
+.btn-group-sm .btn.btn-outline-warning:focus,
+.btn-group-sm .btn.btn-outline-warning:active {
+    background-color: var(--hospital-warning) !important;
+    border-color: var(--hospital-warning) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+/* Force for icons and text inside buttons */
+.btn-outline-primary:hover i,
+.btn-outline-warning:hover i,
+.btn-outline-primary:hover span,
+.btn-outline-warning:hover span {
+    color: white !important;
+}
+
+/* Badge Colors */
+.badge.bg-primary {
+    background-color: var(--hospital-primary) !important;
+}
+
+.badge.bg-success {
+    background-color: var(--hospital-success) !important;
+}
+
+.badge.bg-warning {
+    background-color: var(--hospital-warning) !important;
+}
+
+.badge.bg-danger {
+    background-color: var(--hospital-danger) !important;
+}
+
+.badge.bg-info {
+    background-color: var(--hospital-secondary) !important;
+}
+
+/* Alert Improvements */
+.alert-primary {
+    background-color: rgba(30, 136, 229, 0.1) !important;
+    border-color: var(--hospital-primary) !important;
+    color: var(--hospital-primary) !important;
+}
+
+.alert-info {
+    background-color: rgba(38, 166, 154, 0.1) !important;
+    border-color: var(--hospital-secondary) !important;
+    color: var(--hospital-secondary) !important;
+}
+
+/* Navigation Improvements */
+.navbar-brand {
+    color: var(--hospital-primary) !important;
+    font-weight: 700;
+}
+
+/* Form Improvements */
+.form-control:focus {
+    border-color: var(--hospital-primary) !important;
+    box-shadow: 0 0 0 0.2rem rgba(30, 136, 229, 0.25) !important;
+}
+
+.form-select:focus {
+    border-color: var(--hospital-primary) !important;
+    box-shadow: 0 0 0 0.2rem rgba(30, 136, 229, 0.25) !important;
+}
+
+/* Text Colors */
+.text-primary {
+    color: var(--hospital-primary) !important;
+}
+
+.text-info {
+    color: var(--hospital-secondary) !important;
+}
+
+/* Table Row Hover */
+.table-hover tbody tr:hover {
+    background-color: rgba(30, 136, 229, 0.05) !important;
+}
+
+/* Emergency/Priority Styling */
+.emergency-row {
+    background-color: rgba(244, 67, 54, 0.1) !important;
+    border-left: 4px solid var(--hospital-danger) !important;
+}
+
+.priority-row {
+    background-color: rgba(255, 152, 0, 0.1) !important;
+    border-left: 4px solid var(--hospital-warning) !important;
+}
+
+/* Medical Status Indicators */
+.status-critical { color: var(--hospital-danger) !important; font-weight: bold; }
+.status-stable { color: var(--hospital-success) !important; font-weight: bold; }
+.status-observation { color: var(--hospital-warning) !important; font-weight: bold; }
+.status-discharged { color: var(--hospital-secondary) !important; font-weight: bold; }
+
+/* Quick Action Buttons */
+.quick-action {
+    transition: all 0.3s ease;
+    border-radius: 8px !important;
+}
+
+.quick-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Medical Icons */
+.medical-icon {
+    color: var(--hospital-primary);
+    font-size: 1.2em;
+}
+
+/* Patient Cards */
+.patient-card {
+    border-left: 4px solid var(--hospital-primary);
+    transition: all 0.3s ease;
+}
+
+.patient-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+/* Department Colors */
+.dept-emergency { border-left: 4px solid #f44336; }
+.dept-surgery { border-left: 4px solid #9c27b0; }
+.dept-pediatrics { border-left: 4px solid #4caf50; }
+.dept-cardiology { border-left: 4px solid #f44336; }
+.dept-neurology { border-left: 4px solid #3f51b5; }
+.dept-oncology { border-left: 4px solid #607d8b; }
+.dept-orthopedics { border-left: 4px solid #795548; }
+.dept-radiology { border-left: 4px solid #ff9800; }
+
+/* Responsive Improvements */
+@media (max-width: 768px) {
+    .btn-group-sm .btn {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .btn-group-sm .btn i {
+        font-size: 0.9rem;
+    }
+} 

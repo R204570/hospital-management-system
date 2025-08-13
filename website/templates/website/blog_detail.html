@@ -1,0 +1,789 @@
+{% extends 'website/base.html' %}
+{% load static %}
+
+{% block title %}{{ blog_post.title }} - Smart Care Hospital{% endblock %}
+{% block meta_description %}{{ blog_post.meta_description|default:blog_post.excerpt|default:blog_post.content|truncatewords:25 }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Comment Profile Icons */
+.comment-profile-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border: 3px solid #fff;
+}
+
+.comment-profile-icon i {
+    color: #fff !important;
+    font-size: 24px;
+}
+
+/* Author Profile Icon */
+.author-profile-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 5px;
+    vertical-align: middle;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.author-profile-icon i {
+    color: #fff !important;
+    font-size: 12px;
+}
+
+/* Delete Comment Button */
+.delete-comment-btn {
+    opacity: 0.7;
+    transition: opacity 0.2s ease-in-out;
+    border: none;
+    background: none;
+    color: #dc3545;
+    padding: 5px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.delete-comment-btn:hover {
+    opacity: 1;
+    background: rgba(220, 53, 69, 0.1);
+}
+
+/* Minimalistic Delete Modal */
+.delete-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+}
+
+.delete-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 0;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    animation: modalSlideIn 0.3s ease-out;
+    overflow: hidden;
+}
+
+.delete-modal-header {
+    background: #f8f9fa;
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+    text-align: center;
+}
+
+.delete-modal-header h4 {
+    margin: 0;
+    color: #495057;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.delete-modal-body {
+    padding: 24px;
+}
+
+.delete-modal-body p {
+    margin: 0 0 20px 0;
+    color: #6c757d;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.delete-modal-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+    outline: none;
+    margin-bottom: 20px;
+}
+
+.delete-modal-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.delete-modal-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.delete-modal-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.delete-modal-btn.cancel {
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.delete-modal-btn.cancel:hover {
+    background: #e9ecef;
+}
+
+.delete-modal-btn.delete {
+    background: #dc3545;
+    color: white;
+}
+
+.delete-modal-btn.delete:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+}
+
+.delete-modal-btn.delete:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: scale(0.9) translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Blog Meta Styling */
+.blog-meta-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 20px 0;
+    border-bottom: 2px solid #f8f9fa;
+    margin-bottom: 25px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.meta-left, .meta-right {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+
+.author-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: #333;
+}
+
+.author-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #007bff;
+}
+
+.author-name {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.meta-item i {
+    color: #007bff;
+    width: 16px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.meta-right {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.meta-right .meta-item {
+    white-space: nowrap;
+}
+
+/* Blog Meta Responsive */
+@media (max-width: 768px) {
+    .blog-meta-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    .meta-left, .meta-right {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 15px;
+    }
+    
+    .author-info {
+        margin-bottom: 5px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+		<!-- Breadcrumbs -->
+		<div class="breadcrumbs overlay" style="background-image: url('{% static 'img/bread-bg.jpg' %}')">
+			<div class="container">
+				<div class="bread-inner">
+					<div class="row">
+						<div class="col-12">
+							<h2>{{ blog_post.title }}</h2>
+							<ul class="bread-list">
+								<li><a href="{% url 'website:index' %}">Home</a></li>
+								<li><i class="icofont-simple-right"></i></li>
+								<li><a href="{% url 'website:blog' %}">Blog</a></li>
+								<li><i class="icofont-simple-right"></i></li>
+								<li class="active">{{ blog_post.title|truncatechars:30 }}</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- End Breadcrumbs -->
+		
+		<!-- Single News -->
+		<section class="news-single section">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-8 col-12">
+						<div class="row">
+							<div class="col-12">
+								<div class="single-main">
+									<!-- News Head -->
+									<div class="news-head">
+										{% if blog_post.featured_image %}
+											<img src="{{ blog_post.featured_image.url }}" alt="{{ blog_post.title }}">
+										{% else %}
+											<img src="{% static 'img/blog1.jpg' %}" alt="{{ blog_post.title }}">
+										{% endif %}
+									</div>
+									<!-- News Title -->
+									<h1 class="news-title">{{ blog_post.title }}</h1>
+									<!-- Meta -->
+									<div class="blog-meta-container">
+										<div class="meta-left">
+											<span class="author-info">
+												{% if blog_post.author.profile_picture %}
+													<img src="{{ blog_post.author.profile_picture.url }}" alt="Dr. {{ blog_post.author.get_full_name }}" class="author-img">
+												{% else %}
+													<div class="author-profile-icon">
+														<i class="fas fa-user"></i>
+													</div>
+												{% endif %}
+												<span class="author-name">Dr. {{ blog_post.author.get_full_name }}</span>
+											</span>
+											<span class="meta-item">
+												<i class="fa fa-calendar"></i>{{ blog_post.created_at|date:"d M Y" }}
+											</span>
+											<span class="meta-item">
+												<i class="fa fa-tag"></i>{{ blog_post.get_category_display }}
+											</span>
+										</div>
+										<div class="meta-right">
+											<span class="meta-item">
+												<i class="fa fa-eye"></i><strong>{{ blog_post.views_count|default:0 }}</strong> Views
+											</span>
+											<span class="meta-item">
+												<i class="fa fa-clock-o"></i><strong>{{ blog_post.read_time|default:5 }}</strong> min read
+											</span>
+										</div>
+									</div>
+									<!-- News Text -->
+									<div class="news-text">
+										{{ blog_post.content|linebreaks }}
+									</div>
+									
+									<!-- Tags -->
+									{% if blog_post.get_tags_list %}
+									<div class="blog-tags" style="margin: 30px 0;">
+										<h5>Tags:</h5>
+										<ul class="tag" style="display: inline-flex; flex-wrap: wrap; gap: 10px;">
+											{% for tag in blog_post.get_tags_list %}
+											<li><a href="{% url 'website:blog' %}?search={{ tag }}">{{ tag }}</a></li>
+											{% endfor %}
+										</ul>
+									</div>
+									{% endif %}
+									
+
+								</div>
+							</div>
+							
+							<!-- Related Blogs -->
+							{% if related_blogs %}
+							<div class="col-12">
+								<div style="margin: 40px 0;">
+									<h3>More from Dr. {{ blog_post.author.get_full_name }}</h3>
+									<div class="row">
+										{% for related in related_blogs %}
+										<div class="col-lg-4 col-md-6 col-12">
+											<div class="single-news">
+												<div class="news-head">
+													{% if related.featured_image %}
+														<img src="{{ related.featured_image.url }}" alt="{{ related.title }}">
+													{% else %}
+														<img src="{% static 'img/blog1.jpg' %}" alt="{{ related.title }}">
+													{% endif %}
+												</div>
+												<div class="news-body">
+													<div class="news-content">
+														<div class="date">{{ related.created_at|date:"d M, Y" }}</div>
+														<h2><a href="{% url 'website:blog_detail' related.slug %}">{{ related.title|truncatechars:40 }}</a></h2>
+														<p class="text">{{ related.excerpt|default:related.content|truncatewords:15 }}</p>
+													</div>
+												</div>
+											</div>
+										</div>
+										{% endfor %}
+									</div>
+								</div>
+							</div>
+							{% endif %}
+							
+							<div class="col-12">
+								<div class="blog-comments">
+									<h2>All Comments ({{ comments.count }})</h2>
+									<div class="comments-body">
+										{% for comment in comments %}
+										<!-- Single Comments -->
+										<div class="single-comments" id="comment-{{ comment.id }}">
+											<div class="main">
+												<div class="head">
+													<div class="comment-profile-icon">
+														<i class="fas fa-user"></i>
+													</div>
+												</div>
+												<div class="body">
+													<div style="display: flex; justify-content: space-between; align-items: flex-start;">
+														<div style="flex: 1;">
+															<h4>{{ comment.name }}</h4>
+															<div class="comment-meta">
+																<span class="meta"><i class="fa fa-calendar"></i>{{ comment.created_at|date:"M d, Y" }}</span>
+																<span class="meta"><i class="fa fa-clock-o"></i>{{ comment.created_at|date:"h:i A" }}</span>
+															</div>
+														</div>
+														<div style="margin-left: 10px;">
+															<button class="delete-comment-btn" 
+																	data-comment-id="{{ comment.id }}" 
+																	data-comment-email="{{ comment.email }}"
+																	title="Delete this comment">
+																<i class="fa fa-trash"></i>
+															</button>
+														</div>
+													</div>
+													<p style="margin-top: 10px;">{{ comment.comment }}</p>
+												</div>
+											</div>
+										</div>		
+										<!--/ End Single Comments -->
+										{% empty %}
+										<p>No comments yet. Be the first to comment!</p>
+										{% endfor %}
+									</div>
+								</div>
+							</div>
+							<div class="col-12">
+								<div class="comments-form">
+									<h2>Leave Comments</h2>
+									<!-- Contact Form -->
+									<form class="form" id="commentForm" method="post">
+										{% csrf_token %}
+										<div class="row">
+											<div class="col-lg-4 col-md-4 col-12">
+												<div class="form-group">
+													<i class="fa fa-user"></i>
+													{{ comment_form.name }}
+												</div>
+											</div>
+											<div class="col-lg-4 col-md-4 col-12">
+												<div class="form-group">
+													<i class="fa fa-envelope"></i>
+													{{ comment_form.email }}
+												</div>
+											</div>
+											<div class="col-lg-4 col-md-4 col-12">
+												<div class="form-group">
+													<i class="fa fa-globe"></i>
+													{{ comment_form.website }}
+												</div>
+											</div>
+											<div class="col-12">
+												<div class="form-group message">
+													<i class="fa fa-pencil"></i>
+													{{ comment_form.comment }}
+												</div>
+											</div>
+											<div class="col-12">
+												<div class="form-group button">	
+													<button type="submit" class="btn primary"><i class="fa fa-send"></i>Submit Comment</button>
+												</div>
+											</div>
+										</div>
+									</form>
+									<!--/ End Contact Form -->
+									<div id="commentResult" style="display: none;"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="col-lg-4 col-12">
+						<div class="main-sidebar">
+							
+							<!-- Follow Dr. Section - Minimalistic -->
+							<div class="single-widget" style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+								<div style="text-align: center;">
+									<h4 style="color: #007bff; margin-bottom: 10px;">📩 Follow Dr. {{ blog_post.author.get_full_name }}</h4>
+									<p style="font-size: 14px; color: #666; margin-bottom: 15px;">Get notified about new posts</p>
+									<form id="followForm" method="post" style="margin-bottom: 0;">
+										{% csrf_token %}
+										<input type="hidden" name="subscribe" value="1">
+										<div style="margin-bottom: 10px;">
+											<input type="email" name="email" placeholder="Enter your email" required 
+												   style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+										</div>
+										<button type="submit" style="background: #007bff; color: white; padding: 8px 16px; border: none; border-radius: 5px; width: 100%; font-size: 14px; cursor: pointer;">
+											Follow
+										</button>
+									</form>
+									<div id="followResult" style="margin-top: 10px; display: none;"></div>
+								</div>
+							</div>
+							
+							<!-- Search Widget -->
+							<div class="single-widget search">
+								<div class="form">
+									<form method="GET" action="{% url 'website:blog' %}">
+										<input type="text" name="search" placeholder="Search Here...">
+										<button type="submit" class="button"><i class="fa fa-search"></i></button>
+									</form>
+								</div>
+							</div>
+							<!--/ End Search Form -->
+						
+							<!-- Categories -->
+							<div class="single-widget category">
+								<h3 class="title">Blog Categories</h3>
+								<ul class="categor-list">
+									<li><a href="{% url 'website:blog' %}">All Categories</a></li>
+									{% for choice in blog_post.CATEGORY_CHOICES %}
+									<li><a href="{% url 'website:blog' %}?category={{ choice.0 }}">{{ choice.1 }}</a></li>
+									{% endfor %}
+								</ul>
+							</div>
+							<!--/ End Categories -->
+							
+							<!-- Recent Posts -->
+							<div class="single-widget recent-post">
+								<h3 class="title">Recent Post</h3>
+								{% for recent_blog in recent_blogs %}
+								<!-- Single Post -->
+								<div class="single-post">
+									<div class="image">
+										{% if recent_blog.featured_image %}
+											<img src="{{ recent_blog.featured_image.url }}" alt="{{ recent_blog.title }}">
+										{% else %}
+											<img src="{% static 'img/blog-sidebar1.jpg' %}" alt="{{ recent_blog.title }}">
+										{% endif %}
+									</div>
+									<div class="content">
+										<h5><a href="{% url 'website:blog_detail' recent_blog.slug %}">{{ recent_blog.title|truncatechars:50 }}</a></h5>
+										<ul class="comment">
+											<li><i class="fa fa-calendar" aria-hidden="true"></i>{{ recent_blog.created_at|date:"M d, Y" }}</li>
+											<li><i class="fa fa-user" aria-hidden="true"></i>Dr. {{ recent_blog.author.get_full_name }}</li>
+										</ul>
+									</div>
+								</div>
+								<!-- End Single Post -->
+								{% empty %}
+								<p>No recent posts available.</p>
+								{% endfor %}
+							</div>
+							<!--/ End Recent Posts -->
+							
+							<!-- Side Tags -->
+							<div class="single-widget side-tags">
+								<h3 class="title">Tags</h3>
+								<ul class="tag">
+									<li><a href="#">Health</a></li>
+									<li><a href="#">Medical</a></li>
+									<li><a href="#">Doctor</a></li>
+									<li><a href="#">Treatment</a></li>
+									<li><a href="#">Healthcare</a></li>
+									<li><a href="#">Medicine</a></li>
+									<li><a href="#">Research</a></li>
+									<li><a href="#">Wellness</a></li>
+								</ul>
+							</div>
+							<!--/ End Side Tags -->
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<!--/ End Single News -->
+		
+		<!-- Minimalistic Delete Modal -->
+		<div class="delete-modal-overlay" id="deleteModal">
+			<div class="delete-modal">
+				<div class="delete-modal-header">
+					<h4>🗑️ Delete Comment</h4>
+				</div>
+				<div class="delete-modal-body">
+					<p>To delete this comment, please enter your email address to verify ownership:</p>
+					<input type="email" class="delete-modal-input" id="verifyEmail" placeholder="Enter your email">
+					<div class="delete-modal-actions">
+						<button class="delete-modal-btn cancel" id="cancelDelete">Cancel</button>
+						<button class="delete-modal-btn delete" id="confirmDelete" disabled>Delete</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- AJAX Scripts -->
+		<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+		<script>
+		$(document).ready(function() {
+			// Handle follow form submission
+			$('#followForm').on('submit', function(e) {
+				e.preventDefault();
+				
+				var formData = $(this).serialize();
+				var $button = $(this).find('button[type="submit"]');
+				var originalText = $button.text();
+				
+				// Show loading state
+				$button.text('Following...').prop('disabled', true);
+				
+				$.ajax({
+					url: '{% url "website:blog_detail" blog_post.slug %}',
+					type: 'POST',
+					data: formData,
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest'
+					},
+					success: function(response) {
+						if (response.success) {
+							$('#followResult').html('<div style="color: #28a745; font-size: 12px; padding: 5px;">✓ ' + response.message + '</div>').show();
+							$('#followForm')[0].reset();
+							setTimeout(function() {
+								$('#followResult').fadeOut();
+							}, 3000);
+						} else {
+							$('#followResult').html('<div style="color: #dc3545; font-size: 12px; padding: 5px;">❌ ' + response.message + '</div>').show();
+						}
+					},
+					error: function() {
+						$('#followResult').html('<div style="color: #dc3545; font-size: 12px; padding: 5px;">❌ Error occurred. Please try again.</div>').show();
+					},
+					complete: function() {
+						$button.text(originalText).prop('disabled', false);
+					}
+				});
+			});
+			
+			// Handle comment form submission
+			$('#commentForm').on('submit', function(e) {
+				e.preventDefault();
+				
+				var formData = $(this).serialize();
+				var $button = $(this).find('button[type="submit"]');
+				var originalText = $button.html();
+				
+				// Show loading state
+				$button.html('<i class="fa fa-spinner fa-spin"></i> Submitting...').prop('disabled', true);
+				
+				$.ajax({
+					url: '{% url "website:blog_detail" blog_post.slug %}',
+					type: 'POST',
+					data: formData,
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest'
+					},
+					success: function(response) {
+						if (response.success) {
+							$('#commentResult').html('<div style="color: #28a745; padding: 10px; background: #d4edda; border-radius: 5px; margin-top: 15px;">✓ ' + response.message + '</div>').show();
+							$('#commentForm')[0].reset();
+							
+							// Reload the page to show the new comment
+							setTimeout(function() {
+								location.reload();
+							}, 1500);
+						} else {
+							$('#commentResult').html('<div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 5px; margin-top: 15px;">❌ ' + response.message + '</div>').show();
+						}
+					},
+					error: function() {
+						$('#commentResult').html('<div style="color: #dc3545; padding: 10px; background: #f8d7da; border-radius: 5px; margin-top: 15px;">❌ Error occurred. Please check your input and try again.</div>').show();
+					},
+					complete: function() {
+						$button.html(originalText).prop('disabled', false);
+					}
+				});
+			});
+			
+			// Global variables for delete modal
+			window.currentCommentId = null;
+			window.currentCommentEmail = null;
+			
+			// Handle delete comment button clicks
+			$('.delete-comment-btn').on('click', function(e) {
+				e.preventDefault();
+				
+				window.currentCommentId = $(this).data('comment-id');
+				window.currentCommentEmail = $(this).data('comment-email');
+				
+				// Show the modal
+				$('#deleteModal').css('display', 'flex');
+				$('#verifyEmail').val('').focus();
+				$('#confirmDelete').prop('disabled', true);
+			});
+			
+			// Email input validation
+			$('#verifyEmail').on('input', function() {
+				var enteredEmail = $(this).val().trim().toLowerCase();
+				var commentEmail = window.currentCommentEmail.toLowerCase();
+				
+				if (enteredEmail === commentEmail) {
+					$('#confirmDelete').prop('disabled', false);
+				} else {
+					$('#confirmDelete').prop('disabled', true);
+				}
+			});
+			
+			// Handle cancel delete
+			$('#cancelDelete').on('click', function() {
+				closeDeleteModal();
+			});
+			
+			// Handle confirm delete
+			$('#confirmDelete').on('click', function() {
+				var $button = $(this);
+				var originalText = $button.text();
+				
+				// Show loading state
+				$button.html('<i class="fa fa-spinner fa-spin"></i>').prop('disabled', true);
+				
+				$.ajax({
+					url: '{% url "website:delete_comment" 0 %}'.replace('0', window.currentCommentId),
+					type: 'POST',
+					data: {
+						'email': $('#verifyEmail').val(),
+						'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+					},
+					headers: {
+						'X-Requested-With': 'XMLHttpRequest'
+					},
+					success: function(response) {
+						if (response.success) {
+							// Close modal
+							closeDeleteModal();
+							
+							// Remove the comment from the page with a fade effect
+							$('#comment-' + window.currentCommentId).fadeOut(500, function() {
+								$(this).remove();
+								
+								// Check if there are no comments left
+								if ($('.single-comments').length === 0) {
+									$('.comments-body').html('<p>No comments yet. Be the first to comment!</p>');
+								}
+							});
+							
+							// Show success message
+							var successMsg = $('<div style="color: #28a745; padding: 10px; background: #d4edda; border-radius: 5px; margin: 10px 0;">✓ ' + response.message + '</div>');
+							$('.blog-comments h2').after(successMsg);
+							setTimeout(function() {
+								successMsg.fadeOut();
+							}, 3000);
+						} else {
+							alert('Error: ' + response.message);
+							closeDeleteModal();
+						}
+					},
+					error: function() {
+						alert('An error occurred while deleting the comment. Please try again.');
+						closeDeleteModal();
+					},
+					complete: function() {
+						$button.text(originalText).prop('disabled', false);
+					}
+				});
+			});
+			
+			// Close modal when clicking outside
+			$('#deleteModal').on('click', function(e) {
+				if (e.target === this) {
+					closeDeleteModal();
+				}
+			});
+			
+			// Close modal with Escape key
+			$(document).on('keydown', function(e) {
+				if (e.key === 'Escape' && $('#deleteModal').is(':visible')) {
+					closeDeleteModal();
+				}
+			});
+		});
+		
+		// Close delete modal function
+		function closeDeleteModal() {
+			$('#deleteModal').hide();
+			$('#verifyEmail').val('');
+			$('#confirmDelete').prop('disabled', true);
+			window.currentCommentId = null;
+			window.currentCommentEmail = null;
+		}
+		</script>
+{% endblock %} 

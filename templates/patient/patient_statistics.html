@@ -1,0 +1,377 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Patient Statistics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        border-radius: 10px;
+        transition: transform 0.3s;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .chart-container {
+        height: 300px;
+        max-width: 100%;
+    }
+    .key-indicator {
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+    }
+    .indicator-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+    .indicator-title {
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+    .indicator-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 p-0">
+            {% include 'patient/medical_sidebar.html' %}
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-md-9 col-lg-10 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Patient Statistics</h2>
+                <div>
+                    <select class="form-select form-select-sm" id="time-range">
+                        <option value="7">Last 7 Days</option>
+                        <option value="30" selected>Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="365">Last Year</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Key Indicators -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="key-indicator bg-primary bg-opacity-10">
+                        <i class="fas fa-users indicator-icon text-primary"></i>
+                        <div class="indicator-title">Total Patients</div>
+                        <div class="indicator-value">{{ total_patients }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="key-indicator bg-success bg-opacity-10">
+                        <i class="fas fa-file-medical indicator-icon text-success"></i>
+                        <div class="indicator-title">Records Created</div>
+                        <div class="indicator-value">{{ total_records }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="key-indicator bg-info bg-opacity-10">
+                        <i class="fas fa-calendar-check indicator-icon text-info"></i>
+                        <div class="indicator-title">Recent Appointments</div>
+                        <div class="indicator-value">{{ recent_appointments }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="key-indicator bg-warning bg-opacity-10">
+                        <i class="fas fa-heartbeat indicator-icon text-warning"></i>
+                        <div class="indicator-title">Critical Cases</div>
+                        <div class="indicator-value">{{ critical_cases|default:"0" }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts Row 1 -->
+            <div class="row mb-4">
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0">Records by Day</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="recordsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0">Patient Age Distribution</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="ageDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts Row 2 -->
+            <div class="row mb-4">
+                <div class="col-md-8 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0">Common Diagnoses</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="diagnosesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h5 class="mb-0">Patient Gender</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="genderChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Patients -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Patients</h5>
+                    <a href="{% url 'assigned_patients' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Age</th>
+                                    <th>Last Visit</th>
+                                    <th>Status</th>
+                                    <th>Records</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for patient in recent_patients %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm me-2">
+                                                {% if patient.profile_picture %}
+                                                <img src="{{ patient.profile_picture.url }}" alt="{{ patient.full_name }}" class="rounded-circle" width="40">
+                                                {% else %}
+                                                <div class="avatar-circle bg-primary text-white">
+                                                    {{ patient.full_name|slice:":1" }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">{{ patient.full_name }}</div>
+                                                <small class="text-muted">{{ patient.patient_id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ patient.age }}</td>
+                                    <td>{{ patient.last_visit|date:"M d, Y" }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ patient.status_color }}">{{ patient.status }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="#" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-folder"></i> {{ patient.records_count }}
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-3">No recent patients found</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sample data - in production this would come from the context
+        const recordDates = {{ record_dates|safe|default:"['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul']" }};
+        const recordCounts = {{ record_counts|safe|default:"[12, 19, 3, 5, 2, 3, 9]" }};
+        
+        const ageRanges = {{ age_ranges|safe|default:"['0-18', '19-30', '31-45', '46-60', '61+']" }};
+        const ageDistribution = {{ age_distribution|safe|default:"[15, 25, 30, 20, 10]" }};
+        
+        const commonDiagnoses = {{ common_diagnoses|safe|default:"['Hypertension', 'Diabetes', 'Asthma', 'Common Cold', 'Anxiety']" }};
+        const diagnosisCounts = {{ diagnosis_counts|safe|default:"[30, 25, 20, 15, 10]" }};
+        
+        const genderLabels = {{ gender_labels|safe|default:"['Male', 'Female', 'Other']" }};
+        const genderData = {{ gender_data|safe|default:"[45, 55, 0]" }};
+        
+        // Records by day chart
+        const recordsCtx = document.getElementById('recordsChart').getContext('2d');
+        new Chart(recordsCtx, {
+            type: 'line',
+            data: {
+                labels: recordDates,
+                datasets: [{
+                    label: 'Medical Records',
+                    data: recordCounts,
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            drawBorder: false
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Age distribution chart
+        const ageCtx = document.getElementById('ageDistributionChart').getContext('2d');
+        new Chart(ageCtx, {
+            type: 'bar',
+            data: {
+                labels: ageRanges,
+                datasets: [{
+                    label: 'Patients',
+                    data: ageDistribution,
+                    backgroundColor: [
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(201, 203, 207, 0.7)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Common diagnoses chart
+        const diagnosesCtx = document.getElementById('diagnosesChart').getContext('2d');
+        new Chart(diagnosesCtx, {
+            type: 'bar',
+            data: {
+                labels: commonDiagnoses,
+                datasets: [{
+                    label: 'Occurrences',
+                    data: diagnosisCounts,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Gender chart
+        const genderCtx = document.getElementById('genderChart').getContext('2d');
+        new Chart(genderCtx, {
+            type: 'doughnut',
+            data: {
+                labels: genderLabels,
+                datasets: [{
+                    data: genderData,
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(255, 206, 86, 0.7)'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+        
+        // Time range selector
+        document.getElementById('time-range').addEventListener('change', function() {
+            alert(`Changing time range to ${this.value} days. This would refresh the data in a real implementation.`);
+        });
+    });
+</script>
+{% endblock %} 

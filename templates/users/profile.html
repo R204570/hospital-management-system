@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}User Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* View mode styling */
+    .view-mode .form-control {
+        background-color: #f8f9fa;
+        pointer-events: none;
+    }
+    
+    .view-mode .form-select {
+        background-color: #f8f9fa;
+        pointer-events: none;
+    }
+    
+    .view-mode .form-check-input {
+        pointer-events: none;
+    }
+    
+    /* Cropper modal styling */
+    #cropperModal .modal-dialog {
+        max-width: 600px;
+    }
+    
+    #cropperCanvas {
+        display: block;
+        max-width: 100%;
+        max-height: 500px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">User Profile</h4>
+                    <div>
+                        {% if not edit_mode %}
+                        <a href="{% url 'profile' %}?edit=true" class="btn btn-light btn-sm">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                    <div class="messages">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" enctype="multipart/form-data" id="profileForm" class="{% if not edit_mode %}view-mode{% endif %}">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-4 text-center">
+                                <!-- Profile Picture Display -->
+                                <div class="mb-3">
+                                    {% if user.profile_picture %}
+                                        <img src="{{ user.profile_picture.url }}?timestamp={{ user.pk }}" alt="Profile Picture" class="img-fluid rounded-circle" style="width: 160px; height: 160px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-light rounded-circle d-flex justify-content-center align-items-center mx-auto" style="width: 160px; height: 160px;">
+                                            <i class="fas fa-user fa-5x text-secondary"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if edit_mode %}
+                                <!-- Profile picture controls -->
+                                <div class="mb-3">
+                                    <label for="{{ form.profile_picture.id_for_label }}" class="form-label">Profile Picture</label>
+                                    <input type="file" name="profile_picture" accept="image/*" class="form-control" id="{{ form.profile_picture.id_for_label }}">
+                                    <input type="hidden" name="cropped_data" id="cropped_data">
+                                    <div class="form-text">Upload a new profile picture</div>
+                                        </div>
+                                
+                                {% if user.profile_picture %}
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="profile_picture-clear" id="id_profile_picture-clear">
+                                        <label class="form-check-label" for="id_profile_picture-clear">
+                                            Clear current picture
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {{ form.first_name|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form.last_name|as_crispy_field }}
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {{ form.username|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form.email|as_crispy_field }}
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {{ form.phone_number|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form.address|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <!-- Role-specific fields -->
+                                {% if is_doctor %}
+                                <h5 class="mt-4 mb-3">Doctor Information</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {{ form.specialization|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form.doctor_license_number|as_crispy_field }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if is_nurse %}
+                                <h5 class="mt-4 mb-3">Nurse Information</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {{ form.nurse_license_number|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form.nursing_specialty|as_crispy_field }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if is_pharmacist %}
+                                <h5 class="mt-4 mb-3">Pharmacist Information</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {{ form.pharmacist_license_number|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form.pharmacy_certification|as_crispy_field }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Professional Information -->
+                                <h5 class="mt-4 mb-3">Professional Information</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {{ form.qualification|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ form.years_of_experience|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-12 text-end">
+                                {% if edit_mode %}
+                                <a href="{% url 'profile' %}" class="btn btn-secondary me-2">Cancel</a>
+                                <button type="submit" class="btn btn-primary">Update Profile</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cropper Modal -->
+<div class="modal fade" id="cropperModal" tabindex="-1" role="dialog" aria-labelledby="cropperModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cropperModalLabel">Crop Profile Picture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <img id="cropperCanvas" src="" alt="Profile picture to crop">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="cropImage">Crop and Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Disable form inputs in view mode
+    const profileForm = document.getElementById('profileForm');
+    if (profileForm && profileForm.classList.contains('view-mode')) {
+        document.querySelectorAll('#profileForm input, #profileForm select, #profileForm textarea').forEach(function(input) {
+            input.disabled = true;
+        });
+    }
+    
+    // Profile picture cropping functionality
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+        let cropper;
+        const cropperModal = new bootstrap.Modal(document.getElementById('cropperModal'));
+        const cropperCanvas = document.getElementById('cropperCanvas');
+        
+        // Handle file selection
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    // Show the cropper modal with the selected image
+                    cropperCanvas.src = event.target.result;
+                    cropperModal.show();
+                    
+                    // Initialize cropper when modal is shown
+                    document.getElementById('cropperModal').addEventListener('shown.bs.modal', function() {
+                        // Destroy previous cropper if exists
+                        if (cropper) {
+                            cropper.destroy();
+                        }
+                        
+                        // Initialize new cropper
+                        cropper = new Cropper(cropperCanvas, {
+                            aspectRatio: 1, // 1:1 ratio for profile picture
+                            viewMode: 1,    // Restrict the crop box not to exceed the size of the canvas
+                            guides: true,   // Show guides
+                            center: true,   // Show center indicator
+                            highlight: true, // Show dashed lines around the crop box
+                            cropBoxMovable: true,
+                            cropBoxResizable: true,
+                            toggleDragModeOnDblclick: true
+                        });
+                    });
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+        
+        // Handle crop button click
+        document.getElementById('cropImage').addEventListener('click', function() {
+            if (cropper) {
+                // Get the cropped canvas data
+                const canvas = cropper.getCroppedCanvas({
+                    width: 300,
+                    height: 300,
+                    fillColor: '#fff',
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high',
+                });
+                
+                if (canvas) {
+                    // Convert canvas to base64 string
+                    const croppedData = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    // Store the cropped data in the hidden input
+                    document.getElementById('cropped_data').value = croppedData;
+                    
+                    // Update the preview image (if needed)
+                    const previewImg = document.querySelector('.img-fluid.rounded-circle');
+                    if (previewImg) {
+                        previewImg.src = croppedData;
+                    }
+                    
+                    // Close the modal
+                    cropperModal.hide();
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

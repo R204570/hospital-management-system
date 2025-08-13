@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>
+                <i class="fas fa-users text-primary me-2"></i>
+                User Management
+            </h2>
+            <p class="text-muted">Manage all users in the system</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'create_user' %}" class="btn btn-primary">
+                <i class="fas fa-user-plus me-2"></i> Add New User
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Search & Filter</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <label for="searchInput" class="form-label">Search</label>
+                    <input type="text" name="search" class="form-control" id="searchInput" 
+                           placeholder="Search by name, username, email..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="roleFilter" class="form-label">Filter by Role</label>
+                    <select name="role" id="roleFilter" class="form-select">
+                        <option value="">All Roles</option>
+                        {% for role_code, role_name in role_choices %}
+                            <option value="{{ role_code }}" {% if role_filter == role_code %}selected{% endif %}>
+                                {{ role_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Users</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if users %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if user.profile_picture %}
+                                                <img src="{{ user.get_profile_picture_url }}" alt="Profile" 
+                                                     class="rounded-circle me-2" width="40" height="40">
+                                            {% else %}
+                                                <div class="bg-light rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-user text-secondary"></i>
+                                                </div>
+                                            {% endif %}
+                                            {{ user.get_full_name }}
+                                        </div>
+                                    </td>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        {% if user.role == 'ADMIN' %}
+                                            <span class="badge bg-dark">Administrator</span>
+                                        {% elif user.role == 'DOCTOR' %}
+                                            <span class="badge bg-primary">Doctor</span>
+                                        {% elif user.role == 'NURSE' %}
+                                            <span class="badge bg-success">Nurse</span>
+                                        {% elif user.role == 'RECEPTIONIST' %}
+                                            <span class="badge bg-info">Receptionist</span>
+                                        {% elif user.role == 'PHARMACIST' %}
+                                            <span class="badge bg-warning">Pharmacist</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ user.get_role_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'update_user' user.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info m-3">
+                    <i class="fas fa-info-circle me-2"></i> No users found matching your search criteria
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

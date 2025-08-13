@@ -1,0 +1,796 @@
+{% load static %}
+<!doctype html>
+<html class="no-js" lang="en">
+    <head>
+        <!-- Meta Tags -->
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="keywords" content="Site keywords here">
+		<meta name="description" content="">
+		<meta name='copyright' content=''>
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		
+		<!-- Title -->
+        <title>Smart Care</title>
+		
+		<!-- Favicon -->
+        <link rel="icon" href="{% static 'img/favicon.png' %}">
+		
+		<!-- Google Fonts -->
+		<link href="https://fonts.googleapis.com/css?family=Poppins:200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i&display=swap" rel="stylesheet">
+
+		<!-- Bootstrap CSS -->
+		<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+		<!-- Nice Select CSS -->
+		<link rel="stylesheet" href="{% static 'css/nice-select.css' %}">
+		<!-- Font Awesome CSS -->
+        <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+		<!-- icofont CSS -->
+        <link rel="stylesheet" href="{% static 'css/icofont.css' %}">
+		<!-- Slicknav -->
+		<link rel="stylesheet" href="{% static 'css/slicknav.min.css' %}">
+		<!-- Owl Carousel CSS -->
+        <link rel="stylesheet" href="{% static 'css/owl-carousel.css' %}">
+		<!-- Datepicker CSS -->
+		<link rel="stylesheet" href="{% static 'css/datepicker.css' %}">
+		<!-- Animate CSS -->
+        <link rel="stylesheet" href="{% static 'css/animate.min.css' %}">
+		<!-- Magnific Popup CSS -->
+        <link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+		
+		<!-- Medipro CSS -->
+        <link rel="stylesheet" href="{% static 'css/normalize.css' %}">
+        <link rel="stylesheet" href="{% static 'style.css' %}">
+        <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+		
+		<!-- Mobile Header Login CSS -->
+		<style>
+			.mobile-header-login {
+				display: none;
+				position: fixed;
+				top: 5px;
+				right: 20px;
+				z-index: 999;
+				transition: top 0.3s ease, right 0.3s ease;
+			}
+			
+			.mobile-header-login.scrolled {
+				top: 138px;
+				right: 45px;
+			}
+			
+			.mobile-header-login .btn {
+				background: #1d1e1e !important;
+				color: #fcfcfc !important;
+				padding: 8px 15px;
+				border-radius: 5px;
+				font-size: 12px;
+				font-weight: 500;
+				text-transform: uppercase;
+				border: 2px solid #1A76D1;
+				transition: all 0.3s ease;
+			}
+			
+			.mobile-header-login .btn:hover {
+				background: transparent !important;
+				color: #d5d8db !important;
+				border-color: #1A76D1;
+			}
+			
+			@media (max-width: 991px) {
+				.mobile-header-login {
+					display: block !important;
+				}
+			}
+			
+			@media (min-width: 992px) {
+				.mobile-header-login {
+					display: none !important;
+				}
+			}
+			
+			@media (max-width: 480px) {
+				.mobile-header-login .btn {
+					padding: 6px 10px;
+					font-size: 11px;
+				}
+			}
+		</style>
+		<script>
+			window.addEventListener('scroll', function () {
+				const loginBtn = document.querySelector('.mobile-header-login');
+				
+				if (!loginBtn) return;
+				
+				// Make sure it's only applied on mobile
+				if (window.innerWidth <= 991) {
+					if (window.scrollY > 50) {
+						loginBtn.classList.add('scrolled');
+					} else {
+						loginBtn.classList.remove('scrolled');
+					}
+				} else {
+					loginBtn.classList.remove('scrolled'); // Safety cleanup on resize
+				}
+			});
+		</script>
+		
+    </head>
+    <body>
+	
+		<!-- Preloader -->
+        <div class="preloader">
+            <div class="loader">
+                <div class="loader-outter"></div>
+                <div class="loader-inner"></div>
+                <div class="indicator"> 
+                    <svg width="16px" height="12px">
+                        <polyline id="back" points="1 6 4 6 6 11 10 1 12 6 15 6"></polyline>
+                        <polyline id="front" points="1 6 4 6 6 11 10 1 12 6 15 6"></polyline>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <!-- End Preloader -->
+		
+		<!-- Header Area -->
+		<header class="header" >
+			<!-- Topbar -->
+			<div class="topbar">
+				<div class="container">
+					<div class="row">
+						<div class="col-lg-6 col-md-5 col-12">
+							<!-- Contact -->
+							<ul class="top-link">
+								<li><a href="{% url 'website:about' %}">About</a></li>
+								<li><a href="{% url 'website:doctors' %}">Doctors</a></li>
+								<li><a href="{% url 'website:contact' %}">Contact</a></li>
+								<li><a href="#">FAQ</a></li>
+							</ul>
+							<!-- End Contact -->
+						</div>
+						<div class="col-lg-6 col-md-7 col-12">
+							<!-- Top Contact -->
+							<ul class="top-contact">
+								<li><i class="fa fa-phone"></i>+91 1234 56789</li>
+								<li><i class="fa fa-envelope"></i>support@smartcare.com</li>
+							</ul>
+							<!-- End Top Contact -->
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- End Topbar -->
+			<!-- Header Inner -->
+			<div class="header-inner">
+				<div class="container">
+					<div class="inner">
+						<div class="row">
+							<div class="col-lg-3 col-md-3 col-12">
+								<!-- Start Logo -->
+								<div class="logo" style="margin-top:0px;">
+									<a href="{% url 'website:index' %}"><img src="{% static 'img/logo.png' %}" alt="#"></a>
+								</div>
+								<!-- End Logo -->
+								<!-- Mobile Login Button -->
+								<div class="mobile-header-login">
+									<a href="/users/" class="btn">LOGIN</a>
+								</div>
+								<!-- Mobile Nav -->
+								<div class="mobile-nav"></div>
+								<!-- End Mobile Nav -->
+							</div>
+							<div class="col-lg-7 col-md-9 col-12">
+								<!-- Main Menu -->
+								<div class="main-menu">
+									<nav class="navigation">
+										<ul class="nav menu">
+											<li class="active"><a href="{% url 'website:index' %}">Home </a></li>
+											<li><a href="{% url 'website:doctors' %}">Doctors </a></li>
+											<li><a href="{% url 'website:service' %}">Services </a></li>
+											<li><a href="{% url 'website:about' %}">About Us </a></li>
+											<li><a href="{% url 'website:blog' %}">Blogs </a></li>
+											<li><a href="{% url 'website:contact' %}">Contact Us</a></li>
+										</ul>
+									</nav>
+								</div>
+								<!--/ End Main Menu -->
+							</div>
+							<div class="col-lg-2 col-12">
+								<div class="get-quote">
+									<a href="/users/" class="btn">LOGIN</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--/ End Header Inner -->
+		</header>
+		<!-- End Header Area -->
+		
+		<!-- Slider Area -->
+		<section class="slider">
+			<div class="hero-slider">
+				<!-- Start Single Slider -->
+				<div class="single-slider" style="background-image:url('{% static 'img/slider2.jpg' %}')">
+					<div class="container">
+						<div class="row">
+							<div class="col-lg-7">
+								<div class="text">
+									<h1>We Provide <span>Medical</span> Services That You Can <span>Trust!</span></h1>
+									<p>Smart Care Hospital sets itself apart with a remarkable patient-centric approach. The hospital prioritizes creating an atmosphere where patients feel not just treated, but truly cared for </p>
+									<div class="button">
+										<a href="{% url 'website:appointment_inquiry' %}" class="btn">Book Appointment</a>
+										<a href="{% url 'website:about' %}" class="btn primary">Learn More</a>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- End Single Slider -->
+				<!-- Start Single Slider -->
+				<div class="single-slider" style="background-image:url('{% static 'img/slider.jpg' %}')">
+					<div class="container">
+						<div class="row">
+							<div class="col-lg-7">
+								<div class="text">
+									<h1>We Provide <span>Medical</span> Services That You Can <span>Trust!</span></h1>
+									<p>Smart Care Hospital sets itself apart with a remarkable patient-centric approach. The hospital prioritizes creating an atmosphere where patients feel not just treated, but truly cared for </p>
+									<div class="button">
+										<a href="{% url 'website:appointment_inquiry' %}" class="btn">Book Appointment</a>
+										<a href="{% url 'website:about' %}" class="btn primary">Learn More</a>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- Start End Slider -->
+				<!-- Start Single Slider -->
+				<div class="single-slider" style="background-image:url('{% static 'img/slider3.jpg' %}')">
+					<div class="container">
+						<div class="row">
+							<div class="col-lg-7">
+								<div class="text">
+									<h1>We Provide <span>Medical</span> Services That You Can <span>Trust!</span></h1>
+									<p>Smart Care Hospital sets itself apart with a remarkable patient-centric approach. The hospital prioritizes creating an atmosphere where patients feel not just treated, but truly cared for</p>
+									<div class="button">
+										<a href="{% url 'website:appointment_inquiry' %}" class="btn">Book Appointment</a>
+										<a href="{% url 'website:about' %}" class="btn primary">Learn More</a>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- End Single Slider -->
+			</div>
+		</section>
+		<!--/ End Slider Area -->
+		
+		<!-- Start Schedule Area -->
+		<section class="schedule">
+			<div class="container">
+				<div class="schedule-inner">
+					<div class="row">
+						<div class="col-lg-4 col-md-6 col-12 ">
+							<!-- single-schedule -->
+							<div class="single-schedule first">
+								<div class="inner">
+									<div class="icon">
+										<i class="fa fa-ambulance"></i>
+									</div>
+									<div class="single-content">
+										
+										<h4>Emergency Cases</h4>
+										<p>Smart Care Offers 24/7 Availability For Emergency Cases ,  Ensuring That Help Is Always Just A Call Away.</p>
+										<a href="{% url 'website:about' %}">LEARN MORE<i class="fa fa-long-arrow-right"></i></a>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-4 col-md-6 col-12">
+							<!-- single-schedule -->
+							<div class="single-schedule middle">
+								<div class="inner">
+									<div class="icon">
+										<i class="icofont-prescription"></i>
+									</div>
+									<div class="single-content">
+										
+										<h4>Doctors Timetable</h4>
+										<p>For Inquiery About Timings For Specific Doctors Kindly Reach Us At Contact Us Page & For Daily Updates Subscribe To Newsletter</p>
+										<a href="{% url 'website:contact' %}">LEARN MORE<i class="fa fa-long-arrow-right"></i></a>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-4 col-md-12 col-12">
+							<!-- single-schedule -->
+							<div class="single-schedule last">
+								<div class="inner">
+									<div class="icon">
+										<i class="icofont-ui-clock"></i>
+									</div>
+									<div class="single-content">
+										
+										<h4>Opening Hours</h4>
+										<ul class="time-sidual">
+											<li class="day">Monday - Friday <span>8:00-20:00</span></li>
+											<li class="day">Saturday <span>9:00-20:00</span></li>
+											<li class="day">Sunday <span>9:00-18:30</span></li>
+										</ul>
+										<a href="{% url 'website:about' %}">LEARN MORE<i class="fa fa-long-arrow-right"></i></a>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<!--/End Start schedule Area -->
+
+		<!-- Start Feautes -->
+		<section class="Feautes section">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="section-title">
+							<h2>We Are Always Ready to Help You & Your Family</h2>
+							<img src="{% static 'img/section-img.png' %}" alt="#">
+							<p>At Smart Care, we recognize that health concerns can arise at any time, which is why our dedicated team is always prepared to provide compassionate and expert care for you and your loved ones. </p>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-lg-4 col-12">
+						<!-- Start Single features -->
+						<div class="single-features">
+							<div class="signle-icon">
+								<i class="icofont icofont-ambulance-cross"></i>
+							</div>
+							<h3>Emergency Help</h3>
+							<p>Our emergency services are available 24/7, staffed by a team of skilled professionals who are trained to handle critical situations with speed and precision</p>
+						</div>
+						<!-- End Single features -->
+					</div>
+					<div class="col-lg-4 col-12">
+						<!-- Start Single features -->
+						<div class="single-features">
+							<div class="signle-icon">
+								<i class="icofont icofont-medical-sign-alt"></i>
+							</div>
+							<h3>Enriched Pharmecy</h3>
+							<p>Our well-stocked pharmacy provides a wide range of medications, ensuring that you have convenient access to the treatments you need.</p>
+						</div>
+						<!-- End Single features -->
+					</div>
+					<div class="col-lg-4 col-12">
+						<!-- Start Single features -->
+						<div class="single-features last">
+							<div class="signle-icon">
+								<i class="icofont icofont-stethoscope"></i>
+							</div>
+							<h3>Medical Treatment</h3>
+							<p>From routine check-ups to specialized procedures, our experienced medical staff is committed to delivering personalized care tailored to your unique health needs.</p>
+						</div>
+						<!-- End Single features -->
+					</div>
+				</div>
+			</div>
+		</section>
+		<!--/ End Feautes -->
+		
+		<!-- Start Fun-facts -->
+		<div id="fun-facts" class="fun-facts section overlay">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-3 col-md-6 col-12">
+						<!-- Start Single Fun -->
+						<div class="single-fun">
+							<i class="icofont icofont-home"></i>
+							<div class="content">
+								<span class="counter">3468</span>
+								<p>Hospital Rooms</p>
+							</div>
+						</div>
+						<!-- End Single Fun -->
+					</div>
+					<div class="col-lg-3 col-md-6 col-12">
+						<!-- Start Single Fun -->
+						<div class="single-fun">
+							<i class="icofont icofont-user-alt-3"></i>
+							<div class="content">
+								<span class="counter">557</span>
+								<p>Specialist Doctors</p>
+							</div>
+						</div>
+						<!-- End Single Fun -->
+					</div>
+					<div class="col-lg-3 col-md-6 col-12">
+						<!-- Start Single Fun -->
+						<div class="single-fun">
+							<i class="icofont-simple-smile"></i>
+							<div class="content">
+								<span class="counter">4379</span>
+								<p>Happy Patients</p>
+							</div>
+						</div>
+						<!-- End Single Fun -->
+					</div>
+					<div class="col-lg-3 col-md-6 col-12">
+						<!-- Start Single Fun -->
+						<div class="single-fun">
+							<i class="icofont icofont-table"></i>
+							<div class="content">
+								<span class="counter">32</span>
+								<p>Years of Experience</p>
+							</div>
+						</div>
+						<!-- End Single Fun -->
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--/ End Fun-facts -->
+		
+		<!-- Start Why choose -->
+		<section class="why-choose section" >
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="section-title">
+							<h2>We Offer Different Services To Improve Your Health</h2>
+							<img src="{% static 'img/section-img.png' %}" alt="#">
+							<p>we are dedicated to enhancing your well-being through a diverse range of specialized services designed to meet your unique health needs</p>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-lg-6 col-12">
+						<!-- Start Choose Left -->
+						<div class="choose-left">
+							<h3>Who We Are</h3>
+							<p>Smart Care is a leading healthcare institution committed to providing exceptional medical services with a focus on patient-centric care. Our state-of-the-art facility is equipped with advanced technology and staffed by a team of highly skilled and compassionate professionals who are dedicated to your well-being. We believe in a holistic approach to health, which is why we offer a comprehensive range of services, from emergency care and specialized treatments to preventive health programs. </p>
+							<p>Our mission is to create a supportive and healing environment where patients feel valued and respected. We are constantly striving to innovate and improve our services to ensure that you and your family receive the highest standard of care possible. At Smart Care, your health is our priority, and we are honored to be your trusted partner on your journey to wellness. </p>
+							<div class="row">
+								<div class="col-lg-6">
+									<ul class="list">
+										<li><i class="fa fa-caret-right"></i>General Medicine MD</li>
+										<li><i class="fa fa-caret-right"></i>Cardiologist</li>
+										<li><i class="fa fa-caret-right"></i>Orthopedic</li>
+									</ul>
+								</div>
+								<div class="col-lg-6">
+									<ul class="list">
+										<li><i class="fa fa-caret-right"></i>Neurologist</li>
+										<li><i class="fa fa-caret-right"></i>Cancer</li>
+										<li><i class="fa fa-caret-right"></i>Emergency Care</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+						<!-- End Choose Left -->
+					</div>
+					<div class="col-lg-6 col-12">
+						<!-- Start Choose Rights -->
+						<div class="choose-right">
+							<div class="video-image">
+								<!-- Video Animation -->
+								<div class="promo-video">
+									<div class="waves-block">
+										<div class="waves wave-1"></div>
+										<div class="waves wave-2"></div>
+										<div class="waves wave-3"></div>
+									</div>
+								</div>
+								<!--/ End Video Animation -->
+								<a href="https://www.youtube.com/watch?v=RFVXy6CRVR4" class="video video-popup mfp-iframe"><i class="fa fa-play"></i></a>
+							</div>
+						</div>
+						<!-- End Choose Rights -->
+					</div>
+				</div>
+			</div>
+		</section>
+		<!--/ End Why choose -->
+		
+		<!-- Start Call to action -->
+		<section class="call-action overlay" data-stellar-background-ratio="0.5">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-12 col-md-12 col-12">
+						<div class="content">
+							<h2>Do you need Emergency Medical Care? Call @ 1234 56789</h2>
+							<p>our dedicated emergency response team is available 24/7 to provide immediate assistance</p>
+							<div class="button">
+								<a href="{% url 'website:contact' %}" class="btn">Contact Now</a>
+								<a href="{% url 'website:about' %}" class="btn second">Learn More <i class="fa fa-long-arrow-right"></i></a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<!--/ End Call to action -->
+		
+		<!-- Start portfolio -->
+		<section class="portfolio section" >
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="section-title">
+							<h2>We Maintain Cleanliness Rules Inside Our Hospital</h2>
+							<img src="{% static 'img/section-img.png' %}" alt="#">
+							<p>we adhere to the highest standards of cleanliness and hygiene to ensure a safe and sterile environment for our patients, visitors, and staff</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="container-fluid">
+				<div class="row">
+					<div class="col-lg-12 col-12">
+						<div class="owl-carousel portfolio-slider">
+							<div class="single-pf">
+								<img src="{% static 'img/pf1.jpg' %}" alt="#">
+								<a href="#" class="btn">View Details</a>
+							</div>
+							<div class="single-pf">
+								<img src="{% static 'img/pf2.jpg' %}" alt="#">
+								<a href="#" class="btn">View Details</a>
+							</div>
+							<div class="single-pf">
+								<img src="{% static 'img/pf3.jpg' %}" alt="#">
+								<a href="#" class="btn">View Details</a>
+							</div>
+							<div class="single-pf">
+								<img src="{% static 'img/pf4.jpg' %}" alt="#">
+								<a href="#" class="btn">View Details</a>
+							</div>
+							<div class="single-pf">
+								<img src="{% static 'img/pf1.jpg' %}" alt="#">
+								<a href="#" class="btn">View Details</a>
+							</div>
+							<div class="single-pf">
+								<img src="{% static 'img/pf2.jpg' %}" alt="#">
+								<a href="#" class="btn">View Details</a>
+							</div>
+							<div class="single-pf">
+								<img src="{% static 'img/pf3.jpg' %}" alt="#">
+								<a href="#" class="btn">View Details</a>
+							</div>
+							<div class="single-pf">
+								<img src="{% static 'img/pf4.jpg' %}" alt="#">
+								<a href="#" class="btn">View Details</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<!--/ End portfolio -->
+		<!-- Start Blog Section -->
+		<section class="blog section" id="blog">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="section-title">
+							<h2>Keep up with Our Most Recent Medical News.</h2>
+							<img src="{% static 'img/section-img.png' %}" alt="#">
+							<p>Stay informed and connected with the latest advancements and updates from Smart Care through our dedicated news section</p>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-lg-4 col-md-6 col-12">
+						<!-- Single Blog -->
+						<div class="single-news">
+							<div class="news-head">
+								<img src="{% static 'img/blog1.jpg' %}" alt="#">
+							</div>
+							<div class="news-body">
+								<div class="news-content">
+									<div class="date">22 Aug, 2024</div>
+									<h2><a href="{% url 'website:blog' %}">We have annnocuced our new product.</a></h2>
+									<p class="text">We are thrilled to announce the launch of our latest innovation, a state-of-the-art medical device designed to enhance diagnostic accuracy and improve patient outcomes.</p>
+								</div>
+							</div>
+						</div>
+						<!-- End Single Blog -->
+					</div>
+					<div class="col-lg-4 col-md-6 col-12">
+						<!-- Single Blog -->
+						<div class="single-news">
+							<div class="news-head">
+								<img src="{% static 'img/blog2.jpg' %}" alt="#">
+							</div>
+							<div class="news-body">
+								<div class="news-content">
+									<div class="date">15 Jul, 2024</div>
+									<h2><a href="{% url 'website:blog' %}">Top five way for solving teeth problems.</a></h2>
+									<p class="text">we are sharing our top five strategies for effectively addressing common dental issues and maintaining optimal oral health</p>
+								</div>
+							</div>
+						</div>
+						<!-- End Single Blog -->
+					</div>
+					<div class="col-lg-4 col-md-6 col-12">
+						<!-- Single Blog -->
+						<div class="single-news">
+							<div class="news-head">
+								<img src="{% static 'img/blog3.jpg' %}" alt="#">
+							</div>
+							<div class="news-body">
+								<div class="news-content">
+									<div class="date">05 Jan, 2024</div>
+									<h2><a href="{% url 'website:blog' %}">We provide highly business soliutions.</a></h2>
+									<p class="text">we offer highly effective business solutions tailored to the unique needs of healthcare providers, helping them optimize operations and enhance patient care</p>
+								</div>
+							</div>
+						</div>
+						<!-- End Single Blog -->
+					</div>
+				</div>
+			</div>
+		</section>
+		<!-- End Blog Section -->
+		<!-- Start Newsletter Area -->
+		<section class="newsletter section">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-6 col-md-12">
+						<!-- Newsletter Content -->
+						<div class="newsletter-content">
+							<h2>Sign up for newsletter</h2>
+							<p>Subscribe to our newsletter to receive the latest updates, health tips, and exclusive offers delivered directly to your inbox</p>
+						</div>
+					</div>
+					<div class="col-lg-6 col-md-12">
+						<!-- Newsletter Form -->
+						<div class="newsletter-form">
+							<form action="#" method="post" class="newsletter-inner">
+								{% csrf_token %}
+								<input name="email" placeholder="Your email address" class="common-input" onfocus="this.placeholder = ''"
+									onblur="this.placeholder = 'Your email address'" required="" type="email">
+								<button class="btn" type="submit"><i class="icofont-paper-plane"></i></button>
+						</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<!-- End Newsletter Area -->
+		
+		<!-- Footer Area -->
+		<footer id="footer" class="footer ">
+			<!-- Footer Top -->
+			<div class="footer-top">
+				<div class="container">
+					<div class="row">
+						<div class="col-lg-3 col-md-6 col-12">
+							<div class="single-footer">
+								<h2>About Us</h2>
+								<p>We are committed to delivering exceptional healthcare with a focus on compassion, innovation, and patient-centeredness</p>
+								<!-- Social -->
+								<ul class="social">
+									<li><a href="#"><i class="icofont-facebook"></i></a></li>
+									<li><a href="#"><i class="icofont-google-plus"></i></a></li>
+									<li><a href="#"><i class="icofont-twitter"></i></a></li>
+									<li><a href="#"><i class="icofont-vimeo"></i></a></li>
+									<li><a href="#"><i class="icofont-pinterest"></i></a></li>
+								</ul>
+								<!-- End Social -->
+							</div>
+						</div>
+						<div class="col-lg-3 col-md-6 col-12">
+							<div class="single-footer f-link">
+								<h2>Quick Links</h2>
+								<div class="row">
+									<div class="col-lg-6 col-md-6 col-12">
+										<ul>
+											<li><a href="{% url 'website:index' %}"><i class="fa fa-caret-right" aria-hidden="true"></i>Home</a></li>
+											<li><a href="{% url 'website:about' %}"><i class="fa fa-caret-right" aria-hidden="true"></i>About Us</a></li>
+											<li><a href="{% url 'website:service' %}"><i class="fa fa-caret-right" aria-hidden="true"></i>Services</a></li>
+											<li><a href="#"><i class="fa fa-caret-right" aria-hidden="true"></i>Our Cases</a></li>
+											<li><a href="#"><i class="fa fa-caret-right" aria-hidden="true"></i>Other Links</a></li>	
+										</ul>
+									</div>
+									<div class="col-lg-6 col-md-6 col-12">
+										<ul>
+											<li><a href="#"><i class="fa fa-caret-right" aria-hidden="true"></i>Consulting</a></li>
+											<li><a href="#"><i class="fa fa-caret-right" aria-hidden="true"></i>Finance</a></li>
+											<li><a href="#"><i class="fa fa-caret-right" aria-hidden="true"></i>Testimonials</a></li>
+											<li><a href="#"><i class="fa fa-caret-right" aria-hidden="true"></i>FAQ</a></li>
+											<li><a href="{% url 'website:contact' %}"><i class="fa fa-caret-right" aria-hidden="true"></i>Contact Us</a></li>	
+										</ul>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="col-lg-3 col-md-6 col-12">
+							<div class="single-footer">
+								<h2>Open Hours</h2>
+								<p>We are available to serve you during the following hours</p>
+								<ul class="time-sidual">
+									<li class="day">Monday - Friday <span>8.00-20.00</span></li>
+									<li class="day">Saturday <span>9.00-18.30</span></li>
+									<li class="day">Sunday <span>9.00-15.00</span></li>
+								</ul>
+							</div>
+						</div>
+						<div class="col-lg-3 col-md-6 col-12">
+							<div class="single-footer">
+								<h2>Newsletter</h2>
+								<p>Subscribe to our newsletter to get all our news in your inbox.</p>
+								<form action="#" method="get" target="_blank" class="newsletter-inner">
+									<input name="email" placeholder="Email Address" class="common-input" onfocus="this.placeholder = ''"
+										onblur="this.placeholder = 'Email Address'" required="" type="email">
+									<button class="button" aria-label="Subscribe"><i class="icofont icofont-paper-plane"></i></button>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--/ End Footer Top -->
+			<!-- Copyright -->
+			<div class="copyright">
+				<div class="container">
+					<div class="row">
+						<div class="col-lg-12 col-md-12 col-12">
+							<div class="copyright-content">
+								<p>© Copyright 2024  |  All Rights Reserved by <a href="{% url 'website:index' %}" target="_blank">Smart Care</a> </p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!--/ End Copyright -->
+		</footer>
+		<!--/ End Footer Area -->
+		
+		<!-- jquery Min JS -->
+        <script src="{% static 'js/jquery.min.js' %}"></script>
+		<!-- jquery Migrate JS -->
+		<script src="{% static 'js/jquery-migrate-3.0.0.js' %}"></script>
+		<!-- jquery Ui JS -->
+		<script src="{% static 'js/jquery-ui.min.js' %}"></script>
+		<!-- Easing JS -->
+        <script src="{% static 'js/easing.js' %}"></script>
+		<!-- Color JS -->
+		<script src="{% static 'js/colors.js' %}"></script>
+		<!-- Popper JS -->
+		<script src="{% static 'js/popper.min.js' %}"></script>
+		<!-- Bootstrap Datepicker JS -->
+		<script src="{% static 'js/bootstrap-datepicker.js' %}"></script>
+		<!-- Jquery Nav JS -->
+        <script src="{% static 'js/jquery.nav.js' %}"></script>
+		<!-- Slicknav JS -->
+		<script src="{% static 'js/slicknav.min.js' %}"></script>
+		<!-- Scrollup JS -->
+        <script src="{% static 'js/jquery.scrollup.min.js' %}"></script>
+		<!-- Niceselect JS -->
+		<script src="{% static 'js/niceselect.js' %}"></script>
+		<!-- Tilt Jquery JS -->
+		<script src="{% static 'js/tilt.jquery.min.js' %}"></script>
+		<!-- Owl Carousel JS -->
+        <script src="{% static 'js/owl-carousel.js' %}"></script>
+		<!-- counterup JS -->
+		<script src="{% static 'js/jquery.counterup.min.js' %}"></script>
+		<!-- Steller JS -->
+		<script src="{% static 'js/steller.js' %}"></script>
+		<!-- Wow JS -->
+		<script src="{% static 'js/wow.min.js' %}"></script>
+		<!-- Magnific Popup JS -->
+		<script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
+		<!-- Counter Up CDN JS -->
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/waypoints/2.0.3/waypoints.min.js"></script>
+		<!-- Gmaps JS -->
+		<script src="{% static 'js/gmaps.min.js' %}"></script>
+		<!-- Main JS -->
+        <script src="{% static 'js/main.js' %}"></script>
+    </body>
+</html>

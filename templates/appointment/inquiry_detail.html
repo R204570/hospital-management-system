@@ -1,0 +1,454 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+{% if inquiry_type == 'contact' %}
+Contact Inquiry - {{ inquiry.name }}
+{% else %}
+Appointment Inquiry - {{ inquiry.name }}
+{% endif %}
+{% endblock %}
+
+{% block page_title %}
+{% if inquiry_type == 'contact' %}
+Contact Inquiry Details
+{% else %}
+Appointment Inquiry Details
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .inquiry-header {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+    }
+    
+    .contact-header {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+    }
+    
+    .status-badge-large {
+        font-size: 1.1rem;
+        padding: 8px 16px;
+    }
+    
+    .message-bubble {
+        background: #f8f9fa;
+        border-left: 4px solid #007bff;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+    }
+    
+    .reply-section {
+        background: linear-gradient(135deg, #e3f2fd, #f8f9fa);
+        border-radius: 10px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .notes-section {
+        max-height: 300px;
+        overflow-y: auto;
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .action-card {
+        transition: all 0.3s;
+    }
+    
+    .action-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Main Inquiry Information -->
+            <div class="card shadow mb-4">
+                <div class="card-header {% if inquiry_type == 'contact' %}contact-header{% else %}inquiry-header{% endif %}">
+                    <h4 class="mb-0">
+                        {% if inquiry_type == 'contact' %}
+                        <i class="fas fa-envelope me-2"></i>
+                        Contact Inquiry from {{ inquiry.name }}
+                        {% else %}
+                        <i class="fas fa-calendar-plus me-2"></i>
+                        Appointment Inquiry from {{ inquiry.name }}
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-user me-2"></i>Contact Information</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Name:</strong></td>
+                                    <td>{{ inquiry.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td><a href="mailto:{{ inquiry.email }}">{{ inquiry.email }}</a></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    <td><a href="tel:{{ inquiry.phone }}">{{ inquiry.phone }}</a></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>
+                                {% if inquiry_type == 'contact' %}
+                                <i class="fas fa-info-circle me-2"></i>Inquiry Details
+                                {% else %}
+                                <i class="fas fa-calendar me-2"></i>Appointment Details
+                                {% endif %}
+                            </h6>
+                            <table class="table table-borderless">
+                                {% if inquiry_type == 'contact' %}
+                                <tr>
+                                    <td><strong>Subject:</strong></td>
+                                    <td>{{ inquiry.subject }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td><strong>Department:</strong></td>
+                                    <td>{{ inquiry.get_department_display }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Preferred Date:</strong></td>
+                                    <td>{{ inquiry.preferred_date|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td><strong>Submitted:</strong></td>
+                                    <td>{{ inquiry.created_at|date:"M d, Y g:i A" }}</td>
+                                </tr>
+                                {% if inquiry.replied_at %}
+                                <tr>
+                                    <td><strong>Last Reply:</strong></td>
+                                    <td>{{ inquiry.replied_at|date:"M d, Y g:i A" }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6><i class="fas fa-comment me-2"></i>Message</h6>
+                    <div class="message-bubble">
+                        {{ inquiry.message|linebreaks }}
+                    </div>
+                    
+                    {% if inquiry_type == 'appointment' and inquiry.health_records %}
+                    <hr>
+                    <h6><i class="fas fa-paperclip me-2"></i>Health Records</h6>
+                    <div class="alert alert-info">
+                        <i class="fas fa-file-medical me-2"></i>
+                        <a href="{{ inquiry.health_records.url }}" target="_blank" class="alert-link">
+                            View Uploaded Health Record
+                        </a>
+                        <small class="d-block text-muted mt-1">
+                            Uploaded: {{ inquiry.created_at|date:"M d, Y g:i A" }}
+                        </small>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Email Reply Section -->
+                    {% if inquiry.reply_message %}
+                    <hr>
+                    <h6><i class="fas fa-reply me-2"></i>Previous Reply</h6>
+                    <div class="alert alert-success">
+                        <strong>Reply sent on {{ inquiry.replied_at|date:"M d, Y g:i A" }}:</strong><br>
+                        {{ inquiry.reply_message|linebreaks }}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Customer Email Replies -->
+                    {% if email_replies %}
+                    <hr>
+                    <h6><i class="fas fa-envelope-open me-2"></i>Customer Replies
+                        {% if total_replies_count %}
+                        <small class="text-muted">({{ total_replies_count }} total)</small>
+                        {% endif %}
+                    </h6>
+                    
+                    {% if replies_limit_reached %}
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Conversation Limit:</strong> Showing the first 20 replies in this conversation. 
+                        After 20 replies, new emails from this customer will start a new conversation thread to keep discussions manageable.
+                        <br><small class="text-muted">Total replies in this conversation: {{ total_replies_count }}</small>
+                    </div>
+                    {% endif %}
+                    
+                    {% for reply in email_replies %}
+                    <div class="card mb-3">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ reply.sender_name|default:reply.sender_email }}</strong>
+                                <small class="text-muted">{{ reply.sender_email }}</small>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">{{ reply.email_received_at|date:"M d, Y g:i A" }}</small>
+                                {% if not reply.is_seen_by_staff %}
+                                <span class="badge bg-danger ms-2">NEW</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">{{ reply.subject }}</h6>
+                            <div class="email-content">
+                                {{ reply.message_body|linebreaks }}
+                            </div>
+                            {% if not reply.is_seen_by_staff %}
+                            <div class="mt-3">
+                                <button class="btn btn-sm btn-outline-primary" onclick="markReplySeen({{ reply.id }})">
+                                    <i class="fas fa-check me-1"></i>Mark as Read
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <div class="reply-section">
+                        <h6><i class="fas fa-paper-plane me-2"></i>Send Email Reply</h6>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="send_reply">
+                            <div class="mb-3">
+                                <label for="reply_message" class="form-label">Reply Message</label>
+                                <textarea class="form-control" id="reply_message" name="reply_message" rows="5" 
+                                          placeholder="Type your reply message here..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Send Email Reply
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notes Section -->
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-sticky-note me-2"></i>Internal Notes</h5>
+                </div>
+                <div class="card-body">
+                    {% if inquiry_type == 'contact' %}
+                        {% if inquiry.admin_notes %}
+                        <div class="notes-section mb-3">
+                            {{ inquiry.admin_notes|linebreaks }}
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        {% if inquiry.notes %}
+                        <div class="notes-section mb-3">
+                            {{ inquiry.notes|linebreaks }}
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add_note">
+                        <div class="mb-3">
+                            <label for="note" class="form-label">Add Note</label>
+                            <textarea class="form-control" id="note" name="note" rows="3" 
+                                      placeholder="Add internal notes about this inquiry..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-secondary">
+                            <i class="fas fa-plus-circle me-2"></i>Add Note
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Status Management -->
+            <div class="card shadow mb-4 action-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cog me-2"></i>Inquiry Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Current Status</label>
+                        <div>
+                            <span class="badge {{ inquiry.get_status_badge_class }} status-badge-large">
+                                {{ inquiry.status }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Assigned To</label>
+                        <div>
+                            {% if inquiry.assigned_to %}
+                                <i class="fas fa-user-check text-success me-2"></i>{{ inquiry.assigned_to.get_full_name }}
+                            {% else %}
+                                <span class="text-muted"><i class="fas fa-user-times me-2"></i>Unassigned</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <form method="post" class="mb-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="update_status">
+                        <label for="status" class="form-label">Update Status</label>
+                        <div class="input-group">
+                            <select class="form-select" id="status" name="status">
+                                {% if inquiry_type == 'contact' %}
+                                <option value="PENDING" {% if inquiry.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                                <option value="READ" {% if inquiry.status == 'READ' %}selected{% endif %}>Read</option>
+                                <option value="REPLIED" {% if inquiry.status == 'REPLIED' %}selected{% endif %}>Replied</option>
+                                <option value="CLOSED" {% if inquiry.status == 'CLOSED' %}selected{% endif %}>Closed</option>
+                                {% else %}
+                                <option value="PENDING" {% if inquiry.status == 'PENDING' %}selected{% endif %}>Pending</option>
+                                <option value="CONTACTED" {% if inquiry.status == 'CONTACTED' %}selected{% endif %}>Contacted</option>
+                                <option value="SCHEDULED" {% if inquiry.status == 'SCHEDULED' %}selected{% endif %}>Scheduled</option>
+                                <option value="CLOSED" {% if inquiry.status == 'CLOSED' %}selected{% endif %}>Closed</option>
+                                {% endif %}
+                            </select>
+                            <button type="submit" class="btn btn-primary">Update</button>
+                        </div>
+                    </form>
+                    
+                    <div class="d-grid gap-2">
+                        {% if inquiry_type == 'appointment' %}
+                        <a href="{% url 'book_appointment' %}?inquiry_id={{ inquiry.id }}" class="btn btn-success">
+                            <i class="fas fa-calendar-plus me-2"></i>Schedule Appointment
+                        </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'inquiry_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Inquiries
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card shadow action-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="mailto:{{ inquiry.email }}" class="btn btn-outline-primary">
+                            <i class="fas fa-envelope me-2"></i>Open Email Client
+                        </a>
+                        <a href="tel:{{ inquiry.phone }}" class="btn btn-outline-success">
+                            <i class="fas fa-phone me-2"></i>Call Patient
+                        </a>
+                        <a href="{% url 'patient_register' %}?name={{ inquiry.name|urlencode }}&email={{ inquiry.email|urlencode }}&phone={{ inquiry.phone|urlencode }}" class="btn btn-outline-info">
+                            <i class="fas fa-user-plus me-2"></i>Register as Patient
+                        </a>
+                        
+                        {% if inquiry_type == 'appointment' %}
+                        <a href="{% url 'patient_list' %}?search={{ inquiry.email|urlencode }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-search me-2"></i>Search Patient Records
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-resize textarea
+document.addEventListener('DOMContentLoaded', function() {
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+});
+
+// Confirm before sending email
+document.querySelector('form[action="send_reply"] button[type="submit"]').addEventListener('click', function(e) {
+    const message = document.getElementById('reply_message').value.trim();
+    if (!message) {
+        e.preventDefault();
+        alert('Please enter a reply message before sending.');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to send this email reply to {{ inquiry.email }}?')) {
+        e.preventDefault();
+    }
+});
+
+// Mark email reply as seen
+function markReplySeen(replyId) {
+    console.log('markReplySeen called with ID:', replyId);
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    console.log('CSRF Token found:', csrfToken ? 'Yes' : 'No');
+    
+    if (!csrfToken) {
+        alert('CSRF token not found. Please refresh the page.');
+        return;
+    }
+    
+    fetch('{% url "mark_email_reply_seen" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken
+        },
+        body: 'reply_id=' + replyId
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+        }
+        
+        // Try to parse as JSON
+        return response.text().then(text => {
+            console.log('Raw response:', text);
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                throw new Error('Invalid JSON response: ' + text);
+            }
+        });
+    })
+    .then(data => {
+        console.log('Parsed data:', data);
+        if (data.success) {
+            console.log('Reply marked as seen successfully');
+            // Remove the NEW badge and button
+            location.reload();
+        } else {
+            alert('Error marking reply as seen: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        alert('Error marking reply as seen: ' + error.message);
+    });
+}
+</script>
+{% endblock %} 

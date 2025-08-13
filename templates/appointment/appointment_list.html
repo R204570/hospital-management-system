@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Appointments{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Appointments</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if request.user.is_receptionist %}
+            <a href="{% url 'book_appointment' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Book New Appointment
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Filters</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           placeholder="Search patient name or ID" value="{{ search_query }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="date" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="date" name="date" value="{{ date_filter }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Statuses</option>
+                        {% for status_code, status_name in status_choices %}
+                        <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>
+                            {{ status_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if request.user.is_admin or request.user.is_receptionist %}
+                <div class="col-md-3">
+                    <label for="doctor" class="form-label">Doctor</label>
+                    <select class="form-select" id="doctor" name="doctor">
+                        <option value="">All Doctors</option>
+                        {% for doctor in doctors %}
+                        <option value="{{ doctor.id }}" {% if doctor_filter == doctor.id|stringformat:"i" %}selected{% endif %}>
+                            Dr. {{ doctor.get_full_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">Apply</button>
+                    <a href="{% url 'appointment_list' %}" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Appointments List -->
+    <div class="card shadow">
+        <div class="card-body">
+            {% if appointments %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Patient</th>
+                            <th>Doctor</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                        <tr {% if appointment.date == today %}class="table-primary"{% endif %}>
+                            <td>{{ appointment.date|date:"M d, Y" }}</td>
+                            <td>{{ appointment.start_time|time:"H:i" }} - {{ appointment.end_time|time:"H:i" }}</td>
+                            <td>{{ appointment.patient.full_name }}</td>
+                            <td>Dr. {{ appointment.doctor.get_full_name }}</td>
+                            <td>{{ appointment.get_appointment_type_display }}</td>
+                            <td>
+                                <span class="badge {% if appointment.status == 'SCHEDULED' %}bg-primary
+                                      {% elif appointment.status == 'CONFIRMED' %}bg-success
+                                      {% elif appointment.status == 'COMPLETED' %}bg-info
+                                      {% elif appointment.status == 'CANCELLED' %}bg-danger
+                                      {% else %}bg-warning{% endif %}">
+                                    {{ appointment.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'appointment_detail' appointment.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                {% if request.user.is_receptionist and appointment.status != 'CANCELLED' and appointment.status != 'COMPLETED' %}
+                                <a href="{% url 'cancel_appointment' appointment.id %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <i class="bi bi-info-circle fs-4 me-2"></i> No appointments found matching your criteria.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Update Patient{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Cropper modal styling */
+    #cropperModal .modal-dialog {
+        max-width: 600px;
+    }
+    
+    #cropperCanvas {
+        display: block;
+        max-width: 100%;
+        max-height: 500px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Update Patient: {{ patient.full_name }}</h2>
+            <p class="text-muted">Patient ID: {{ patient.patient_id }}</p>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="row">
+                    <!-- Personal Information -->
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2 mb-3">Personal Information</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.first_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.last_name|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.gender|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.date_of_birth|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.blood_group|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {% if patient.profile_picture %}
+                                <div class="mb-2">
+                                    <img src="{{ patient.profile_picture.url }}" alt="Current Profile" class="img-thumbnail profile-preview" style="max-height: 100px;">
+                                </div>
+                                {% endif %}
+                                <label for="{{ form.profile_picture.id_for_label }}" class="form-label">Profile Picture</label>
+                                <input type="file" name="profile_picture" accept="image/*" class="form-control" id="{{ form.profile_picture.id_for_label }}">
+                                <input type="hidden" name="cropped_data" id="cropped_data">
+                                <div class="form-text">Upload a new profile picture</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="col-md-6">
+                        <h5 class="border-bottom pb-2 mb-3">Contact Information</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.phone|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.email|as_crispy_field }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.address|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emergency Contact -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">Emergency Contact</h5>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.emergency_contact_name|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.emergency_contact_relation|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form.emergency_contact_phone|as_crispy_field }}
+                    </div>
+                </div>
+
+                <!-- Medical History -->
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <h5 class="border-bottom pb-2 mb-3">Medical History</h5>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.allergies|as_crispy_field }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        {{ form.medical_conditions|as_crispy_field }}
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12 text-end">
+                        <a href="{% url 'patient_detail' patient.id %}" class="btn btn-secondary me-2">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Update Patient
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Cropper Modal -->
+<div class="modal fade" id="cropperModal" tabindex="-1" role="dialog" aria-labelledby="cropperModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cropperModalLabel">Crop Profile Picture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <img id="cropperCanvas" src="" alt="Profile picture to crop">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="cropImage">Crop and Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Profile picture cropping functionality
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+        let cropper;
+        const cropperModal = new bootstrap.Modal(document.getElementById('cropperModal'));
+        const cropperCanvas = document.getElementById('cropperCanvas');
+        
+        // Handle file selection
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    // Show the cropper modal with the selected image
+                    cropperCanvas.src = event.target.result;
+                    cropperModal.show();
+                    
+                    // Initialize cropper when modal is shown
+                    document.getElementById('cropperModal').addEventListener('shown.bs.modal', function() {
+                        // Destroy previous cropper if exists
+                        if (cropper) {
+                            cropper.destroy();
+                        }
+                        
+                        // Initialize new cropper
+                        cropper = new Cropper(cropperCanvas, {
+                            aspectRatio: 1, // 1:1 ratio for profile picture
+                            viewMode: 1,    // Restrict the crop box not to exceed the size of the canvas
+                            guides: true,   // Show guides
+                            center: true,   // Show center indicator
+                            highlight: true, // Show dashed lines around the crop box
+                            cropBoxMovable: true,
+                            cropBoxResizable: true,
+                            toggleDragModeOnDblclick: true
+                        });
+                    });
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+        
+        // Handle crop button click
+        document.getElementById('cropImage').addEventListener('click', function() {
+            if (cropper) {
+                // Get the cropped canvas data
+                const canvas = cropper.getCroppedCanvas({
+                    width: 300,
+                    height: 300,
+                    fillColor: '#fff',
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high',
+                });
+                
+                if (canvas) {
+                    // Convert canvas to base64 string
+                    const croppedData = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    // Store the cropped data in the hidden input
+                    document.getElementById('cropped_data').value = croppedData;
+                    
+                    // Update the preview image (if needed)
+                    const previewImg = document.querySelector('.profile-preview');
+                    if (previewImg) {
+                        previewImg.src = croppedData;
+                    }
+                    
+                    // Close the modal
+                    cropperModal.hide();
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

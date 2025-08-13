@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Leave Request History{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2>
+                <i class="fas fa-history text-primary me-2"></i>
+                Leave Request History
+            </h2>
+            <p class="text-muted">View the status of your leave requests</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <a href="{% url 'doctor_leave_request' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i> New Leave Request
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="mb-0">Your Leave Requests</h5>
+                </div>
+                <div class="col-auto">
+                    <form method="get" class="row g-2">
+                        <div class="col-auto">
+                            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="">All Statuses</option>
+                                {% for status_code, status_name in status_choices %}
+                                    <option value="{{ status_code }}" {% if status_filter == status_code %}selected{% endif %}>
+                                        {{ status_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if leave_requests %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date Range</th>
+                                <th>Time</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for leave in leave_requests %}
+                                <tr>
+                                    <td>
+                                        {% if leave.start_date == leave.end_date %}
+                                            {{ leave.start_date }}
+                                        {% else %}
+                                            {{ leave.start_date }} to {{ leave.end_date }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ leave.start_time }} - {{ leave.end_time }}</td>
+                                    <td>
+                                        <span class="text-truncate d-inline-block" style="max-width: 200px;">
+                                            {{ leave.reason }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if leave.status == 'PENDING' %}
+                                            <span class="badge bg-warning">Pending Approval</span>
+                                        {% elif leave.status == 'APPROVED' %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% elif leave.status == 'REJECTED' %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% elif leave.status == 'CANCELLED' %}
+                                            <span class="badge bg-secondary">Cancelled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ leave.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if leave.status == 'PENDING' %}
+                                            <a href="{% url 'cancel_leave_request' leave.id %}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </a>
+                                        {% else %}
+                                            {% if leave.admin_notes %}
+                                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#notesModal{{ leave.id }}">
+                                                    <i class="fas fa-comment-alt"></i> Notes
+                                                </button>
+                                                
+                                                <div class="modal fade" id="notesModal{{ leave.id }}" tabindex="-1" aria-labelledby="notesModalLabel{{ leave.id }}" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="notesModalLabel{{ leave.id }}">Administrator Notes</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <p>{{ leave.admin_notes|linebreaksbr }}</p>
+                                                                <small class="text-muted">Reviewed on {{ leave.reviewed_at|date:"M d, Y H:i" }}</small>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-4 text-center">
+                    <p class="mb-0"><i class="fas fa-calendar-minus text-muted me-2"></i> You have no leave requests.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

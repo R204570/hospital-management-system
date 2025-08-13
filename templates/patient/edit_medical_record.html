@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{% if record %}Edit{% else %}Add{% endif %} Medical Record{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">{% if record %}Edit{% else %}Add{% endif %} Medical Record</h6>
+                        <a href="{% if record %}{% url 'view_medical_record' record.id %}{% else %}{% url 'medical_record_list' %}{% endif %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-arrow-left me-2"></i>Back
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% if not record %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header pb-0">
+                                        <h6 class="mb-0">Patient Information</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        {% if appointment %}
+                                        <div class="alert alert-info">
+                                            <div class="d-flex">
+                                                <div class="me-3">
+                                                    <i class="fas fa-info-circle fa-2x"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="alert-heading">Creating record for appointment</h6>
+                                                    <p class="mb-0">Patient: {{ appointment.patient.full_name }}</p>
+                                                    <p class="mb-0">Date: {{ appointment.date|date:"F d, Y" }}</p>
+                                                    <p class="mb-0">Time: {{ appointment.start_time|time:"h:i A" }} - {{ appointment.end_time|time:"h:i A" }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="appointment" value="{{ appointment.id }}">
+                                        <input type="hidden" name="patient" value="{{ appointment.patient.id }}">
+                                        {% else %}
+                                        <div class="form-group mb-3">
+                                            {{ form.patient|as_crispy_field }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card mb-4">
+                                    <div class="card-header pb-0">
+                                        <h6 class="mb-0">Vital Signs</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                {{ form.temperature|as_crispy_field }}
+                                            </div>
+                                            <div class="col-md-3">
+                                                {{ form.blood_pressure|as_crispy_field }}
+                                            </div>
+                                            <div class="col-md-3">
+                                                {{ form.pulse_rate|as_crispy_field }}
+                                            </div>
+                                            <div class="col-md-3">
+                                                {{ form.weight|as_crispy_field }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header pb-0">
+                                        <h6 class="mb-0">Clinical Information</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group mb-3">
+                                            {{ form.symptoms|as_crispy_field }}
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            {{ form.diagnosis|as_crispy_field }}
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            {{ form.lab_results|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header pb-0">
+                                        <h6 class="mb-0">Treatment Information</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group mb-3">
+                                            {{ form.treatment_plan|as_crispy_field }}
+                                        </div>
+                                        
+                                        <div class="form-group mb-3">
+                                            <label for="id_medications">Medications</label>
+                                            <div id="medications-container">
+                                                {{ medication_formset.management_form }}
+                                                {% for medication_form in medication_formset %}
+                                                <div class="medication-form mb-3 p-3 border rounded">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            {{ medication_form.name|as_crispy_field }}
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            {{ medication_form.dosage|as_crispy_field }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            {{ medication_form.frequency|as_crispy_field }}
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            {{ medication_form.duration|as_crispy_field }}
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            {{ medication_form.type|as_crispy_field }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-12">
+                                                            {{ medication_form.instructions|as_crispy_field }}
+                                                        </div>
+                                                    </div>
+                                                    {% if not forloop.first %}
+                                                    <div class="text-end">
+                                                        <button type="button" class="btn btn-sm btn-danger remove-medication">
+                                                            <i class="fas fa-trash"></i> Remove
+                                                        </button>
+                                                    </div>
+                                                    {% endif %}
+                                                    {% for hidden in medication_form.hidden_fields %}
+                                                    {{ hidden }}
+                                                    {% endfor %}
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                            <button type="button" id="add-medication" class="btn btn-sm btn-success">
+                                                <i class="fas fa-plus"></i> Add Medication
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="form-group mb-3">
+                                            {{ form.next_appointment|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="card mb-4">
+                                    <div class="card-header pb-0">
+                                        <h6 class="mb-0">Additional Notes</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            {{ form.notes|as_crispy_field }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Save Medical Record
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Initialize datepicker for next appointment field
+        $('#id_next_appointment').datetimepicker({
+            format: 'Y-m-d H:i',
+            step: 15
+        });
+        
+        // Handle adding new medication form
+        $('#add-medication').click(function() {
+            var form_idx = $('#id_medications-TOTAL_FORMS').val();
+            var newForm = $('.medication-form:first').clone(true);
+            
+            // Update form index
+            newForm.find(':input').each(function() {
+                var name = $(this).attr('name');
+                if(name) {
+                    name = name.replace('-0-', '-' + form_idx + '-');
+                    $(this).attr('name', name);
+                    $(this).attr('id', 'id_' + name);
+                }
+            });
+            
+            // Update form labels
+            newForm.find('label').each(function() {
+                var newFor = $(this).attr('for').replace('-0-', '-' + form_idx + '-');
+                $(this).attr('for', newFor);
+            });
+            
+            // Clear input values
+            newForm.find('input[type=text], textarea').val('');
+            newForm.find('select').prop('selectedIndex', 0);
+            
+            // Add remove button if not present
+            if(newForm.find('.remove-medication').length === 0) {
+                newForm.append('<div class="text-end"><button type="button" class="btn btn-sm btn-danger remove-medication"><i class="fas fa-trash"></i> Remove</button></div>');
+            }
+            
+            // Add the new form to the container
+            $('#medications-container').append(newForm);
+            
+            // Increment form count
+            $('#id_medications-TOTAL_FORMS').val(parseInt(form_idx) + 1);
+        });
+        
+        // Handle removing medication form
+        $(document).on('click', '.remove-medication', function() {
+            $(this).closest('.medication-form').remove();
+            
+            // Update total forms
+            var forms = $('.medication-form');
+            $('#id_medications-TOTAL_FORMS').val(forms.length);
+            
+            // Re-index forms
+            forms.each(function(i) {
+                $(this).find(':input').each(function() {
+                    var name = $(this).attr('name');
+                    if(name) {
+                        name = name.replace(/-\d+-/, '-' + i + '-');
+                        $(this).attr('name', name);
+                        $(this).attr('id', 'id_' + name);
+                    }
+                });
+                
+                $(this).find('label').each(function() {
+                    var newFor = $(this).attr('for').replace(/-\d+-/, '-' + i + '-');
+                    $(this).attr('for', newFor);
+                });
+            });
+        });
+    });
+</script>
+{% endblock %} 

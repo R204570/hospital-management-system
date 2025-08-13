@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}PDF Reports{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 p-0">
+            {% include 'patient/medical_sidebar.html' %}
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-md-9 col-lg-10 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>PDF Reports</h2>
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#reportOptionsCollapse">
+                    <i class="fas fa-cog"></i> Report Options
+                </button>
+            </div>
+            
+            <!-- Report Options Collapse -->
+            <div class="collapse mb-4" id="reportOptionsCollapse">
+                <div class="card card-body">
+                    <form id="reportForm" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="reportType" class="form-label">Report Type</label>
+                            <select class="form-select" id="reportType">
+                                <option value="single">Single Record</option>
+                                <option value="patient">Patient Summary</option>
+                                <option value="monthly">Monthly Report</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="patientSelect" class="form-label">Patient</label>
+                            <select class="form-select" id="patientSelect">
+                                <option value="">Select Patient...</option>
+                                <!-- Patient options would be populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="dateRange" class="form-label">Date Range</label>
+                            <select class="form-select" id="dateRange">
+                                <option value="7">Last 7 Days</option>
+                                <option value="30" selected>Last 30 Days</option>
+                                <option value="90">Last 90 Days</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <button type="button" class="btn btn-primary" id="generateReportBtn">
+                                <i class="fas fa-file-pdf"></i> Generate Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Recent Records -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Medical Records</h5>
+                </div>
+                <div class="card-body">
+                    {% if records %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Patient</th>
+                                        <th>Diagnosis</th>
+                                        <th>PDF</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in records %}
+                                        <tr>
+                                            <td>{{ record.report_date|date:"M d, Y" }}</td>
+                                            <td>{{ record.patient.full_name }}</td>
+                                            <td class="text-truncate" style="max-width: 300px;">{{ record.diagnosis }}</td>
+                                            <td>
+                                                <a href="{% url 'medical_record_pdf' record_id=record.id %}" class="btn btn-sm btn-danger" target="_blank">
+                                                    <i class="fas fa-file-pdf"></i> Download
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> No recent medical records found.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Batch Download Options -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Batch Downloads</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-user-md fa-3x mb-3 text-primary"></i>
+                                    <h5>My Records (Today)</h5>
+                                    <p class="text-muted">Download all records you created today</p>
+                                    <button class="btn btn-outline-primary mt-2" id="downloadTodayBtn">
+                                        <i class="fas fa-download"></i> Download
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-calendar-week fa-3x mb-3 text-success"></i>
+                                    <h5>Weekly Summary</h5>
+                                    <p class="text-muted">Download this week's records summary</p>
+                                    <button class="btn btn-outline-success mt-2" id="downloadWeeklyBtn">
+                                        <i class="fas fa-download"></i> Download
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-line fa-3x mb-3 text-danger"></i>
+                                    <h5>Monthly Report</h5>
+                                    <p class="text-muted">Download monthly activity report</p>
+                                    <button class="btn btn-outline-danger mt-2" id="downloadMonthlyBtn">
+                                        <i class="fas fa-download"></i> Download
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle generate report button
+        const generateReportBtn = document.getElementById('generateReportBtn');
+        
+        generateReportBtn?.addEventListener('click', function() {
+            const reportType = document.getElementById('reportType').value;
+            const patientId = document.getElementById('patientSelect').value;
+            const dateRange = document.getElementById('dateRange').value;
+            
+            // This would be implemented to actually generate and download reports
+            alert(`Generating ${reportType} report... This feature is under development.`);
+        });
+        
+        // Handle batch download buttons
+        document.getElementById('downloadTodayBtn')?.addEventListener('click', function() {
+            alert('Downloading today\'s records... This feature is under development.');
+        });
+        
+        document.getElementById('downloadWeeklyBtn')?.addEventListener('click', function() {
+            alert('Downloading weekly summary... This feature is under development.');
+        });
+        
+        document.getElementById('downloadMonthlyBtn')?.addEventListener('click', function() {
+            alert('Downloading monthly report... This feature is under development.');
+        });
+    });
+</script>
+{% endblock %} 

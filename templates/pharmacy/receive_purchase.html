@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Receive Purchase | HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12 mb-3">
+            <a href="{% url 'purchase_detail' purchase.id %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Purchase Details
+            </a>
+        </div>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Receive Purchase #{{ purchase.id }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Supplier:</strong></p>
+                            <p>{{ purchase.supplier.name }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Invoice Number:</strong></p>
+                            <p>{{ purchase.invoice_number|default:"Not Specified" }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Purchase Date:</strong></p>
+                            <p>{{ purchase.purchase_date|date:"F d, Y" }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Total Amount:</strong></p>
+                            <p>${{ purchase.final_amount }}</p>
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="alert alert-warning">
+                            <p><strong>Warning:</strong> Receiving this purchase will update the inventory stock quantities. Make sure all items have been physically received before confirming.</p>
+                        </div>
+                        
+                        <h5 class="mt-4 mb-3">Purchase Items</h5>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Medicine</th>
+                                        <th>Batch #</th>
+                                        <th>Expiry Date</th>
+                                        <th>Ordered Qty</th>
+                                        <th>Received Qty</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in purchase_items %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ item.medicine.name }}</td>
+                                        <td>{{ item.batch_number|default:"-" }}</td>
+                                        <td>{{ item.expiry_date|date:"M d, Y" }}</td>
+                                        <td>{{ item.quantity }}</td>
+                                        <td>
+                                            <input type="number" name="received_qty_{{ item.id }}" class="form-control" value="{{ item.quantity }}" min="0" max="{{ item.quantity }}" required>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label>Received Date</label>
+                            <input type="date" name="received_date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label>Notes</label>
+                            <textarea name="notes" class="form-control" rows="3" placeholder="Enter any notes about receiving this purchase"></textarea>
+                        </div>
+                        
+                        <div class="d-flex justify-content-end">
+                            <a href="{% url 'purchase_detail' purchase.id %}" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check"></i> Confirm Receipt
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

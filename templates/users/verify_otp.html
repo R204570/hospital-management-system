@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Verification - Smart Care</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% load static %}
+    <style>
+        :root {
+            --primary-color: #0037ff;
+            --secondary-color: #FF5722;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("{% static 'images/login-background.jpg' %}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(2px);
+            z-index: -1;
+        }
+        
+        .login-container {
+            max-width: 400px;
+            width: 100%;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .login-card {
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.15);
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+        
+        .login-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 30px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-body {
+            padding: 30px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #0026b3;
+            border-color: #0026b3;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(0, 55, 255, 0.25);
+        }
+        
+        .logo {
+            max-width: 300px;
+            width: 100%;
+            margin: 15px auto;
+            display: block;
+        }
+        
+        .otp-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .otp-input {
+            width: 40px;
+            height: 50px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <div class="login-card">
+            <div class="login-header">
+                <img src="{% static 'images/smartcare-logo.png' %}" alt="Smart Care Logo" class="logo">
+            </div>
+            <div class="login-body">
+                <h4 class="mb-3 text-center">OTP Verification</h4>
+                <p class="text-center mb-4">Enter the OTP sent to your email</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.otp.id_for_label }}" class="form-label">{{ form.otp.label }}</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            {{ form.otp }}
+                        </div>
+                        {% if form.otp.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ form.otp.errors }}
+                        </div>
+                        {% endif %}
+                        <div class="form-text">
+                            This code is valid for 2 minutes
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ form.non_field_errors }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-info small" role="alert">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Your session will expire after 3 minutes of inactivity
+                    </div>
+                    
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check-circle me-2"></i> Verify OTP
+                        </button>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-center">
+                            <a href="{% url 'forgot_password' %}" class="text-decoration-none">
+                                <i class="fas fa-arrow-left me-1"></i> Back
+                            </a>
+                        </div>
+                        
+                        {% if can_resend %}
+                        <div class="text-end">
+                            <a href="{% url 'verify_otp' %}?resend_otp=1" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-paper-plane me-1"></i> Resend OTP
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="text-muted small">
+                            <i class="fas fa-clock me-1"></i> Resend available in <span id="countdown"></span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% if not can_resend %}
+    <script>
+        // OTP countdown timer
+        document.addEventListener('DOMContentLoaded', function() {
+            const expiry = new Date("{{ otp_expiry|date:'c' }}");
+            
+            function updateCountdown() {
+                const now = new Date();
+                const diff = Math.max(0, Math.floor((expiry - now) / 1000));
+                
+                if (diff <= 0) {
+                    document.getElementById('countdown').textContent = '0s';
+                    window.location.reload(); // Reload to enable resend button
+                    return;
+                }
+                
+                const minutes = Math.floor(diff / 60);
+                const seconds = diff % 60;
+                
+                document.getElementById('countdown').textContent = 
+                    (minutes > 0 ? minutes + 'm ' : '') + seconds + 's';
+                
+                setTimeout(updateCountdown, 1000);
+            }
+            
+            updateCountdown();
+        });
+    </script>
+    {% endif %}
+</body>
+</html> 

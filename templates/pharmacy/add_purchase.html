@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Purchase | HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12 mb-3">
+            <a href="{% url 'purchase_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Purchases
+            </a>
+        </div>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Add New Purchase</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Supplier</label>
+                                    <select name="supplier" class="form-select" required>
+                                        <option value="">Select Supplier</option>
+                                        {% for supplier in suppliers %}
+                                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Invoice Number</label>
+                                    <input type="text" name="invoice_number" class="form-control" placeholder="Enter invoice number">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Purchase Date</label>
+                                    <input type="date" name="purchase_date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        <h5>Purchase Items</h5>
+                        
+                        <div id="purchase-items">
+                            <div class="purchase-item mb-3 border p-3 rounded">
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <label>Medicine</label>
+                                        <select name="medicine[]" class="form-select" required>
+                                            <option value="">Select Medicine</option>
+                                            {% for medicine in medicines %}
+                                            <option value="{{ medicine.id }}">{{ medicine.name }} | {{ medicine.generic_name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label>Unit Price</label>
+                                        <input type="number" name="unit_price[]" class="form-control unit-price" step="0.01" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label>Quantity</label>
+                                        <input type="number" name="quantity[]" class="form-control quantity" value="1" min="1" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label>Batch Number</label>
+                                        <input type="text" name="batch_number[]" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Expiry Date</label>
+                                        <input type="date" name="expiry_date[]" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Subtotal</label>
+                                        <input type="text" class="form-control subtotal" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button type="button" id="add-item" class="btn btn-outline-primary">
+                                <i class="fas fa-plus"></i> Add Another Item
+                            </button>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="offset-md-8 col-md-4">
+                                <div class="form-group mb-2">
+                                    <label>Total Amount</label>
+                                    <input type="text" name="total_amount" id="total-amount" class="form-control form-control-lg" readonly>
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label>Discount</label>
+                                    <input type="number" name="discount" id="discount" class="form-control" value="0" min="0" step="0.01">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Final Amount</label>
+                                    <input type="text" name="final_amount" id="final-amount" class="form-control form-control-lg" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label>Notes</label>
+                            <textarea name="notes" class="form-control" rows="3" placeholder="Enter any notes about this purchase"></textarea>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Purchase
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addItemBtn = document.getElementById('add-item');
+        const purchaseItems = document.getElementById('purchase-items');
+        
+        // Function to calculate item subtotal
+        function calculateSubtotal(item) {
+            const unitPrice = parseFloat(item.querySelector('.unit-price').value) || 0;
+            const quantity = parseInt(item.querySelector('.quantity').value) || 0;
+            const subtotal = unitPrice * quantity;
+            item.querySelector('.subtotal').value = subtotal.toFixed(2);
+        }
+        
+        // Function to calculate total amount
+        function calculateTotal() {
+            let total = 0;
+            document.querySelectorAll('.subtotal').forEach(function(subtotalField) {
+                total += parseFloat(subtotalField.value) || 0;
+            });
+            
+            document.getElementById('total-amount').value = total.toFixed(2);
+            
+            // Calculate final amount with discount
+            const discount = parseFloat(document.getElementById('discount').value) || 0;
+            const finalAmount = total - discount;
+            document.getElementById('final-amount').value = finalAmount.toFixed(2);
+        }
+        
+        // Add event listeners to quantity and unit price fields
+        function addCalculationListeners(item) {
+            const unitPriceField = item.querySelector('.unit-price');
+            const quantityField = item.querySelector('.quantity');
+            
+            unitPriceField.addEventListener('input', function() {
+                calculateSubtotal(item);
+                calculateTotal();
+            });
+            
+            quantityField.addEventListener('input', function() {
+                calculateSubtotal(item);
+                calculateTotal();
+            });
+        }
+        
+        // Add calculation listeners to initial row
+        const initialItem = document.querySelector('.purchase-item');
+        addCalculationListeners(initialItem);
+        
+        // Add discount change listener
+        document.getElementById('discount').addEventListener('input', calculateTotal);
+        
+        // Add new item button click handler
+        addItemBtn.addEventListener('click', function() {
+            const newItem = initialItem.cloneNode(true);
+            
+            // Reset input values
+            newItem.querySelectorAll('input[type="number"], input[type="text"]').forEach(function(input) {
+                if (input.classList.contains('quantity')) {
+                    input.value = '1';
+                } else {
+                    input.value = '';
+                }
+            });
+            
+            // Reset date field
+            const dateField = newItem.querySelector('input[type="date"]');
+            if (dateField) {
+                dateField.value = '';
+            }
+            
+            // Reset select
+            newItem.querySelector('select').selectedIndex = 0;
+            
+            // Add calculation listeners to new item
+            addCalculationListeners(newItem);
+            
+            // Append new item
+            purchaseItems.appendChild(newItem);
+        });
+    });
+</script>
+{% endblock %} 

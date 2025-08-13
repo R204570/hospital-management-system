@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Appointment Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Appointment Details</h4>
+                    <span class="badge {% if appointment.status == 'SCHEDULED' %}bg-primary
+                          {% elif appointment.status == 'CONFIRMED' %}bg-success
+                          {% elif appointment.status == 'COMPLETED' %}bg-info
+                          {% elif appointment.status == 'CANCELLED' %}bg-danger
+                          {% else %}bg-warning{% endif %}">
+                        {{ appointment.get_status_display }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                    <div class="messages mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5 class="border-bottom pb-2">Patient Information</h5>
+                            <p><strong>Name:</strong> {{ appointment.patient.full_name }}</p>
+                            <p><strong>ID:</strong> {{ appointment.patient.patient_id }}</p>
+                            <p><strong>Phone:</strong> {{ appointment.patient.phone_number }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="border-bottom pb-2">Doctor Information</h5>
+                            <p><strong>Name:</strong> Dr. {{ appointment.doctor.get_full_name }}</p>
+                            <p><strong>Specialization:</strong> {{ appointment.doctor.specialization }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2">Appointment Details</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Date:</strong> {{ appointment.date|date:"l, F j, Y" }}</p>
+                                    <p><strong>Time:</strong> {{ appointment.start_time|time:"g:i A" }} - {{ appointment.end_time|time:"g:i A" }}</p>
+                                    <p><strong>Type:</strong> {{ appointment.get_appointment_type_display }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Created:</strong> {{ appointment.created_at|date:"M d, Y" }}</p>
+                                    <p><strong>Created By:</strong> {{ appointment.created_by.get_full_name }}</p>
+                                    <p><strong>Last Updated:</strong> {{ appointment.updated_at|date:"M d, Y g:i A" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2">Reason for Visit</h5>
+                            <p>{{ appointment.reason }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if appointment.notes %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2">Notes & History</h5>
+                            <div class="bg-light p-3 rounded">
+                                {{ appointment.notes|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Update Status Form -->
+                    {% if request.user.is_doctor or request.user.is_admin or request.user.is_receptionist %}
+                    {% if appointment.status != 'COMPLETED' and appointment.status != 'CANCELLED' %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2">Update Status</h5>
+                            <form method="post" action="{% url 'update_appointment_status' appointment.id %}">
+                                {% csrf_token %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {{ status_form.status|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        {{ status_form.notes|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">Update Status</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'appointment_list' %}" class="btn btn-secondary">Back to List</a>
+                        
+                        {% if request.user.is_receptionist and appointment.status != 'CANCELLED' and appointment.status != 'COMPLETED' %}
+                        <a href="{% url 'cancel_appointment' appointment.id %}" class="btn btn-danger">Cancel Appointment</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

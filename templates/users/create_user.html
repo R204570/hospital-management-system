@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create New User{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hide role-specific fields initially */
+    .doctor-field, .nurse-field, .pharmacist-field {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>
+                <i class="fas fa-user-plus text-primary me-2"></i>
+                Create New User
+            </h2>
+            <p class="text-muted">Add a new user to the system</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Account Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.first_name|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.last_name|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.username|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.email|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.password1|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.password2|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">User Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.role|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.phone_number|as_crispy_field }}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.address|as_crispy_field }}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.profile_picture|as_crispy_field }}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.qualification|as_crispy_field }}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.years_of_experience|as_crispy_field }}
+                                </div>
+                                
+                                <!-- Doctor-specific fields -->
+                                <div class="doctor-field mb-3">
+                                    {{ form.specialization|as_crispy_field }}
+                                </div>
+                                
+                                <div class="doctor-field mb-3">
+                                    {{ form.doctor_license_number|as_crispy_field }}
+                                </div>
+                                
+                                <div class="doctor-field mb-3">
+                                    {{ form.is_available|as_crispy_field }}
+                                </div>
+                                
+                                <!-- Nurse-specific fields -->
+                                <div class="nurse-field mb-3">
+                                    {{ form.nurse_license_number|as_crispy_field }}
+                                </div>
+                                
+                                <div class="nurse-field mb-3">
+                                    {{ form.nursing_specialty|as_crispy_field }}
+                                </div>
+                                
+                                <!-- Pharmacist-specific fields -->
+                                <div class="pharmacist-field mb-3">
+                                    {{ form.pharmacist_license_number|as_crispy_field }}
+                                </div>
+                                
+                                <div class="pharmacist-field mb-3">
+                                    {{ form.pharmacy_certification|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-end">
+                    <a href="{% url 'user_list' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Create User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show/hide role-specific fields based on role selection
+    document.addEventListener('DOMContentLoaded', function() {
+        const roleSelect = document.getElementById('id_role');
+        const doctorFields = document.querySelectorAll('.doctor-field');
+        const nurseFields = document.querySelectorAll('.nurse-field');
+        const pharmacistFields = document.querySelectorAll('.pharmacist-field');
+        
+        // Function to toggle role-specific fields visibility
+        function toggleRoleFields() {
+            const selectedRole = roleSelect.value;
+            
+            // Hide all role-specific fields first
+            doctorFields.forEach(field => field.style.display = 'none');
+            nurseFields.forEach(field => field.style.display = 'none');
+            pharmacistFields.forEach(field => field.style.display = 'none');
+            
+            // Show fields based on selected role
+            if(selectedRole === 'DOCTOR') {
+                doctorFields.forEach(field => field.style.display = 'block');
+            } else if(selectedRole === 'NURSE') {
+                nurseFields.forEach(field => field.style.display = 'block');
+            } else if(selectedRole === 'PHARMACIST') {
+                pharmacistFields.forEach(field => field.style.display = 'block');
+            }
+        }
+        
+        // Initialize fields on page load
+        toggleRoleFields();
+        
+        // Add event listener for role changes
+        roleSelect.addEventListener('change', toggleRoleFields);
+    });
+</script>
+{% endblock %} 

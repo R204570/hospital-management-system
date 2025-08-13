@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sale Details | HMS{% endblock %}
+
+{% block extra_head %}
+{% if print_mode %}
+<style>
+    @media print {
+        body {
+            font-size: 12pt;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: none;
+            padding: 0;
+        }
+        .no-print {
+            display: none !important;
+        }
+        .print-only {
+            display: block !important;
+        }
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .card-header, .card-footer {
+            background-color: white !important;
+        }
+        .table {
+            width: 100%;
+        }
+        h4 {
+            font-size: 14pt;
+            margin-bottom: 10px;
+        }
+    }
+    .print-only {
+        display: none;
+    }
+</style>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    {% if print_mode %}
+    <div class="row print-only mb-4">
+        <div class="col-12 text-center">
+            <h2>HMS Pharmacy</h2>
+            <p>123 Medical Center Blvd, Medical City</p>
+            <p>Phone: (123) 456-7890 | Email: pharmacy@hms.com</p>
+            <hr>
+            <h4>SALE RECEIPT</h4>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title">Sale Details #{{ sale.id }}</h4>
+                    <div class="no-print">
+                        <a href="{% url 'sale_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Sales
+                        </a>
+                        <button id="printBtn" class="btn btn-primary">
+                            <i class="fas fa-print"></i> Print Receipt
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Customer Information</h5>
+                            <table class="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <th width="150">Customer Type:</th>
+                                        <td>
+                                            {% if sale.patient %}
+                                                <span class="badge bg-info">Patient</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Walk-in</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Customer Name:</th>
+                                        <td>
+                                            {% if sale.patient %}
+                                                {{ sale.patient.get_full_name }}
+                                                {% if not print_mode %}
+                                                <a href="{% url 'patient_detail' sale.patient.id %}" class="btn btn-sm btn-link">
+                                                    <i class="fas fa-external-link-alt"></i>
+                                                </a>
+                                                {% endif %}
+                                            {% else %}
+                                                {{ sale.customer_name|default:"Anonymous" }}
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Sale Information</h5>
+                            <table class="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <th width="150">Receipt #:</th>
+                                        <td>{{ sale.id }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Date:</th>
+                                        <td>{{ sale.sale_date|date:"F d, Y H:i" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Payment Method:</th>
+                                        <td>
+                                            {% if sale.payment_method == 'CASH' %}
+                                                <span class="badge bg-success">Cash</span>
+                                            {% elif sale.payment_method == 'CREDIT_CARD' %}
+                                                <span class="badge bg-primary">Credit Card</span>
+                                            {% elif sale.payment_method == 'DEBIT_CARD' %}
+                                                <span class="badge bg-info">Debit Card</span>
+                                            {% elif sale.payment_method == 'INSURANCE' %}
+                                                <span class="badge bg-warning">Insurance</span>
+                                            {% elif sale.payment_method == 'MOBILE_PAYMENT' %}
+                                                <span class="badge bg-dark">Mobile Payment</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% if sale.prescription %}
+                                    <tr>
+                                        <th>Prescription:</th>
+                                        <td>
+                                            #{{ sale.prescription.id }}
+                                            {% if not print_mode %}
+                                            <a href="{% url 'prescription_detail' sale.prescription.id %}" class="btn btn-sm btn-link">
+                                                <i class="fas fa-external-link-alt"></i>
+                                            </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <h5>Sale Items</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Medicine</th>
+                                    <th>Unit Price</th>
+                                    <th>Quantity</th>
+                                    <th>Discount</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in sale.saleitem_set.all %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        {{ item.medicine.name }}
+                                        <small class="text-muted d-block">
+                                            {{ item.medicine.strength }} | {{ item.medicine.form }}
+                                        </small>
+                                    </td>
+                                    <td>${{ item.unit_price }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ item.discount }}%</td>
+                                    <td>${{ item.subtotal }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="5" class="text-end">Subtotal:</th>
+                                    <td>${{ sale.total_amount }}</td>
+                                </tr>
+                                <tr>
+                                    <th colspan="5" class="text-end">Discount:</th>
+                                    <td>{{ sale.discount }}%</td>
+                                </tr>
+                                <tr>
+                                    <th colspan="5" class="text-end">Tax:</th>
+                                    <td>{{ sale.tax }}%</td>
+                                </tr>
+                                <tr>
+                                    <th colspan="5" class="text-end">Final Amount:</th>
+                                    <td class="fw-bold">${{ sale.final_amount }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    {% if sale.notes %}
+                    <div class="mt-4">
+                        <h5>Notes</h5>
+                        <div class="card">
+                            <div class="card-body">
+                                {{ sale.notes }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4 print-only">
+                        <div class="row">
+                            <div class="col-12">
+                                <hr>
+                                <p class="text-center">
+                                    Thank you for your purchase!<br>
+                                    For refunds or exchanges, please contact us within 3 days with your receipt.
+                                </p>
+                                <p class="text-center mt-3">
+                                    <small>Issued on: {{ now|date:"F d, Y H:i" }}</small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if not print_mode %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('printBtn').addEventListener('click', function() {
+            window.print();
+        });
+    });
+</script>
+{% else %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Automatically print when in print mode
+        window.print();
+    });
+</script>
+{% endif %}
+{% endblock %} 

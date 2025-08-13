@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Low Stock Medicines{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Low Stock Medicines</h2>
+        <div>
+            <a href="{% url 'add_purchase' %}" class="btn btn-success">
+                <i class="bi bi-cart-plus me-2"></i> Create Purchase Order
+            </a>
+            <a href="{% url 'medicine_list' %}" class="btn btn-primary">
+                <i class="bi bi-arrow-left me-2"></i> Back to Inventory
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="row mb-4">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Low Stock Alert -->
+    <div class="alert alert-warning mb-4">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
+            <div>
+                <h5 class="alert-heading">Attention: Low Stock Items</h5>
+                <p class="mb-0">The following items are below their reorder levels and should be restocked soon.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Items Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Low Stock Medicines</h6>
+        </div>
+        <div class="card-body">
+            {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Dosage</th>
+                            <th>Current Stock</th>
+                            <th>Reorder Level</th>
+                            <th>Supplier</th>
+                            <th>Last Purchase</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for medicine in page_obj %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ medicine.name }}</div>
+                                <div class="text-muted small">{{ medicine.generic_name }}</div>
+                            </td>
+                            <td>{{ medicine.category.name }}</td>
+                            <td>
+                                <div class="fw-bold">{{ medicine.strength|default:"--" }}</div>
+                                <div class="text-muted small">{{ medicine.dosage_form|default:"--" }}</div>
+                            </td>
+                            <td class="text-warning fw-bold">{{ medicine.stock_quantity }}</td>
+                            <td>{{ medicine.reorder_level }}</td>
+                            <td>
+                                {% if medicine.supplier %}
+                                {{ medicine.supplier.name }}
+                                {% else %}
+                                <span class="text-muted">No supplier</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if medicine.purchase_items.exists %}
+                                {{ medicine.purchase_items.first.purchase.purchase_date|date:"M d, Y" }}
+                                {% else %}
+                                <span class="text-muted">No data</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'medicine_detail' medicine.id %}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a href="{% url 'add_purchase' %}" class="btn btn-sm btn-success">
+                                    <i class="bi bi-cart-plus"></i> Order
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-check-circle-fill text-success fs-1 mb-3"></i>
+                <h5>All items are sufficiently stocked!</h5>
+                <p class="text-muted">There are currently no medicines below their reorder levels.</p>
+                <a href="{% url 'medicine_list' %}" class="btn btn-primary mt-3">
+                    <i class="bi bi-arrow-left me-2"></i> Back to Inventory
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

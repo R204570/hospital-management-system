@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add New Medicine{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Add New Medicine</h6>
+                    <a href="{% url 'medicine_list' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-arrow-left me-2"></i> Back to List
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                    <div class="mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" action="{% url 'add_medicine' %}">
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">Basic Information</h5>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Medicine Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="generic_name" class="form-label">Generic Name</label>
+                                <input type="text" class="form-control" id="generic_name" name="generic_name">
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Classification -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">Classification</h5>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Select Category</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="supplier" class="form-label">Supplier</label>
+                                <select class="form-select" id="supplier" name="supplier">
+                                    <option value="">Select Supplier (Optional)</option>
+                                    {% for supplier in suppliers %}
+                                    <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Pricing & Stock -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">Pricing & Stock</h5>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="purchase_price" class="form-label">Purchase Price <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="purchase_price" name="purchase_price" step="0.01" min="0" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="selling_price" class="form-label">Selling Price <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="selling_price" name="selling_price" step="0.01" min="0" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="stock_quantity" class="form-label">Initial Stock</label>
+                                <input type="number" class="form-control" id="stock_quantity" name="stock_quantity" min="0" value="0">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="reorder_level" class="form-label">Reorder Level</label>
+                                <input type="number" class="form-control" id="reorder_level" name="reorder_level" min="1" value="10">
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Details -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2 mb-3">Additional Details</h5>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="dosage_form" class="form-label">Dosage Form</label>
+                                <input type="text" class="form-control" id="dosage_form" name="dosage_form" placeholder="e.g., Tablet, Capsule">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="strength" class="form-label">Strength</label>
+                                <input type="text" class="form-control" id="strength" name="strength" placeholder="e.g., 500mg, 5ml">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="manufacturer" class="form-label">Manufacturer <span class="text-danger">*</span></label>
+                                <select class="form-select" id="manufacturer" name="manufacturer" required>
+                                    <option value="">Select Manufacturer</option>
+                                    <option value="Pfizer">Pfizer (USA)</option>
+                                    <option value="Johnson & Johnson">Johnson & Johnson (USA)</option>
+                                    <option value="Roche">Roche (Switzerland)</option>
+                                    <option value="Novartis">Novartis (Switzerland)</option>
+                                    <option value="Merck & Co.">Merck & Co. (USA)</option>
+                                    <option value="GlaxoSmithKline">GlaxoSmithKline (UK)</option>
+                                    <option value="Sanofi">Sanofi (France)</option>
+                                    <option value="Gilead Sciences">Gilead Sciences (USA)</option>
+                                    <option value="AstraZeneca">AstraZeneca (UK)</option>
+                                    <option value="AbbVie">AbbVie (USA)</option>
+                                    <option value="Bayer">Bayer (Germany)</option>
+                                    <option value="Eli Lilly">Eli Lilly (USA)</option>
+                                    <option value="Bristol-Myers Squibb">Bristol-Myers Squibb (USA)</option>
+                                    <option value="Amgen">Amgen (USA)</option>
+                                    <option value="Boehringer Ingelheim">Boehringer Ingelheim (Germany)</option>
+                                    <option value="Teva Pharmaceutical">Teva Pharmaceutical (Israel)</option>
+                                    <option value="Novo Nordisk">Novo Nordisk (Denmark)</option>
+                                    <option value="Takeda Pharmaceutical">Takeda Pharmaceutical (Japan)</option>
+                                    <option value="Biogen">Biogen (USA)</option>
+                                    <option value="Allergan">Allergan (Ireland)</option>
+                                    <option value="Sun Pharmaceutical">Sun Pharmaceutical (India)</option>
+                                    <option value="Cipla">Cipla (India)</option>
+                                    <option value="Lupin Limited">Lupin Limited (India)</option>
+                                    <option value="Dr. Reddy's Laboratories">Dr. Reddy's Laboratories (India)</option>
+                                    <option value="Astellas Pharma">Astellas Pharma (Japan)</option>
+                                    <option value="Eisai">Eisai (Japan)</option>
+                                    <option value="Daiichi Sankyo">Daiichi Sankyo (Japan)</option>
+                                    <option value="CSL Limited">CSL Limited (Australia)</option>
+                                    <option value="Grifols">Grifols (Spain)</option>
+                                    <option value="Regeneron Pharmaceuticals">Regeneron Pharmaceuticals (USA)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="expiry_date" class="form-label">Expiry Date</label>
+                                <input type="date" class="form-control" id="expiry_date" name="expiry_date">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="batch_number" class="form-label">Batch Number</label>
+                                <input type="text" class="form-control" id="batch_number" name="batch_number">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" id="requires_prescription" name="requires_prescription">
+                                    <label class="form-check-label" for="requires_prescription">
+                                        <strong>Requires Prescription</strong> - This medicine can only be sold with a valid prescription
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <button type="submit" class="btn btn-primary px-5">
+                                    <i class="bi bi-plus-circle me-2"></i> Add Medicine
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set minimum expiry date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('expiry_date').setAttribute('min', today);
+    
+    // Auto-calculate selling price (example: 30% markup)
+    document.getElementById('purchase_price').addEventListener('input', function() {
+        const purchasePrice = parseFloat(this.value) || 0;
+        const markupPercentage = 30; // 30% markup
+        const sellingPrice = purchasePrice * (1 + markupPercentage/100);
+        document.getElementById('selling_price').value = sellingPrice.toFixed(2);
+    });
+</script>
+{% endblock %} 

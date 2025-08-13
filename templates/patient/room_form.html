@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>{{ title }}</h2>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'room_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Rooms
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8 mx-auto">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if room %}
+                        <div class="alert alert-info mb-4">
+                            <h5 class="alert-heading">Editing Room {{ room.room_number }}</h5>
+                            <p class="mb-0">You are currently editing the details for Room {{ room.room_number }} on Floor {{ room.floor }}.</p>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info mb-4">
+                            <h5 class="alert-heading">Creating New Room</h5>
+                            <p>Please select the appropriate floor and specialization. The room number will be automatically generated.</p>
+                            <p class="mb-0">Note: 10 beds will be automatically created in this room.</p>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Specialization field with description of floors -->
+                        <div class="mb-4">
+                            {{ form.specialization|as_crispy_field }}
+                            <div class="mt-2 small">
+                                <ul>
+                                    <li><strong>General Medicine:</strong> 1st Floor</li>
+                                    <li><strong>Orthopedic:</strong> 2nd Floor</li>
+                                    <li><strong>Cardiology:</strong> 3rd Floor</li>
+                                    <li><strong>Oncology (Cancer Specialists):</strong> 4th & 5th Floors</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.floor|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.is_active|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="col-12 text-end">
+                                <a href="{% url 'room_list' %}" class="btn btn-secondary me-2">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    {% if room %}
+                                    <i class="bi bi-save"></i> Update Room
+                                    {% else %}
+                                    <i class="bi bi-plus-circle"></i> Create Room
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Update floor options based on specialization
+        $('#id_specialization').on('change', function() {
+            const specialization = $(this).val();
+            const floorInput = $('#id_floor');
+            
+            // Set appropriate floor based on specialization
+            switch(specialization) {
+                case 'GENERAL_MEDICINE':
+                    floorInput.val(1);
+                    break;
+                case 'ORTHOPEDIC':
+                    floorInput.val(2);
+                    break;
+                case 'CARDIOLOGY':
+                    floorInput.val(3);
+                    break;
+                case 'ONCOLOGY':
+                    floorInput.val(4); // Default to 4th floor for oncology
+                    break;
+            }
+        });
+    });
+</script>
+{% endblock %} 

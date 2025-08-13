@@ -1,0 +1,379 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Book Appointment{% endblock %}
+
+{% block extra_css %}
+<style>
+    .time-slot {
+        display: inline-block;
+        padding: 8px 12px;
+        margin: 5px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .time-slot:hover {
+        background-color: #e9ecef;
+    }
+    
+    .time-slot.selected {
+        background-color: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+    
+    #available-slots {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Book New Appointment</h2>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            {% if messages %}
+            <div class="messages mb-4">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <form method="post" id="appointment-form">
+                {% csrf_token %}
+                <input type="hidden" name="time_slot" id="time_slot">
+                
+                <div class="row">
+                    <!-- Step 1: Patient and Appointment Type -->
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Patient & Appointment Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        {{ form.patient|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        {{ form.appointment_type|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        {{ form.is_emergency|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        {{ form.reason|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2: Time slot selection -->
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Select Date & Doctor</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ slot_form.date|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ slot_form.doctor|as_crispy_field }}
+                                    </div>
+                                </div>
+                                
+                                <div class="d-grid gap-2 mb-3">
+                                    <button type="button" id="check-availability" class="btn btn-outline-primary">
+                                        <i class="bi bi-calendar-check"></i> Check Availability
+                                    </button>
+                                </div>
+                                
+                                <div id="slots-container" style="display: none;">
+                                    <h6 class="border-bottom pb-2 mb-3">Available Time Slots</h6>
+                                    <div id="available-slots" class="mb-3">
+                                        <div class="text-center py-3">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="mt-2">Loading available slots...</p>
+                                        </div>
+                                    </div>
+                                    <div id="no-slots" class="alert alert-warning" style="display: none;">
+                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                        No available time slots for the selected date and doctor.
+                                    </div>
+                                </div>
+                                
+                                <!-- Hidden fields for time -->
+                                <div class="d-none">
+                                    {{ form.date|as_crispy_field }}
+                                    {{ form.start_time|as_crispy_field }}
+                                    {{ form.end_time|as_crispy_field }}
+                                    {{ form.doctor|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12 text-end">
+                        <a href="{% url 'appointment_list' %}" class="btn btn-secondary me-2">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary" id="book-btn" disabled>
+                            <i class="bi bi-calendar-plus"></i> Book Appointment
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded - initializing appointment booking form');
+        
+        // Debug form fields to verify ID names
+        const formFields = document.querySelectorAll('form input, form select');
+        console.log('All form fields:', formFields);
+        
+        const checkAvailabilityBtn = document.getElementById('check-availability');
+        const slotsContainer = document.getElementById('slots-container');
+        const availableSlotsDiv = document.getElementById('available-slots');
+        const noSlotsDiv = document.getElementById('no-slots');
+        const timeSlotInput = document.getElementById('time_slot');
+        const bookBtn = document.getElementById('book-btn');
+        
+        // Get form elements - try both possible ID formats
+        const startTimeInput = document.getElementById('id_start_time') || document.getElementById('start_time');
+        const endTimeInput = document.getElementById('id_end_time') || document.getElementById('end_time');
+        const doctorSelectSlot = document.getElementById('id_doctor') || document.getElementById('doctor-select');
+        const doctorSelect = document.getElementById('id_slot-doctor');
+        const dateSelect = document.getElementById('id_slot-date');
+        const dateField = document.getElementById('id_date') || document.getElementById('date-select');
+        const appointmentForm = document.getElementById('appointment-form');
+        const isEmergencyCheckbox = document.getElementById('is-emergency') || document.getElementById('id_is_emergency');
+        const appointmentTypeSelect = document.getElementById('id_appointment_type');
+        
+        // Log field references to debug
+        console.log('Form element references:');
+        console.log('- startTimeInput:', startTimeInput);
+        console.log('- endTimeInput:', endTimeInput);
+        console.log('- doctorSelectSlot:', doctorSelectSlot);
+        console.log('- doctorSelect:', doctorSelect);
+        console.log('- dateSelect:', dateSelect);
+        console.log('- dateField:', dateField);
+        console.log('- isEmergencyCheckbox:', isEmergencyCheckbox);
+        console.log('- appointmentTypeSelect:', appointmentTypeSelect);
+        
+        // Emergency checkbox handling
+        if (isEmergencyCheckbox) {
+            console.log('Setting up emergency checkbox handler');
+            isEmergencyCheckbox.addEventListener('change', function() {
+                console.log('Emergency checkbox changed:', this.checked);
+                if (this.checked) {
+                    // If emergency is checked, set appointment type to EMERGENCY
+                    if (appointmentTypeSelect) {
+                        // Find the EMERGENCY option value
+                        for (let i = 0; i < appointmentTypeSelect.options.length; i++) {
+                            if (appointmentTypeSelect.options[i].text.includes('Emergency')) {
+                                appointmentTypeSelect.value = appointmentTypeSelect.options[i].value;
+                                console.log('Set appointment type to Emergency:', appointmentTypeSelect.value);
+                                break;
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Form submission handler
+        appointmentForm.addEventListener('submit', function(e) {
+            console.log('Form submit triggered');
+            
+            // Make sure we have selected a time slot
+            if (!timeSlotInput.value) {
+                console.log('Error: No time slot selected');
+                e.preventDefault();
+                alert('Please select a time slot before booking the appointment');
+                return false;
+            }
+            
+            // Make sure all required form data is set
+            if (!startTimeInput?.value || !endTimeInput?.value || !doctorSelectSlot?.value || !dateField?.value) {
+                console.log('Missing required form data:');
+                console.log('Start time:', startTimeInput?.value);
+                console.log('End time:', endTimeInput?.value);
+                console.log('Doctor:', doctorSelectSlot?.value);
+                console.log('Date:', dateField?.value);
+                e.preventDefault();
+                alert('Please make sure all appointment details are filled out');
+                return false;
+            }
+            
+            console.log('Form validation passed, submitting');
+            return true;
+        });
+        
+        checkAvailabilityBtn.addEventListener('click', function() {
+            const date = dateSelect?.value;
+            const doctorId = doctorSelect?.value;
+            
+            console.log('Check availability clicked for date:', date, 'doctor:', doctorId);
+            
+            if (!date || !doctorId) {
+                alert('Please select both a date and doctor');
+                return;
+            }
+            
+            // Copy the doctor selection and date to the hidden fields
+            if (doctorSelectSlot) {
+                doctorSelectSlot.value = doctorId;
+                console.log('Set doctor field value:', doctorId);
+            }
+            
+            if (dateField) {
+                dateField.value = date;
+                console.log('Set date field value:', date);
+            }
+            
+            // Show slots container and loading state
+            slotsContainer.style.display = 'block';
+            availableSlotsDiv.innerHTML = `
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading available slots...</p>
+                </div>
+            `;
+            noSlotsDiv.style.display = 'none';
+            
+            // Check if this is an emergency appointment
+            const isEmergency = isEmergencyCheckbox && isEmergencyCheckbox.checked;
+            console.log('Is emergency?', isEmergency);
+            
+            // Prepare the fetch URL with proper parameters
+            const fetchUrl = `/appointment/get-available-slots/?date=${encodeURIComponent(date)}&doctor_id=${encodeURIComponent(doctorId)}&is_emergency=${isEmergency}`;
+            console.log('Fetching slots from:', fetchUrl);
+            
+            // Fetch available slots
+            fetch(fetchUrl)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`Server responded with status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Received data:', data);
+                    if (data.slots && data.slots.length > 0) {
+                        // Clear and populate slots
+                        availableSlotsDiv.innerHTML = '';
+                        console.log(`Found ${data.slots.length} available slots`);
+                        
+                        // If there's a warning, display it
+                        if (data.warning) {
+                            const warningDiv = document.createElement('div');
+                            warningDiv.className = 'alert alert-warning mb-3';
+                            warningDiv.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i> ${data.warning}`;
+                            availableSlotsDiv.appendChild(warningDiv);
+                        }
+                        
+                        data.slots.forEach(slot => {
+                            const slotDiv = document.createElement('div');
+                            slotDiv.className = 'time-slot';
+                            slotDiv.innerText = slot.display;
+                            slotDiv.dataset.start = slot.start;
+                            slotDiv.dataset.end = slot.end;
+                            
+                            slotDiv.addEventListener('click', function() {
+                                // Deselect all slots
+                                document.querySelectorAll('.time-slot').forEach(s => {
+                                    s.classList.remove('selected');
+                                });
+                                
+                                // Select this slot
+                                this.classList.add('selected');
+                                
+                                // Update hidden inputs
+                                timeSlotInput.value = `${slot.start},${slot.end}`;
+                                
+                                console.log('Selected time slot:', slot.display);
+                                
+                                if (startTimeInput) {
+                                    startTimeInput.value = slot.start;
+                                    console.log('Set start time:', startTimeInput.value);
+                                }
+                                
+                                if (endTimeInput) {
+                                    endTimeInput.value = slot.end;
+                                    console.log('Set end time:', endTimeInput.value);
+                                }
+                                
+                                if (doctorSelectSlot) {
+                                    console.log('Confirmed doctor ID:', doctorSelectSlot.value);
+                                }
+                                
+                                if (dateField) {
+                                    console.log('Confirmed date:', dateField.value);
+                                }
+                                
+                                // Enable book button
+                                bookBtn.disabled = false;
+                                console.log('Enabled book button');
+                            });
+                            
+                            availableSlotsDiv.appendChild(slotDiv);
+                        });
+                        
+                        noSlotsDiv.style.display = 'none';
+                    } else {
+                        // No slots available
+                        console.log('No time slots available');
+                        availableSlotsDiv.innerHTML = '';
+                        noSlotsDiv.style.display = 'block';
+                        bookBtn.disabled = true;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching slots:', error);
+                    availableSlotsDiv.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-circle-fill me-2"></i>
+                            Error loading time slots: ${error.message}. Please try again.
+                        </div>
+                    `;
+                });
+        });
+    });
+</script>
+{% endblock %} 

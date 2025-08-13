@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Receptionist Dashboard{% endblock %}
+
+{% block page_title %}Receptionist Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    
+    .inquiry-card {
+        border-left: 4px solid;
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 5px;
+        transition: all 0.3s;
+    }
+    
+    .inquiry-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .inquiry-card.appointment {
+        border-left-color: #007bff;
+        background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);
+    }
+    
+    .inquiry-card.contact {
+        border-left-color: #28a745;
+        background: linear-gradient(135deg, #e8f5e8 0%, #f8f9fa 100%);
+    }
+    
+    .inquiry-card.urgent {
+        border-left-color: #dc3545;
+        background: linear-gradient(135deg, #ffebee 0%, #f8f9fa 100%);
+    }
+    
+    .inquiry-sidebar {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .badge-notification {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    .quick-action-btn {
+        position: relative;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center">
+                            {% if user.profile_picture %}
+                            <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="img-fluid rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                            {% else %}
+                            <div class="bg-light rounded-circle d-flex justify-content-center align-items-center mx-auto" style="width: 120px; height: 120px;">
+                                <i class="fas fa-user-tie fa-4x text-secondary"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-10">
+                            <h2>Welcome, {{ request.user.get_full_name }}</h2>
+                            <p class="text-muted mb-0">Reception Dashboard</p>
+                            <p>Here you can manage appointments, register patients, and handle front desk operations.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid py-4">
+        <h2 class="mb-4">Receptionist Dashboard</h2>
+
+        {% if messages %}
+        <div class="row mb-4">
+            <div class="col-12">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <!-- Statistics Cards -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Today's Appointments</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ today_appointments_count }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-calendar-check fs-2 text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    Registered Patients</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ patients_count }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-people fs-2 text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    Available Doctors</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ available_doctors_count }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-person-badge fs-2 text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    Pending Appointments</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_appointments_count }}</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-hourglass-split fs-2 text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-danger shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                    Pending Inquiries</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_inquiries_count }}</div>
+                                {% if unread_email_replies > 0 %}
+                                <div class="text-xs text-muted">
+                                    📧 {{ unread_email_replies }} new email repl{{ unread_email_replies|pluralize:"y,ies" }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-envelope-exclamation fs-2 text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <!-- Today's Appointments -->
+            <div class="col-xl-6 col-lg-6">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                        <h6 class="m-0 font-weight-bold text-primary">Today's Appointments</h6>
+                        <a href="{% url 'appointment_list' %}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-list"></i> View All
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        {% if today_appointments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Patient</th>
+                                        <th>Doctor</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for appointment in today_appointments %}
+                                    <tr>
+                                        <td>{{ appointment.start_time|time:"g:i A" }}</td>
+                                        <td>{{ appointment.patient.full_name }}</td>
+                                        <td>Dr. {{ appointment.doctor.get_full_name }}</td>
+                                        <td>
+                                            <span class="badge {% if appointment.status == 'SCHEDULED' %}bg-warning{% elif appointment.status == 'COMPLETED' %}bg-success{% elif appointment.status == 'CANCELED' %}bg-danger{% else %}bg-info{% endif %}">
+                                                {{ appointment.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'appointment_detail' appointment.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted">No appointments scheduled for today.</p>
+                            <a href="{% url 'book_appointment' %}" class="btn btn-primary">
+                                <i class="bi bi-calendar-plus"></i> Book New Appointment
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="col-xl-3 col-lg-3">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-info">Recent Activities</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-bell text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="small text-muted">Use the notification bell above to view inquiries</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-calendar text-success"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="small text-muted">{{ today_appointments|length }} appointments today</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-users text-info"></i>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <div class="small text-muted">{{ available_doctors_count }} doctors available</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="col-xl-3 col-lg-3">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'book_appointment' %}" class="btn btn-primary">
+                                <i class="bi bi-calendar-plus me-2"></i> Book Appointment
+                            </a>
+                            <a href="{% url 'patient_register' %}" class="btn btn-success">
+                                <i class="bi bi-person-plus me-2"></i> Register Patient
+                            </a>
+                            <a href="{% url 'patient_list' %}" class="btn btn-info">
+                                <i class="bi bi-search me-2"></i> Search Patients
+                            </a>
+                            <a href="{% url 'inquiry_list' %}" class="btn btn-danger">
+                                <i class="bi bi-envelope me-2"></i> Manage Inquiries
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Toast for New Inquiries -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="inquiryToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-warning text-dark">
+            <i class="fas fa-bell me-2"></i>
+            <strong class="me-auto">New Inquiry</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            You have a new inquiry that needs attention!
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// CSRF token setup
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
+// Mark all inquiries as seen
+function markAllInquiriesSeen() {
+    fetch('{% url "mark_inquiries_seen" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload(); // Refresh to update the UI
+        } else {
+            alert('Error marking inquiries as seen: ' + data.error);
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        alert('An error occurred while marking inquiries as seen.');
+    });
+}
+
+// Check for new inquiries every 30 seconds
+setInterval(function() {
+    fetch('/appointment/inquiries/?ajax=1', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.new_inquiries > 0) {
+            // Show toast notification
+            const toastElement = document.getElementById('inquiryToast');
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+            
+            // Update badge numbers (optional - you might want to refresh instead)
+            // location.reload();
+        }
+    })
+    .catch((error) => {
+        console.error('Error checking for new inquiries:', error);
+    });
+}, 30000); // Check every 30 seconds
+
+// Add click cursor for inquiry cards
+document.addEventListener('DOMContentLoaded', function() {
+    const inquiryCards = document.querySelectorAll('.inquiry-card');
+    inquiryCards.forEach(card => {
+        card.style.cursor = 'pointer';
+    });
+});
+</script>
+{% endblock %} 

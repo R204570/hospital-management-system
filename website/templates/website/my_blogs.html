@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Blog Posts - Doctor Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="fas fa-blog text-primary me-2"></i> My Blog Posts</h2>
+            <p class="text-muted">Manage your medical articles and blog posts</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'website:create_blog' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Write New Post
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Row -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 col-12">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-primary">{{ total_blogs }}</h3>
+                    <p class="text-muted mb-0">Total Posts</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-12">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-success">{{ published_blogs }}</h3>
+                    <p class="text-muted mb-0">Published</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-12">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-info">{{ total_views }}</h3>
+                    <p class="text-muted mb-0">Total Views</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-12">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-warning">{{ total_subscribers }}</h3>
+                    <p class="text-muted mb-0">Subscribers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blog Posts Management -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Your Blog Posts</h5>
+                    <div>
+                        <a href="{% url 'website:create_blog' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> New Post
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if blogs %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Views</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for blog in blogs %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ blog.title|truncatechars:50 }}</strong>
+                                        {% if blog.is_featured %}
+                                        <span class="badge bg-success ms-2">Featured</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ blog.get_category_display }}</td>
+                                    <td>
+                                        {% if blog.status == 'PUBLISHED' %}
+                                        <span class="badge bg-success">Published</span>
+                                        {% elif blog.status == 'DRAFT' %}
+                                        <span class="badge bg-secondary">Draft</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ blog.views_count }}</td>
+                                    <td>{{ blog.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            {% if blog.status == 'PUBLISHED' %}
+                                            <a href="{% url 'website:blog_detail' blog.slug %}" class="btn btn-outline-info btn-sm" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            {% endif %}
+                                            <a href="{% url 'website:edit_blog' blog.slug %}" class="btn btn-outline-warning btn-sm" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'website:delete_blog' blog.slug %}" class="btn btn-outline-danger btn-sm" title="Delete" onclick="return confirm('Are you sure you want to delete this blog post?')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="p-5 text-center">
+                        <div style="font-size: 48px; color: #dee2e6; margin-bottom: 20px;">
+                            <i class="fas fa-blog"></i>
+                        </div>
+                        <h4>No Blog Posts Yet</h4>
+                        <p class="text-muted">You haven't written any blog posts yet. Share your medical expertise with the community!</p>
+                        <a href="{% url 'website:create_blog' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Write Your First Post
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

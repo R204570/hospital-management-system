@@ -1,0 +1,222 @@
+{% extends 'website/base.html' %}
+{% load static %}
+
+{% block title %}Blog - Smart Care Hospital{% endblock %}
+{% block meta_description %}Read the latest medical insights, health tips, and healthcare news from our expert doctors at Smart Care Hospital.{% endblock %}
+
+{% block extra_css %}
+<style>
+.clickable-blog-card {
+    cursor: pointer !important;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.clickable-blog-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.clickable-blog-card h2 {
+    transition: color 0.2s ease-in-out;
+}
+
+.clickable-blog-card:hover h2 {
+    color: #1A76D1;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+		<!-- Breadcrumbs -->
+		<div class="breadcrumbs overlay" style="background-image: url('{% static 'img/bread-bg.jpg' %}')">
+			<div class="container">
+				<div class="bread-inner">
+					<div class="row">
+						<div class="col-12">
+							<h2>Blog Grid Sidebar</h2>
+							<ul class="bread-list">
+								<li><a href="{% url 'website:index' %}">Home</a></li>
+								<li><i class="icofont-simple-right"></i></li>
+								<li class="active">Blog</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- End Breadcrumbs -->
+		
+		<!-- Single News -->
+		<section class="blog section" id="blog">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-8 col-12">
+						<div class="row">
+							{% if blogs %}
+								{% for blog in blogs %}
+								<div class="col-lg-6 col-md-6 col-12">
+									<!-- Single Blog -->
+									<div class="single-news clickable-blog-card" data-url="{% url 'website:track_blog_view' blog.slug %}">
+									<div class="news-head">
+											{% if blog.featured_image %}
+												<img src="{{ blog.featured_image.url }}" alt="{{ blog.title }}">
+											{% else %}
+												<img src="{% static 'img/blog1.jpg' %}" alt="{{ blog.title }}">
+											{% endif %}
+										</div>
+										<div class="news-body">
+											<div class="news-content">
+												<div class="date">{{ blog.created_at|date:"d M, Y" }}</div>
+												<h2>{{ blog.title }}</h2>
+												<p class="text">{{ blog.excerpt|default:blog.content|truncatewords:20 }}</p>
+											</div>
+										</div>
+									</div>
+									<!-- End Single Blog -->
+								</div>
+								{% endfor %}
+							{% else %}
+							<div class="col-12">
+									<div class="text-center py-5">
+										<h3>No blog posts found</h3>
+										<p>{% if search_query or selected_category or selected_author %}
+											No articles match your current filters. Try adjusting your search criteria.
+										{% else %}
+											No medical articles have been published yet. Our doctors will be sharing their insights soon!
+										{% endif %}</p>
+									</div>
+								</div>
+							{% endif %}
+							</div>
+						
+						<!-- Pagination -->
+						{% if blogs.has_other_pages %}
+						<div class="row">
+							<div class="col-12">
+								<div class="pagination-main">
+									<ul class="pagination">
+										{% if blogs.has_previous %}
+										<li><a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_author %}author={{ selected_author }}&{% endif %}page={{ blogs.previous_page_number }}"><i class="icofont-rounded-left"></i></a></li>
+										{% endif %}
+										
+										{% for num in blogs.paginator.page_range %}
+											{% if blogs.number == num %}
+											<li class="active"><a href="#">{{ num }}</a></li>
+											{% elif num > blogs.number|add:'-3' and num < blogs.number|add:'3' %}
+											<li><a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_author %}author={{ selected_author }}&{% endif %}page={{ num }}">{{ num }}</a></li>
+											{% endif %}
+										{% endfor %}
+										
+										{% if blogs.has_next %}
+										<li><a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_author %}author={{ selected_author }}&{% endif %}page={{ blogs.next_page_number }}"><i class="icofont-rounded-right"></i></a></li>
+										{% endif %}
+									</ul>
+								</div>
+							</div>
+						</div>
+						{% endif %}
+					</div>
+					<div class="col-lg-4 col-12">
+						<div class="main-sidebar">
+							<!-- Search Widget -->
+							<div class="single-widget search">
+								<div class="form">
+									<form method="GET">
+										<input type="text" name="search" value="{{ search_query }}" placeholder="Search Here...">
+										<button type="submit" class="button"><i class="fa fa-search"></i></button>
+									</form>
+								</div>
+							</div>
+							<!--/ End Search Form -->
+						
+							<!-- Categories -->
+							<div class="single-widget category">
+								<h3 class="title">Blog Categories</h3>
+								<ul class="categor-list">
+									<li><a href="{% url 'website:blog' %}">All Categories</a></li>
+									{% for choice in category_choices %}
+									<li><a href="{% url 'website:blog' %}?category={{ choice.0 }}">{{ choice.1 }}</a></li>
+									{% endfor %}
+								</ul>
+							</div>
+							<!--/ End Categories -->
+							
+							<!-- Authors -->
+							<div class="single-widget category">
+								<h3 class="title">Our Doctors</h3>
+								<ul class="categor-list">
+									<li><a href="{% url 'website:blog' %}">All Doctors</a></li>
+									{% for doctor in doctors %}
+									<li><a href="{% url 'website:blog' %}?author={{ doctor.id }}">Dr. {{ doctor.get_full_name }}</a></li>
+									{% endfor %}
+								</ul>
+							</div>
+							<!--/ End Authors -->
+							
+							<!-- Recent Posts -->
+							<div class="single-widget recent-post">
+								<h3 class="title">Recent Post</h3>
+								{% for recent_blog in recent_blogs %}
+								<!-- Single Post -->
+								<div class="single-post">
+									<div class="image">
+										{% if recent_blog.featured_image %}
+											<img src="{{ recent_blog.featured_image.url }}" alt="{{ recent_blog.title }}">
+										{% else %}
+											<img src="{% static 'img/blog-sidebar1.jpg' %}" alt="{{ recent_blog.title }}">
+										{% endif %}
+									</div>
+									<div class="content">
+										<h5><a href="{% url 'website:blog_detail' recent_blog.slug %}">{{ recent_blog.title|truncatechars:50 }}</a></h5>
+										<ul class="comment">
+											<li><i class="fa fa-calendar" aria-hidden="true"></i>{{ recent_blog.created_at|date:"M d, Y" }}</li>
+											<li><i class="fa fa-user" aria-hidden="true"></i>Dr. {{ recent_blog.author.get_full_name }}</li>
+										</ul>
+									</div>
+								</div>
+								<!-- End Single Post -->
+								{% empty %}
+								<p>No recent posts available.</p>
+								{% endfor %}
+							</div>
+							<!--/ End Recent Posts -->
+							
+							<!-- Side Tags -->
+							<div class="single-widget side-tags">
+								<h3 class="title">Tags</h3>
+								<ul class="tag">
+									<li><a href="#">Health</a></li>
+									<li><a href="#">Medical</a></li>
+									<li><a href="#">Doctor</a></li>
+									<li><a href="#">Treatment</a></li>
+									<li><a href="#">Healthcare</a></li>
+									<li><a href="#">Medicine</a></li>
+									<li><a href="#">Research</a></li>
+									<li><a href="#">Wellness</a></li>
+								</ul>
+							</div>
+							<!--/ End Side Tags -->
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<!--/ End Single News -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Make blog cards clickable
+    const blogCards = document.querySelectorAll('.clickable-blog-card');
+    blogCards.forEach(function(card) {
+        card.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            if (url) {
+                window.location.href = url;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

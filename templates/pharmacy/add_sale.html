@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Sale | HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12 mb-3">
+            <a href="{% url 'sale_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Sales
+            </a>
+        </div>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Add New Sale</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Customer Type</label>
+                                    <select name="customer_type" id="customer-type" class="form-select" required>
+                                        <option value="WALKIN">Walk-in Customer</option>
+                                        <option value="PATIENT">Hospital Patient</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4 patient-selector" style="display: none;">
+                                <div class="form-group">
+                                    <label>Select Patient</label>
+                                    <select name="patient" class="form-select">
+                                        <option value="">Select Patient</option>
+                                        {% for patient in patients %}
+                                        <option value="{{ patient.id }}">{{ patient.get_full_name }} (ID: {{ patient.id }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Customer Name</label>
+                                    <input type="text" name="customer_name" class="form-control" placeholder="Enter customer name">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Sale Date</label>
+                                    <input type="date" name="sale_date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        <h5>Sale Items</h5>
+                        
+                        <div id="sale-items">
+                            <div class="sale-item mb-3 border p-3 rounded">
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <label>Medicine</label>
+                                        <select name="medicine[]" class="form-select medicine-select" required>
+                                            <option value="">Select Medicine</option>
+                                            {% for medicine in medicines %}
+                                            <option value="{{ medicine.id }}" 
+                                                data-price="{{ medicine.selling_price }}"
+                                                data-stock="{{ medicine.stock_quantity }}"
+                                                data-prescription="{{ medicine.requires_prescription }}">
+                                                {{ medicine.name }} ({{ medicine.dosage_form }} {{ medicine.strength }})
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="form-text stock-info">Available stock: 0</div>
+                                        <div class="prescription-warning text-danger" style="display: none;">Requires prescription</div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label>Unit Price</label>
+                                        <input type="number" name="unit_price[]" class="form-control unit-price" step="0.01" readonly>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label>Quantity</label>
+                                        <input type="number" name="quantity[]" class="form-control quantity" value="1" min="1" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label>Instructions</label>
+                                        <input type="text" name="instructions[]" class="form-control" placeholder="Take 1 tablet twice daily after meals">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label>Discount</label>
+                                        <input type="number" name="discount[]" class="form-control item-discount" value="0" min="0" step="0.01">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label>Subtotal</label>
+                                        <input type="text" class="form-control subtotal" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <button type="button" id="add-item" class="btn btn-outline-primary">
+                                <i class="fas fa-plus"></i> Add Another Item
+                            </button>
+                        </div>
+                        
+                        <div class="row mt-4">
+                            <div class="offset-md-8 col-md-4">
+                                <div class="form-group mb-2">
+                                    <label>Total Amount</label>
+                                    <input type="text" name="total_amount" id="total-amount" class="form-control form-control-lg" readonly>
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label>Discount</label>
+                                    <input type="number" name="discount" id="discount" class="form-control" value="0" min="0" step="0.01">
+                                </div>
+                                <div class="form-group mb-2">
+                                    <label>Tax (5%)</label>
+                                    <input type="text" name="tax" id="tax" class="form-control" readonly>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label>Final Amount</label>
+                                    <input type="text" name="final_amount" id="final-amount" class="form-control form-control-lg" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label>Payment Method</label>
+                            <select name="payment_method" class="form-select">
+                                <option value="CASH">Cash</option>
+                                <option value="CREDIT_CARD">Credit Card</option>
+                                <option value="DEBIT_CARD">Debit Card</option>
+                                <option value="INSURANCE">Insurance</option>
+                                <option value="MOBILE_PAYMENT">Mobile Payment</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label>Notes</label>
+                            <textarea name="notes" class="form-control" rows="3" placeholder="Enter any notes about this sale"></textarea>
+                        </div>
+                        
+                        <!-- Hidden field to indicate if prescription was checked -->
+                        <input type="hidden" name="prescription_checked" id="prescription-checked" value="false">
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Complete Sale
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addItemBtn = document.getElementById('add-item');
+        const saleItems = document.getElementById('sale-items');
+        const customerTypeSelect = document.getElementById('customer-type');
+        const patientSelector = document.querySelector('.patient-selector');
+        
+        // Show/hide patient selector based on customer type
+        customerTypeSelect.addEventListener('change', function() {
+            if (this.value === 'PATIENT') {
+                patientSelector.style.display = 'block';
+            } else {
+                patientSelector.style.display = 'none';
+            }
+        });
+        
+        // Function to update stock info and prescription warning
+        function updateMedicineInfo(itemDiv) {
+            const select = itemDiv.querySelector('.medicine-select');
+            const stockInfo = itemDiv.querySelector('.stock-info');
+            const prescriptionWarning = itemDiv.querySelector('.prescription-warning');
+            const unitPriceField = itemDiv.querySelector('.unit-price');
+            
+            if (select.selectedIndex > 0) {
+                const option = select.options[select.selectedIndex];
+                const stock = option.dataset.stock;
+                const price = option.dataset.price;
+                const requiresPrescription = option.dataset.prescription === 'True';
+                
+                stockInfo.textContent = `Available stock: ${stock}`;
+                unitPriceField.value = price;
+                
+                if (requiresPrescription) {
+                    prescriptionWarning.style.display = 'block';
+                } else {
+                    prescriptionWarning.style.display = 'none';
+                }
+            } else {
+                stockInfo.textContent = 'Available stock: 0';
+                unitPriceField.value = '';
+                prescriptionWarning.style.display = 'none';
+            }
+        }
+        
+        // Function to calculate item subtotal
+        function calculateSubtotal(item) {
+            const unitPrice = parseFloat(item.querySelector('.unit-price').value) || 0;
+            const quantity = parseInt(item.querySelector('.quantity').value) || 0;
+            const itemDiscount = parseFloat(item.querySelector('.item-discount').value) || 0;
+            const subtotal = (unitPrice * quantity) - itemDiscount;
+            item.querySelector('.subtotal').value = subtotal.toFixed(2);
+        }
+        
+        // Function to calculate total amount
+        function calculateTotal() {
+            let total = 0;
+            document.querySelectorAll('.subtotal').forEach(function(subtotalField) {
+                total += parseFloat(subtotalField.value) || 0;
+            });
+            
+            document.getElementById('total-amount').value = total.toFixed(2);
+            
+            // Calculate tax and final amount
+            const discount = parseFloat(document.getElementById('discount').value) || 0;
+            const subtotalAfterDiscount = total - discount;
+            const tax = subtotalAfterDiscount * 0.05; // 5% tax
+            const finalAmount = subtotalAfterDiscount + tax;
+            
+            document.getElementById('tax').value = tax.toFixed(2);
+            document.getElementById('final-amount').value = finalAmount.toFixed(2);
+        }
+        
+        // Add event listeners to medicine select, quantity and discount fields
+        function addItemListeners(item) {
+            const medicineSelect = item.querySelector('.medicine-select');
+            const quantityField = item.querySelector('.quantity');
+            const discountField = item.querySelector('.item-discount');
+            
+            medicineSelect.addEventListener('change', function() {
+                updateMedicineInfo(item);
+                calculateSubtotal(item);
+                calculateTotal();
+            });
+            
+            quantityField.addEventListener('input', function() {
+                calculateSubtotal(item);
+                calculateTotal();
+            });
+            
+            discountField.addEventListener('input', function() {
+                calculateSubtotal(item);
+                calculateTotal();
+            });
+        }
+        
+        // Initialize the first item
+        const initialItem = document.querySelector('.sale-item');
+        addItemListeners(initialItem);
+        
+        // Add discount change listener
+        document.getElementById('discount').addEventListener('input', calculateTotal);
+        
+        // Add new item button click handler
+        addItemBtn.addEventListener('click', function() {
+            const newItem = initialItem.cloneNode(true);
+            
+            // Reset input values
+            newItem.querySelectorAll('input').forEach(function(input) {
+                if (input.classList.contains('quantity')) {
+                    input.value = '1';
+                } else {
+                    input.value = '';
+                }
+            });
+            
+            // Reset select
+            newItem.querySelector('select').selectedIndex = 0;
+            
+            // Reset stock info and prescription warning
+            newItem.querySelector('.stock-info').textContent = 'Available stock: 0';
+            newItem.querySelector('.prescription-warning').style.display = 'none';
+            
+            // Add listeners to new item
+            addItemListeners(newItem);
+            
+            // Append new item
+            saleItems.appendChild(newItem);
+        });
+        
+        // Set prescription_checked to true on form submit
+        document.querySelector('form').addEventListener('submit', function() {
+            document.getElementById('prescription-checked').value = 'true';
+        });
+    });
+</script>
+{% endblock %} 

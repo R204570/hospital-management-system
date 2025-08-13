@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Medical Report - {{ record.patient.full_name }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            font-size: 11pt;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .logo {
+            font-weight: bold;
+            font-size: 24px;
+            color: #0056b3;
+            margin-bottom: 5px;
+        }
+        .hospital-info {
+            font-size: 10pt;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .report-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin: 15px 0;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .record-id {
+            font-size: 9pt;
+            color: #777;
+            text-align: right;
+        }
+        .section {
+            margin-bottom: 15px;
+            page-break-inside: avoid;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 13pt;
+            margin-bottom: 10px;
+            color: #0056b3;
+            border-bottom: 1px solid #0056b3;
+            padding-bottom: 3px;
+        }
+        .patient-info {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: space-between;
+        }
+        .patient-details, .doctor-details {
+            flex: 1;
+        }
+        .info-row {
+            margin-bottom: 5px;
+            display: flex;
+        }
+        .label {
+            font-weight: bold;
+            width: 140px;
+            color: #555;
+        }
+        .value {
+            flex: 1;
+        }
+        .vital-signs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .vital-box {
+            flex: 1;
+            min-width: 100px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            text-align: center;
+            background-color: #f5f5f5;
+        }
+        .vital-title {
+            font-size: 9pt;
+            color: #666;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+        .vital-value {
+            font-weight: bold;
+            font-size: 14pt;
+            color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            width: 25%;
+            font-weight: bold;
+            color: #555;
+        }
+        .prescription-box {
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            padding: 10px 15px;
+            background-color: #d4edda;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .prescription-heading {
+            color: #155724;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-size: 11pt;
+            display: flex;
+            align-items: center;
+        }
+        .prescription-heading:before {
+            content: "Rx";
+            margin-right: 10px;
+            font-style: italic;
+            font-size: 16pt;
+            color: #155724;
+        }
+        .prescription-content {
+            white-space: pre-line;
+            font-size: 11pt;
+        }
+        .care-instructions {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .care-box {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            background-color: #f8f9fa;
+        }
+        .care-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+            border-bottom: 1px dotted #ccc;
+            padding-bottom: 3px;
+        }
+        .signature-section {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .date-section {
+            width: 40%;
+        }
+        .doctor-signature {
+            width: 40%;
+            text-align: center;
+        }
+        .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 40px;
+            margin-bottom: 5px;
+        }
+        .doctor-name {
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+            font-size: 9pt;
+            color: #777;
+            text-align: center;
+        }
+        .confidential {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 8pt;
+            color: #dc3545;
+            font-weight: bold;
+            transform: rotate(15deg);
+            border: 1px solid #dc3545;
+            padding: 2px 5px;
+            opacity: 0.7;
+        }
+        .confidential-stamp {
+            position: fixed;
+            top: 40%;
+            left: 20%;
+            transform: rotate(-45deg);
+            font-size: 72pt;
+            color: rgba(220, 53, 69, 0.1);
+            font-weight: bold;
+            z-index: -1;
+        }
+        .blood-test-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .follow-up-box {
+            border: 1px solid #b8daff;
+            background-color: #cce5ff;
+            color: #004085;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .follow-up-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .xray-section {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .xray-image {
+            max-width: 80%;
+            height: auto;
+            margin: 10px auto;
+            border: 1px solid #ddd;
+            padding: 5px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="confidential-stamp">CONFIDENTIAL</div>
+    
+    <div class="header">
+        {% load static %}
+        <img src="{% static 'images/smartcare-logo.png' %}" alt="Smart Care Logo" style="max-width: 200px; margin: 0 auto;">
+        <div class="hospital-info">
+            123 Medical Center Drive, Healthville | Phone: (123) 456-7890 | Email: info@smartcare.com
+        </div>
+    </div>
+    
+    <div class="report-title">Medical Report</div>
+    <div class="record-id">Report ID: MR-{{ record.id }} | Generated: {{ record.report_date|date:"F d, Y H:i" }}</div>
+    
+    <div class="section">
+        <div class="section-title">Patient Information</div>
+        <div class="patient-info">
+            <div class="patient-details">
+                <div class="info-row">
+                    <span class="label">Patient Name:</span>
+                    <span class="value">{{ record.patient.full_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Patient ID:</span>
+                    <span class="value">{{ record.patient.patient_id }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Date of Birth:</span>
+                    <span class="value">{{ record.patient.date_of_birth|date:"F d, Y" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Gender:</span>
+                    <span class="value">{{ record.patient.get_gender_display }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Blood Group:</span>
+                    <span class="value">{{ record.patient.blood_group|default:"Not recorded" }}</span>
+                </div>
+            </div>
+            
+            <div class="doctor-details">
+                <div class="info-row">
+                    <span class="label">Attending Physician:</span>
+                    <span class="value">Dr. {{ record.doctor.get_full_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Specialization:</span>
+                    <span class="value">{{ record.doctor.specialization }}</span>
+                </div>
+                {% if record.appointment %}
+                <div class="info-row">
+                    <span class="label">Appointment Date:</span>
+                    <span class="value">{{ record.appointment.date|date:"F d, Y" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Type:</span>
+                    <span class="value">{{ record.appointment.get_appointment_type_display }}</span>
+                </div>
+                {% endif %}
+                <div class="info-row">
+                    <span class="label">Report Date:</span>
+                    <span class="value">{{ record.report_date|date:"F d, Y" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Vital Signs</div>
+        <div class="vital-signs">
+            {% if record.blood_pressure %}
+            <div class="vital-box">
+                <div class="vital-title">Blood Pressure</div>
+                <div class="vital-value">{{ record.blood_pressure }}</div>
+            </div>
+            {% endif %}
+            
+            {% if record.temperature %}
+            <div class="vital-box">
+                <div class="vital-title">Temperature</div>
+                <div class="vital-value">{{ record.temperature }}°C</div>
+            </div>
+            {% endif %}
+            
+            {% if record.weight %}
+            <div class="vital-box">
+                <div class="vital-title">Weight</div>
+                <div class="vital-value">{{ record.weight }} kg</div>
+            </div>
+            {% endif %}
+            
+            {% if record.sugar_level %}
+            <div class="vital-box">
+                <div class="vital-title">Blood Glucose</div>
+                <div class="vital-value">{{ record.sugar_level }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">Clinical Assessment</div>
+        
+        <table>
+            <tr>
+                <th>Symptoms</th>
+                <td>{{ record.symptoms }}</td>
+            </tr>
+            <tr>
+                <th>Diagnosis</th>
+                <td>{{ record.diagnosis }}</td>
+            </tr>
+            <tr>
+                <th>Treatment Plan</th>
+                <td>{{ record.treatment_plan }}</td>
+            </tr>
+        </table>
+    </div>
+    
+    {% if record.blood_test_results %}
+    <div class="section">
+        <div class="section-title">Laboratory Results</div>
+        <div class="blood-test-box">{{ record.blood_test_results|linebreaks }}</div>
+    </div>
+    {% endif %}
+    
+    <div class="section">
+        <div class="section-title">Prescription</div>
+        <div class="prescription-box">
+            <div class="confidential">CONFIDENTIAL</div>
+            <div class="prescription-heading">Medications</div>
+            <div class="prescription-content">{{ record.prescription|linebreaks }}</div>
+        </div>
+    </div>
+    
+    {% if record.xray_image %}
+    <div class="section">
+        <div class="section-title">Diagnostic Imaging</div>
+        <div class="xray-section">
+            <img src="{{ record.xray_image.url }}" alt="X-ray Image" class="xray-image">
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if record.follow_up_date %}
+    <div class="follow-up-box">
+        <div class="follow-up-title">Follow-up Appointment</div>
+        <p>Please return for follow-up on: <strong>{{ record.follow_up_date|date:"F d, Y" }}</strong></p>
+    </div>
+    {% endif %}
+    
+    {% if record.precautions or record.diet or record.exercise %}
+    <div class="section">
+        <div class="section-title">Care Instructions</div>
+        
+        <div class="care-instructions">
+            {% if record.precautions %}
+            <div class="care-box">
+                <div class="care-title">Precautions</div>
+                <div>{{ record.precautions|linebreaks }}</div>
+            </div>
+            {% endif %}
+            
+            {% if record.diet %}
+            <div class="care-box">
+                <div class="care-title">Diet Recommendations</div>
+                <div>{{ record.diet|linebreaks }}</div>
+            </div>
+            {% endif %}
+            
+            {% if record.exercise %}
+            <div class="care-box">
+                <div class="care-title">Exercise Plan</div>
+                <div>{{ record.exercise|linebreaks }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if record.notes %}
+    <div class="section">
+        <div class="section-title">Additional Notes</div>
+        <div>{{ record.notes|linebreaks }}</div>
+    </div>
+    {% endif %}
+    
+    <div class="signature-section">
+        <div class="date-section">
+            <div>Date: {{ record.report_date|date:"F d, Y" }}</div>
+        </div>
+        <div class="doctor-signature">
+            <div class="signature-line"></div>
+            <div class="doctor-name">Dr. {{ record.doctor.get_full_name }}</div>
+            <div>{{ record.doctor.specialization }}</div>
+            <div>License #: MD-12345</div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>This is an official medical record from HMS Hospital. Please keep this document for your records.</p>
+        <p>This document contains confidential information. Unauthorized disclosure is prohibited by law.</p>
+        <p>Report generated on: {{ record.report_date|date:"F d, Y H:i" }}</p>
+    </div>
+</body>
+</html> 

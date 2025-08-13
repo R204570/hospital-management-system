@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Update User{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Base styling for role-specific fields */
+    .doctor-field, .nurse-field, .pharmacist-field {
+        display: none;
+    }
+    
+    /* Styling for floor assignment checkboxes */
+    .floor-assignment-field {
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        padding: 20px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .floor-assignment-field > .form-label {
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #495057;
+        font-size: 1.1rem;
+        display: block;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 8px;
+    }
+    
+    .floor-checkboxes-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 12px;
+        margin-top: 15px;
+    }
+    
+    .floor-assignment-field .form-check {
+        background-color: white;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.375rem;
+        padding: 12px 15px;
+        margin-bottom: 0;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+    
+    .floor-assignment-field .form-check:hover {
+        border-color: #007bff;
+        box-shadow: 0 2px 8px rgba(0,123,255,0.15);
+        transform: translateY(-1px);
+    }
+    
+    .floor-assignment-field .form-check-input {
+        margin-top: 0;
+        margin-right: 10px;
+        transform: scale(1.1);
+    }
+    
+    .floor-assignment-field .form-check-input:checked {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    
+    .floor-assignment-field .form-check-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0;
+        cursor: pointer;
+        flex: 1;
+    }
+    
+    .floor-assignment-field .form-check:has(.form-check-input:checked) {
+        background-color: #e7f3ff;
+        border-color: #007bff;
+    }
+    
+    .floor-assignment-field .form-check:has(.form-check-input:checked) .form-check-label {
+        color: #0056b3;
+        font-weight: 600;
+    }
+    
+    .floor-assignment-field .help-text {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 10px;
+        font-style: italic;
+    }
+    
+    .floor-assignment-field .text-danger {
+        margin-top: 10px;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .floor-checkboxes-container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>
+                <i class="fas fa-user-edit text-primary me-2"></i>
+                Update User
+            </h2>
+            <p class="text-muted">Editing user: {{ form.instance.get_full_name }}</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Account Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.first_name|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.last_name|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.username|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.email|as_crispy_field }}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.is_active|as_crispy_field }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">User Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.role|as_crispy_field }}
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.phone_number|as_crispy_field }}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.address|as_crispy_field }}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {% if form.instance.profile_picture %}
+                                        <div class="mb-3">
+                                            <label class="form-label">Current Profile Picture</label>
+                                            <div>
+                                                <img src="{{ form.instance.get_profile_picture_url }}" alt="Profile Picture" 
+                                                     class="img-thumbnail" style="max-height: 150px;">
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    {{ form.profile_picture|as_crispy_field }}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.qualification|as_crispy_field }}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.years_of_experience|as_crispy_field }}
+                                </div>
+                                
+                                <!-- Doctor-specific fields -->
+                                <div class="doctor-field mb-3">
+                                    {{ form.specialization|as_crispy_field }}
+                                </div>
+                                
+                                <div class="doctor-field mb-3">
+                                    {{ form.doctor_license_number|as_crispy_field }}
+                                </div>
+                                
+                                <div class="doctor-field mb-3">
+                                    {{ form.is_available|as_crispy_field }}
+                                </div>
+                                
+                                <!-- Nurse-specific fields -->
+                                <div class="nurse-field mb-3">
+                                    {{ form.nurse_license_number|as_crispy_field }}
+                                </div>
+                                
+                                <div class="nurse-field mb-3">
+                                    {{ form.nursing_specialty|as_crispy_field }}
+                                </div>
+                                
+                                <!-- Pharmacist-specific fields -->
+                                <div class="pharmacist-field mb-3">
+                                    {{ form.pharmacist_license_number|as_crispy_field }}
+                                </div>
+                                
+                                <div class="pharmacist-field mb-3">
+                                    {{ form.pharmacy_certification|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Floor Assignment Field for Nurses - Full Width -->
+                <div class="nurse-field mb-4">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-hospital me-2"></i>
+                                Floor Assignment
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="floor-assignment-field">
+                                <label class="form-label">
+                                    <i class="fas fa-building me-2"></i>
+                                    Select Assigned Floors
+                                </label>
+                                <div class="floor-checkboxes-container">
+                                    {% for choice in form.assigned_floors %}
+                                        <div class="form-check">
+                                            {{ choice.tag }}
+                                            <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                                {{ choice.choice_label }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% if form.assigned_floors.help_text %}
+                                    <div class="help-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        {{ form.assigned_floors.help_text }}
+                                    </div>
+                                {% endif %}
+                                {% if form.assigned_floors.errors %}
+                                    <div class="text-danger mt-2">
+                                        {% for error in form.assigned_floors.errors %}
+                                            <small><i class="fas fa-exclamation-triangle me-1"></i>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-end">
+                    <a href="{% url 'user_list' %}" class="btn btn-secondary me-2">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Update User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show/hide role-specific fields based on role selection
+    document.addEventListener('DOMContentLoaded', function() {
+        const roleSelect = document.getElementById('id_role');
+        const doctorFields = document.querySelectorAll('.doctor-field');
+        const nurseFields = document.querySelectorAll('.nurse-field');
+        const pharmacistFields = document.querySelectorAll('.pharmacist-field');
+        
+        // Function to toggle role-specific fields visibility
+        function toggleRoleFields() {
+            const selectedRole = roleSelect.value;
+            
+            // Hide all role-specific fields first
+            doctorFields.forEach(field => field.style.display = 'none');
+            nurseFields.forEach(field => field.style.display = 'none');
+            pharmacistFields.forEach(field => field.style.display = 'none');
+            
+            // Show fields based on selected role
+            if(selectedRole === 'DOCTOR') {
+                doctorFields.forEach(field => field.style.display = 'block');
+            } else if(selectedRole === 'NURSE') {
+                nurseFields.forEach(field => field.style.display = 'block');
+            } else if(selectedRole === 'PHARMACIST') {
+                pharmacistFields.forEach(field => field.style.display = 'block');
+            }
+        }
+        
+        // Initialize fields on page load based on current role
+        toggleRoleFields();
+        
+        // Add event listener for role changes
+        roleSelect.addEventListener('change', toggleRoleFields);
+    });
+</script>
+{% endblock %} 

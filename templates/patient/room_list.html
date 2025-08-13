@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Hospital Rooms{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Hospital Rooms</h2>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'room_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create New Room
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card shadow">
+        <div class="card-body">
+            <!-- Room Floor Filter Tabs -->
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#all-rooms" data-bs-toggle="tab">All</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#f1-rooms" data-bs-toggle="tab">1st Floor (Medicine)</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#f2-rooms" data-bs-toggle="tab">2nd Floor (Orthopedic)</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#f3-rooms" data-bs-toggle="tab">3rd Floor (Cardiology)</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#f4-rooms" data-bs-toggle="tab">4th & 5th Floor (Cancer)</a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="all-rooms">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Room Number</th>
+                                    <th>Floor</th>
+                                    <th>Specialization</th>
+                                    <th>Total Beds</th>
+                                    <th>Occupied Beds</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room in rooms %}
+                                <tr>
+                                    <td>{{ room.room_number }}</td>
+                                    <td>{{ room.floor }}</td>
+                                    <td>{{ room.get_specialization_display }}</td>
+                                    <td>{{ room.bed_count }}</td>
+                                    <td>{{ room.occupied_beds }}</td>
+                                    <td>
+                                        {% if room.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'room_detail' room.id %}" class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                        <a href="{% url 'room_update' room.id %}" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No rooms found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Floor-specific tabs -->
+                {% for floor_num in '12345'|make_list %}
+                {% if floor_num == '4' %}
+                <div class="tab-pane fade" id="f4-rooms">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Room Number</th>
+                                    <th>Floor</th>
+                                    <th>Total Beds</th>
+                                    <th>Occupied Beds</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room in rooms %}
+                                {% if room.floor == 4 or room.floor == 5 %}
+                                <tr>
+                                    <td>{{ room.room_number }}</td>
+                                    <td>{{ room.floor }}</td>
+                                    <td>{{ room.bed_count }}</td>
+                                    <td>{{ room.occupied_beds }}</td>
+                                    <td>
+                                        {% if room.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'room_detail' room.id %}" class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                        <a href="{% url 'room_update' room.id %}" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No rooms found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% else %}
+                <div class="tab-pane fade" id="f{{ floor_num }}-rooms">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Room Number</th>
+                                    <th>Total Beds</th>
+                                    <th>Occupied Beds</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room in rooms %}
+                                {% if room.floor|stringformat:"s" == floor_num %}
+                                <tr>
+                                    <td>{{ room.room_number }}</td>
+                                    <td>{{ room.bed_count }}</td>
+                                    <td>{{ room.occupied_beds }}</td>
+                                    <td>
+                                        {% if room.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'room_detail' room.id %}" class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                        <a href="{% url 'room_update' room.id %}" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No rooms found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        // Initialize tab functionality
+        $('.nav-tabs a').on('click', function(e) {
+            e.preventDefault();
+            $(this).tab('show');
+        });
+    });
+</script>
+{% endblock %} 

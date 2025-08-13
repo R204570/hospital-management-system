@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Assigned Patients{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 p-0">
+            {% include 'patient/medical_sidebar.html' with active_menu='assigned_patients' %}
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-md-9 col-lg-10 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Assigned Patients</h2>
+                    <p class="text-muted">Patients assigned to you through appointments</p>
+                </div>
+                <div class="d-flex">
+                    <a href="{% url 'patient_list' %}" class="btn btn-primary me-2">
+                        <i class="fas fa-users"></i> View All Patients
+                    </a>
+                    <input type="text" id="patientSearch" class="form-control me-2" placeholder="Search patients...">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown">
+                            <li><a class="dropdown-item" href="#" data-filter="all">All Patients</a></li>
+                            <li><a class="dropdown-item" href="#" data-filter="recent">Recent Appointments</a></li>
+                            <li><a class="dropdown-item" href="#" data-filter="upcoming">Upcoming Appointments</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            {% if patients %}
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4" id="patientCards">
+                    {% for patient in patients %}
+                        <div class="col patient-card-wrapper">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        {% if patient.profile_picture %}
+                                            <img src="{{ patient.profile_picture.url }}" alt="{{ patient.full_name }}" class="patient-img me-3">
+                                        {% else %}
+                                            <div class="patient-img-placeholder me-3">
+                                                {{ patient.first_name|first }}{{ patient.last_name|first }}
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <h5 class="card-title mb-0">{{ patient.full_name }}</h5>
+                                            <p class="card-text text-muted mb-0">ID: {{ patient.patient_id }}</p>
+                                            <small class="text-muted">Age: {{ patient.age }}</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="card-info">
+                                        <div class="info-row">
+                                            <span class="info-label"><i class="fas fa-phone-alt"></i></span>
+                                            <span class="info-value">{{ patient.phone }}</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label"><i class="fas fa-heartbeat"></i></span>
+                                            <span class="info-value">Blood: {{ patient.blood_group|default:"Not recorded" }}</span>
+                                        </div>
+                                        <div class="info-row">
+                                            <span class="info-label"><i class="fas fa-calendar-alt"></i></span>
+                                            <span class="info-value">
+                                                Last Visit: 
+                                                {% if patient.last_appointment %}
+                                                    {{ patient.last_appointment.date }}
+                                                {% else %}
+                                                    Never
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="d-flex justify-content-between">
+                                        <a href="{% url 'patient_detail' pk=patient.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-user-circle"></i> Profile
+                                        </a>
+                                        <a href="{% url 'create_medical_record' patient_id=patient.id %}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-file-medical"></i> New Record
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> You don't have any assigned patients yet.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .patient-img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .patient-img-placeholder {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: #007bff;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        font-size: 1.2rem;
+    }
+    
+    .card-info {
+        margin-top: 1rem;
+    }
+    
+    .info-row {
+        display: flex;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .info-label {
+        width: 2rem;
+        color: #6c757d;
+    }
+    
+    .card-footer {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Patient search functionality
+        const searchInput = document.getElementById('patientSearch');
+        const patientCards = document.querySelectorAll('.patient-card-wrapper');
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            
+            patientCards.forEach(card => {
+                const patientName = card.querySelector('.card-title').textContent.toLowerCase();
+                const patientId = card.querySelector('.text-muted').textContent.toLowerCase();
+                
+                if (patientName.includes(searchTerm) || patientId.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+        
+        // Filter dropdown functionality
+        const filterLinks = document.querySelectorAll('[data-filter]');
+        
+        filterLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const filter = this.dataset.filter;
+                
+                // Implement filter logic here
+                // This would require additional data attributes on the cards
+                alert(`Filter by ${filter} - Functionality to be implemented`);
+            });
+        });
+    });
+</script>
+{% endblock %} 

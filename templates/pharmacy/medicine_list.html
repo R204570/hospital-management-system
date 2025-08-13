@@ -1,0 +1,419 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Medicine Inventory{% endblock %}
+
+{% block extra_css %}
+<style>
+    #search-suggestions {
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 1050;
+        width: 100%;
+        position: absolute;
+        box-shadow: 0 5px 10px rgba(0,0,0,.2);
+    }
+    
+    #search-suggestions .dropdown-item {
+        white-space: normal;
+        padding: 10px 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    #search-suggestions .dropdown-item:hover {
+        background-color: #f8f9fa;
+        color: #212529;
+    }
+    
+    #search-suggestions .dropdown-item.active {
+        background-color: #0d6efd;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Medicine Inventory</h2>
+        <a href="{% url 'add_medicine' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i> Add New Medicine
+        </a>
+    </div>
+
+    {% if messages %}
+    <div class="row mb-4">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Search & Filter -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Search & Filter</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Search</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="search" name="search"
+                               placeholder="Search by name or generic name..." value="{{ search_query }}"
+                               autocomplete="off">
+                        <button class="btn btn-outline-primary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                    <div id="search-suggestions" class="dropdown-menu w-100" style="display: none;"></div>
+                </div>
+                <div class="col-md-4">
+                    <label for="category" class="form-label">Category</label>
+                    <select class="form-select" id="category" name="category">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category_filter == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Apply</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Medicines Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Medicines</h6>
+            <div>
+                <a href="{% url 'low_stock_list' %}" class="btn btn-sm btn-warning">
+                    <i class="bi bi-exclamation-triangle"></i> Low Stock
+                </a>
+                <a href="{% url 'expired_medicines' %}" class="btn btn-sm btn-danger">
+                    <i class="bi bi-clock-history"></i> Expired
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Manufacturer</th>
+                            <th>Dosage</th>
+                            <th>Stock</th>
+                            <th>Price</th>
+                            <th>Expiry</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for medicine in page_obj %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ medicine.name }}</div>
+                                <div class="text-muted small">{{ medicine.generic_name }}</div>
+                            </td>
+                            <td>{{ medicine.category.name }}</td>
+                            <td>
+                                <div>{{ medicine.manufacturer }}</div>
+                                {% if medicine.manufacturer == 'Pfizer' %} <div class="small text-muted">USA</div>
+                                {% elif medicine.manufacturer == 'Johnson & Johnson' %} <div class="small text-muted">USA</div>
+                                {% elif medicine.manufacturer == 'Roche' %} <div class="small text-muted">Switzerland</div>
+                                {% elif medicine.manufacturer == 'Novartis' %} <div class="small text-muted">Switzerland</div>
+                                {% elif medicine.manufacturer == 'Merck & Co.' %} <div class="small text-muted">USA</div>
+                                {% elif medicine.manufacturer == 'GlaxoSmithKline' %} <div class="small text-muted">UK</div>
+                                {% elif medicine.manufacturer == 'Sanofi' %} <div class="small text-muted">France</div>
+                                {% elif medicine.manufacturer == 'Gilead Sciences' %} <div class="small text-muted">USA</div>
+                                {% elif medicine.manufacturer == 'AstraZeneca' %} <div class="small text-muted">UK</div>
+                                {% elif medicine.manufacturer == 'AbbVie' %} <div class="small text-muted">USA</div>
+                                {% elif medicine.manufacturer == 'Bayer' %} <div class="small text-muted">Germany</div>
+                                {% elif medicine.manufacturer == 'Eli Lilly' %} <div class="small text-muted">USA</div>
+                                {% elif medicine.manufacturer == 'Bristol-Myers Squibb' %} <div class="small text-muted">USA</div>
+                                {% elif medicine.manufacturer == 'Amgen' %} <div class="small text-muted">USA</div>
+                                {% elif medicine.manufacturer == 'Boehringer Ingelheim' %} <div class="small text-muted">Germany</div>
+                                {% elif medicine.manufacturer == 'Teva Pharmaceutical' %} <div class="small text-muted">Israel</div>
+                                {% elif medicine.manufacturer == 'Novo Nordisk' %} <div class="small text-muted">Denmark</div>
+                                {% elif medicine.manufacturer == 'Takeda Pharmaceutical' %} <div class="small text-muted">Japan</div>
+                                {% elif medicine.manufacturer == 'Biogen' %} <div class="small text-muted">USA</div>
+                                {% elif medicine.manufacturer == 'Allergan' %} <div class="small text-muted">Ireland</div>
+                                {% elif medicine.manufacturer == 'Sun Pharmaceutical' %} <div class="small text-muted">India</div>
+                                {% elif medicine.manufacturer == 'Cipla' %} <div class="small text-muted">India</div>
+                                {% elif medicine.manufacturer == 'Lupin Limited' %} <div class="small text-muted">India</div>
+                                {% elif medicine.manufacturer == 'Dr. Reddy\'s Laboratories' %} <div class="small text-muted">India</div>
+                                {% elif medicine.manufacturer == 'Astellas Pharma' %} <div class="small text-muted">Japan</div>
+                                {% elif medicine.manufacturer == 'Eisai' %} <div class="small text-muted">Japan</div>
+                                {% elif medicine.manufacturer == 'Daiichi Sankyo' %} <div class="small text-muted">Japan</div>
+                                {% elif medicine.manufacturer == 'CSL Limited' %} <div class="small text-muted">Australia</div>
+                                {% elif medicine.manufacturer == 'Grifols' %} <div class="small text-muted">Spain</div>
+                                {% elif medicine.manufacturer == 'Regeneron Pharmaceuticals' %} <div class="small text-muted">USA</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-bold">{{ medicine.strength|default:"--" }}</div>
+                                <div class="text-muted small">{{ medicine.dosage_form|default:"--" }}</div>
+                            </td>
+                            <td class="{% if medicine.is_low_stock %}text-warning fw-bold{% endif %}">
+                                {{ medicine.stock_quantity }}
+                            </td>
+                            <td>${{ medicine.selling_price }}</td>
+                            <td>
+                                {% if medicine.expiry_date %}
+                                <span class="{% if medicine.is_expired %}text-danger fw-bold{% endif %}">
+                                    {{ medicine.expiry_date|date:"M d, Y" }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if medicine.is_expired %}
+                                <span class="badge bg-danger">Expired</span>
+                                {% elif medicine.is_low_stock %}
+                                <span class="badge bg-warning text-dark">Low Stock</span>
+                                {% else %}
+                                <span class="badge bg-success">In Stock</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'medicine_detail' medicine.id %}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a href="{% url 'edit_medicine' medicine.id %}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <p class="text-muted mb-0">No medicines found.</p>
+                <p class="text-muted">Try clearing your filters or adding new medicines.</p>
+                <a href="{% url 'add_medicine' %}" class="btn btn-primary mt-3">
+                    <i class="bi bi-plus-circle me-2"></i> Add Medicine
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search');
+        const suggestionsContainer = document.getElementById('search-suggestions');
+        let searchTimeout;
+        let currentFocus = -1;
+        
+        // Add event listener for input on search field
+        searchInput.addEventListener('input', function() {
+            const query = this.value.trim();
+            
+            // Clear previous timeout
+            clearTimeout(searchTimeout);
+            
+            // Reset current focus
+            currentFocus = -1;
+            
+            // Hide suggestions if query is empty
+            if (query.length < 2) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+            
+            // Set a timeout to avoid too many requests
+            searchTimeout = setTimeout(function() {
+                // Make AJAX request to search API
+                fetch(`/pharmacy/medicines/search/?query=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Clear previous suggestions
+                        suggestionsContainer.innerHTML = '';
+                        
+                        // If no results, hide suggestions
+                        if (data.results.length === 0) {
+                            suggestionsContainer.style.display = 'none';
+                            return;
+                        }
+                        
+                        // Add each result to suggestions
+                        data.results.forEach(medicine => {
+                            const item = document.createElement('a');
+                            item.href = '#';
+                            item.className = 'dropdown-item';
+                            
+                            // Format suggestion with medicine details
+                            let itemText = `<strong>${medicine.name}</strong>`;
+                            if (medicine.generic_name) {
+                                itemText += ` (${medicine.generic_name})`;
+                            }
+                            if (medicine.strength) {
+                                itemText += ` - ${medicine.strength}`;
+                            }
+                            itemText += ` | ${medicine.category}`;
+                            
+                            item.innerHTML = itemText;
+                            
+                            // Add click event to select suggestion
+                            item.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                searchInput.value = medicine.name;
+                                suggestionsContainer.style.display = 'none';
+                                
+                                // Submit the form
+                                searchInput.form.submit();
+                            });
+                            
+                            suggestionsContainer.appendChild(item);
+                        });
+                        
+                        // Show suggestions
+                        suggestionsContainer.style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching search suggestions:', error);
+                    });
+            }, 300); // 300ms delay
+        });
+        
+        // Add keyboard navigation
+        searchInput.addEventListener('keydown', function(e) {
+            const items = suggestionsContainer.getElementsByTagName('a');
+            
+            if (!items.length) return;
+            
+            // Down arrow
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentFocus++;
+                addActive(items);
+            } 
+            // Up arrow
+            else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentFocus--;
+                addActive(items);
+            } 
+            // Enter key
+            else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentFocus > -1) {
+                    // Simulate click on active item
+                    if (items[currentFocus]) {
+                        items[currentFocus].click();
+                    }
+                }
+            } 
+            // Escape key
+            else if (e.key === 'Escape') {
+                suggestionsContainer.style.display = 'none';
+                currentFocus = -1;
+            }
+        });
+        
+        // Function to add active class to items
+        function addActive(items) {
+            // First remove active from any items
+            removeActive(items);
+            
+            // Adjust focus if out of bounds
+            if (currentFocus >= items.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = items.length - 1;
+            
+            // Add active class
+            if (items[currentFocus]) {
+                items[currentFocus].classList.add('active');
+                // Scroll into view if needed
+                items[currentFocus].scrollIntoView({ block: 'nearest' });
+            }
+        }
+        
+        // Function to remove active class from items
+        function removeActive(items) {
+            for (let i = 0; i < items.length; i++) {
+                items[i].classList.remove('active');
+            }
+        }
+        
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                suggestionsContainer.style.display = 'none';
+                currentFocus = -1;
+            }
+        });
+        
+        // Show suggestions when focusing on search field if it has content
+        searchInput.addEventListener('focus', function() {
+            if (this.value.trim().length >= 2) {
+                // Trigger the input event to show suggestions
+                this.dispatchEvent(new Event('input'));
+            }
+        });
+    });
+</script>
+{% endblock %} 

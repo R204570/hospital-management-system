@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Doctor Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2><i class="fas fa-edit text-primary me-2"></i> {{ title }}</h2>
+            <p class="text-muted">Share your medical expertise and insights with the community</p>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'website:my_blogs' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to My Posts
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{{ title }}</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Display form errors -->
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <h6>Please fix the following errors:</h6>
+                        <ul class="mb-0">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <li><strong>{{ field|title }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Title -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">Blog Title *</label>
+                                {{ form.title }}
+                                <div class="form-text">Create an engaging title for your blog post</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Category and Status -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.category.id_for_label }}" class="form-label">Category *</label>
+                                {{ form.category }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">Status *</label>
+                                {{ form.status }}
+                                <div class="form-text">Draft = Save without publishing</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Excerpt -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="{{ form.excerpt.id_for_label }}" class="form-label">Excerpt</label>
+                                {{ form.excerpt }}
+                                <div class="form-text">Brief description that appears in blog listings (optional)</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Content -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label for="{{ form.content.id_for_label }}" class="form-label">Content *</label>
+                                {{ form.content }}
+                                <div class="form-text">Write your blog content here</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Featured Image and Featured Post -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.featured_image.id_for_label }}" class="form-label">Featured Image</label>
+                                {{ form.featured_image }}
+                                <div class="form-text">Upload a header image for your blog (optional)</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mt-4">
+                                    {{ form.is_featured }}
+                                    <label class="form-check-label" for="{{ form.is_featured.id_for_label }}">
+                                        Featured Post
+                                    </label>
+                                    <div class="form-text">Check to feature this post on homepage</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tags and Meta -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.tags.id_for_label }}" class="form-label">Tags</label>
+                                {{ form.tags }}
+                                <div class="form-text">Comma-separated keywords (e.g., cardiology, health tips)</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.meta_description.id_for_label }}" class="form-label">SEO Description</label>
+                                {{ form.meta_description }}
+                                <div class="form-text">Meta description for search engines (optional)</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Buttons -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="text-center mt-4">
+                                    <button type="submit" class="btn btn-primary me-2">
+                                        <i class="fas fa-save"></i> 
+                                        {% if blog_post %}Update Blog Post{% else %}Create Blog Post{% endif %}
+                                    </button>
+                                    <a href="{% url 'website:my_blogs' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Character count for title and excerpt
+document.addEventListener('DOMContentLoaded', function() {
+    const titleField = document.getElementById('{{ form.title.id_for_label }}');
+    const excerptField = document.getElementById('{{ form.excerpt.id_for_label }}');
+    
+    if (titleField) {
+        const titleCounter = document.createElement('small');
+        titleCounter.className = 'form-text text-muted';
+        titleCounter.style.float = 'right';
+        titleField.parentNode.appendChild(titleCounter);
+        
+        function updateTitleCounter() {
+            const count = titleField.value.length;
+            titleCounter.textContent = `${count}/200 characters`;
+            titleCounter.style.color = count > 200 ? '#dc3545' : '#6c757d';
+        }
+        
+        titleField.addEventListener('input', updateTitleCounter);
+        updateTitleCounter();
+    }
+    
+    if (excerptField) {
+        const excerptCounter = document.createElement('small');
+        excerptCounter.className = 'form-text text-muted';
+        excerptCounter.style.float = 'right';
+        excerptField.parentNode.appendChild(excerptCounter);
+        
+        function updateExcerptCounter() {
+            const count = excerptField.value.length;
+            excerptCounter.textContent = `${count}/300 characters`;
+            excerptCounter.style.color = count > 300 ? '#dc3545' : '#6c757d';
+        }
+        
+        excerptField.addEventListener('input', updateExcerptCounter);
+        updateExcerptCounter();
+    }
+});
+</script>
+{% endblock %} 

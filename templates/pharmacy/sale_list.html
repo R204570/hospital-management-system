@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sales | HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Sales</h4>
+                    <div class="d-flex align-items-center">
+                        <form class="me-2" method="get">
+                            <div class="input-group">
+                                <input type="text" name="search" class="form-control" placeholder="Search by customer" value="{{ search_query }}">
+                                <input type="date" name="date" class="form-control" value="{{ date_filter|default:'' }}">
+                                <button class="btn btn-primary" type="submit">Filter</button>
+                            </div>
+                        </form>
+                        <a href="{% url 'add_sale' %}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> New Sale
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Receipt #</th>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Total Amount</th>
+                                    <th>Payment Method</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sale in page_obj %}
+                                <tr>
+                                    <td>{{ sale.id }}</td>
+                                    <td>{{ sale.sale_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if sale.patient %}
+                                            <span class="badge bg-info">Patient</span> {{ sale.patient.get_full_name }}
+                                        {% else %}
+                                            <span class="badge bg-secondary">Walk-in</span> {{ sale.customer_name|default:"Anonymous" }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ sale.items_count }}</td>
+                                    <td>${{ sale.final_amount }}</td>
+                                    <td>
+                                        {% if sale.payment_method == 'CASH' %}
+                                            <span class="badge bg-success">Cash</span>
+                                        {% elif sale.payment_method == 'CREDIT_CARD' %}
+                                            <span class="badge bg-primary">Credit Card</span>
+                                        {% elif sale.payment_method == 'DEBIT_CARD' %}
+                                            <span class="badge bg-info">Debit Card</span>
+                                        {% elif sale.payment_method == 'INSURANCE' %}
+                                            <span class="badge bg-warning">Insurance</span>
+                                        {% elif sale.payment_method == 'MOBILE_PAYMENT' %}
+                                            <span class="badge bg-dark">Mobile Payment</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'sale_detail' sale.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        <button class="btn btn-sm btn-secondary print-receipt" data-id="{{ sale.id }}">
+                                            <i class="fas fa-print"></i> Print
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" aria-label="First">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <a class="page-link" href="#">{{ num }}</a>
+                                </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if date_filter %}&date={{ date_filter }}{% endif %}" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="alert alert-info">
+                        <p class="mb-0">No sales found.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Print receipt functionality
+        document.querySelectorAll('.print-receipt').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const saleId = this.dataset.id;
+                // Open a new window with the receipt
+                const receiptUrl = `{% url 'sale_detail' 0 %}`.replace('0', saleId) + '?print=true';
+                const receiptWindow = window.open(receiptUrl, '_blank', 'width=800,height=600');
+                
+                // Print automatically when the receipt loads
+                receiptWindow.addEventListener('load', function() {
+                    receiptWindow.print();
+                });
+            });
+        });
+    });
+</script>
+{% endblock %} 

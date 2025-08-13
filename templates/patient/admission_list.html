@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Patient Admissions{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Patient Admissions</h2>
+        </div>
+        <div class="col-auto">
+            {% if user.is_doctor %}
+            <a href="{% url 'emergency_admission' %}" class="btn btn-danger me-2">
+                <i class="bi bi-exclamation-triangle"></i> Emergency Admission
+            </a>
+            <a href="{% url 'admission_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Admission
+            </a>
+            {% endif %}
+            {% if user.is_doctor or user.is_nurse %}
+            <a href="{% url 'admission_request_list' %}" class="btn btn-outline-primary">
+                <i class="bi bi-clipboard-check"></i> Admission Requests
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">
+                Search & Filter Admissions
+                {% if user.is_nurse and user_nurse_assignment %}
+                <small class="text-muted">
+                    - Showing patients from your assigned floors: 
+                    {% for floor in user_nurse_assignment.assigned_floors %}Floor {{ floor }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                </small>
+                {% endif %}
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <!-- Search Bar -->
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" name="search" id="search" class="form-control" 
+                           placeholder="Search by patient name, ID, diagnosis, room, doctor..." 
+                           value="{{ search_query }}">
+                </div>
+                
+                <!-- Status Filter -->
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="">All</option>
+                        <option value="current" {% if status_filter == 'current' %}selected{% endif %}>Currently Admitted</option>
+                        <option value="discharged" {% if status_filter == 'discharged' %}selected{% endif %}>Discharged</option>
+                    </select>
+                </div>
+                
+                <!-- Buttons Column - Aligned with form -->
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="d-grid gap-2 d-md-flex">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                        <a href="{% url 'admission_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Reset
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Admission Type Filter -->
+                <div class="col-md-3">
+                    <label for="admission_type" class="form-label">Admission Type</label>
+                    <select name="admission_type" id="admission_type" class="form-select">
+                        <option value="">All Types</option>
+                        {% for type_code, type_name in admission_types %}
+                        <option value="{{ type_code }}" {% if admission_type_filter == type_code %}selected{% endif %}>
+                            {{ type_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Additional filters for Admin/Receptionist -->
+                {% if user.is_admin or user.is_receptionist %}
+                <div class="col-md-3">
+                    <label for="doctor" class="form-label">Doctor</label>
+                    <select name="doctor" id="doctor" class="form-select">
+                        <option value="">All Doctors</option>
+                        {% for doctor in doctors %}
+                        <option value="{{ doctor.id }}" {% if doctor_filter|stringformat:"s" == doctor.id|stringformat:"s" %}selected{% endif %}>
+                            Dr. {{ doctor.get_full_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="floor" class="form-label">Floor</label>
+                    <select name="floor" id="floor" class="form-select">
+                        <option value="">All Floors</option>
+                        {% for floor_num, floor_name in floor_choices %}
+                        <option value="{{ floor_num }}" {% if floor_filter|stringformat:"s" == floor_num|stringformat:"s" %}selected{% endif %}>
+                            {{ floor_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="department" class="form-label">Department</label>
+                    <select name="department" id="department" class="form-select">
+                        <option value="">All Departments</option>
+                        {% for dept_code, dept_name in department_choices %}
+                        <option value="{{ dept_code }}" {% if department_filter == dept_code %}selected{% endif %}>
+                            {{ dept_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Empty column for spacing when admin filters are present -->
+                <div class="col-md-3"></div>
+                {% else %}
+                <!-- When no admin filters, fill remaining space -->
+                <div class="col-md-6"></div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Doctor</th>
+                            <th>Room & Bed</th>
+                            <th>Admission Date</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for admission in admissions %}
+                        <tr class="{% if admission.is_critical %}table-danger{% endif %}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if admission.patient.profile_picture %}
+                                    <div class="me-2">
+                                        <img src="{{ admission.patient.profile_picture.url }}" alt="{{ admission.patient.full_name }}" 
+                                            class="rounded-circle" width="40" height="40">
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div>{{ admission.patient.full_name }}</div>
+                                        <div class="small text-muted">{{ admission.patient.patient_id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                Dr. {{ admission.admitting_doctor.get_full_name }}
+                                <div class="small text-muted">{{ admission.admitting_doctor.get_specialization_display }}</div>
+                            </td>
+                            <td>
+                                {% if admission.bed %}
+                                Room {{ admission.bed.room.room_number }}, Bed {{ admission.bed.bed_number }}
+                                <div class="small text-muted">Floor {{ admission.bed.room.floor }}</div>
+                                {% else %}
+                                <span class="text-muted">Not assigned</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ admission.admission_date|date:"M d, Y" }}
+                                <div class="small text-muted">{{ admission.admission_date|time:"g:i A" }}</div>
+                            </td>
+                            <td>
+                                {% if admission.admission_type == 'EMERGENCY' %}
+                                <span class="badge bg-danger">EMERGENCY</span>
+                                {% else %}
+                                <span class="badge bg-primary">{{ admission.get_admission_type_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if admission.discharge_date %}
+                                <span class="badge bg-success">Discharged</span>
+                                <div class="small text-muted">{{ admission.discharge_date|date:"M d, Y" }}</div>
+                                {% else %}
+                                    {% if admission.is_critical %}
+                                    <span class="badge bg-danger">CRITICAL</span>
+                                    {% else %}
+                                    <span class="badge bg-info">Active</span>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'admission_detail' admission.id %}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                {% if not admission.discharge_date and user.is_doctor %}
+                                <a href="{% url 'admission_discharge' admission.id %}" class="btn btn-sm btn-success">
+                                    <i class="bi bi-box-arrow-right"></i> Discharge
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No admissions found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Purchases | HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Purchases</h4>
+                    <div class="d-flex align-items-center">
+                        <form class="me-2" method="get">
+                            <div class="input-group">
+                                <input type="text" name="search" class="form-control" placeholder="Search by invoice number or supplier" value="{{ search_query }}">
+                                <select name="status" class="form-select">
+                                    <option value="" {% if not status_filter %}selected{% endif %}>All Status</option>
+                                    <option value="PENDING" {% if status_filter == 'PENDING' %}selected{% endif %}>Pending</option>
+                                    <option value="RECEIVED" {% if status_filter == 'RECEIVED' %}selected{% endif %}>Received</option>
+                                    <option value="CANCELLED" {% if status_filter == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+                                </select>
+                                <button class="btn btn-primary" type="submit">Filter</button>
+                            </div>
+                        </form>
+                        <a href="{% url 'add_purchase' %}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> New Purchase
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Purchase Date</th>
+                                    <th>Supplier</th>
+                                    <th>Invoice #</th>
+                                    <th>Items</th>
+                                    <th>Total Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for purchase in page_obj %}
+                                <tr>
+                                    <td>{{ purchase.id }}</td>
+                                    <td>{{ purchase.purchase_date|date:"M d, Y" }}</td>
+                                    <td>{{ purchase.supplier.name }}</td>
+                                    <td>{{ purchase.invoice_number|default:"-" }}</td>
+                                    <td>{{ purchase.items_count }}</td>
+                                    <td>${{ purchase.total_amount }}</td>
+                                    <td>
+                                        {% if purchase.status == 'PENDING' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% elif purchase.status == 'RECEIVED' %}
+                                        <span class="badge bg-success">Received</span>
+                                        {% elif purchase.status == 'CANCELLED' %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'purchase_detail' purchase.id %}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        
+                                        {% if purchase.status == 'PENDING' %}
+                                        <a href="{% url 'receive_purchase' purchase.id %}" class="btn btn-sm btn-success">
+                                            <i class="fas fa-check"></i> Receive
+                                        </a>
+                                        <a href="{% url 'cancel_purchase' purchase.id %}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-times"></i> Cancel
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="First">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <a class="page-link" href="#">{{ num }}</a>
+                                </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    
+                    {% else %}
+                    <div class="alert alert-info">
+                        <p class="mb-0">No purchases found.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

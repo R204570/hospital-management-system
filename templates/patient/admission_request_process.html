@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Process Admission Request #{{ admission_request.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-clipboard-check"></i> Process Admission Request #{{ admission_request.id }}
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    <!-- Patient and Request Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="bi bi-person"></i> Patient Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Name:</strong> {{ admission_request.patient.full_name }}</p>
+                                    <p><strong>Age:</strong> {{ admission_request.patient.age }} years</p>
+                                    <p><strong>Phone:</strong> {{ admission_request.patient.phone }}</p>
+                                    <p><strong>Blood Group:</strong> {{ admission_request.patient.blood_group|default:"Not specified" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0"><i class="bi bi-clipboard"></i> Request Details</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Doctor:</strong> {{ admission_request.requesting_doctor.get_full_name }}</p>
+                                    <p><strong>Priority:</strong> 
+                                        {% if admission_request.priority == 'high' %}
+                                            <span class="badge bg-danger">{{ admission_request.get_priority_display }}</span>
+                                        {% elif admission_request.priority == 'medium' %}
+                                            <span class="badge bg-warning">{{ admission_request.get_priority_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ admission_request.get_priority_display }}</span>
+                                        {% endif %}
+                                    </p>
+                                    <p><strong>Created:</strong> {{ admission_request.created_at|date:"M d, Y g:i A" }}</p>
+                                    <p><strong>Preferred Room:</strong> {{ admission_request.get_preferred_room_type_display|default:"No preference" }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medical Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="bi bi-heart-pulse"></i> Medical Information</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Primary Diagnosis:</strong></p>
+                                            <p>{{ admission_request.primary_diagnosis }}</p>
+                                        </div>
+                                        {% if admission_request.secondary_diagnosis %}
+                                        <div class="col-md-6">
+                                            <p><strong>Secondary Diagnosis:</strong></p>
+                                            <p>{{ admission_request.secondary_diagnosis }}</p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% if admission_request.treatment_plan %}
+                                    <div class="row mt-3">
+                                        <div class="col-md-12">
+                                            <p><strong>Treatment Plan:</strong></p>
+                                            <p>{{ admission_request.treatment_plan }}</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    {% if admission_request.special_requirements %}
+                                    <div class="row mt-3">
+                                        <div class="col-md-12">
+                                            <p><strong>Special Requirements:</strong></p>
+                                            <p>{{ admission_request.special_requirements }}</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Available Beds Preview -->
+                    {% if available_beds %}
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="bi bi-house-door"></i> Available Beds (Top 10 matches)</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Room</th>
+                                                    <th>Floor</th>
+                                                    <th>Type</th>
+                                                    <th>Rate/Day</th>
+                                                    <th>Amenities</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for bed in available_beds %}
+                                                <tr>
+                                                    <td>{{ bed.room.room_number }}-{{ bed.bed_number }}</td>
+                                                    <td>{{ bed.room.floor }}</td>
+                                                    <td>{{ bed.room.get_room_type_display }}</td>
+                                                    <td>₹{{ bed.room.daily_rate }}</td>
+                                                    <td>{{ bed.room.amenities|truncatechars:30 }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <strong>Warning:</strong> No beds are currently available that match the requested preferences. 
+                        You may still approve this request and assign an alternative room later.
+                    </div>
+                    {% endif %}
+
+                    <!-- Process Actions -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="bi bi-check-circle"></i> Approve Request</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="approve">
+                                        <div class="mb-3">
+                                            <label for="approve_notes" class="form-label">Review Notes (Optional)</label>
+                                            <textarea name="review_notes" id="approve_notes" class="form-control" rows="3" 
+                                                placeholder="Add any notes about the approval..."></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="bi bi-check-circle"></i> Approve & Assign Room
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-danger">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0"><i class="bi bi-x-circle"></i> Reject Request</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="reject">
+                                        <div class="mb-3">
+                                            <label for="reject_notes" class="form-label">Reason for Rejection <span class="text-danger">*</span></label>
+                                            <textarea name="review_notes" id="reject_notes" class="form-control" rows="3" 
+                                                placeholder="Please provide reason for rejection..." required></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-danger w-100" 
+                                                onclick="return confirm('Are you sure you want to reject this admission request?')">
+                                            <i class="bi bi-x-circle"></i> Reject Request
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Navigation -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <a href="{% url 'admission_request_detail' admission_request.id %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Details
+                            </a>
+                            <a href="{% url 'admission_request_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-list"></i> Back to List
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

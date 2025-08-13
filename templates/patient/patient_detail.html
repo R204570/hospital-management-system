@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Patient Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Patient Details</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if request.user.is_receptionist %}
+            <a href="{% url 'patient_update' patient.id %}" class="btn btn-secondary me-2">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+            <a href="{% url 'book_appointment' %}?patient_id={{ patient.id }}" class="btn btn-primary">
+                <i class="bi bi-calendar-plus"></i> Book Appointment
+            </a>
+            {% endif %}
+            
+            {% if request.user.is_doctor %}
+            <a href="{% url 'admission_create_for_patient' patient.id %}" class="btn btn-success me-2">
+                <i class="bi bi-hospital"></i> Admit Patient
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Patient Information Card -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Patient Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        {% if patient.profile_picture %}
+                        <img src="{{ patient.profile_picture.url }}" alt="Patient Photo" class="img-fluid rounded-circle mb-3" style="max-width: 150px; max-height: 150px;">
+                        {% else %}
+                        <div class="bg-light rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                            <i class="bi bi-person fs-1"></i>
+                        </div>
+                        {% endif %}
+                        <h4>{{ patient.full_name }}</h4>
+                        <span class="badge bg-info">ID: {{ patient.patient_id }}</span>
+                    </div>
+
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Gender:</span>
+                            <span>{{ patient.get_gender_display }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Date of Birth:</span>
+                            <span>{{ patient.date_of_birth|date:"F j, Y" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Age:</span>
+                            <span>{{ patient.age }} years</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Blood Group:</span>
+                            <span>{{ patient.get_blood_group_display }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Phone:</span>
+                            <span>{{ patient.phone }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Email:</span>
+                            <span>{{ patient.email|default:"Not provided" }}</span>
+                        </li>
+                        <li class="list-group-item">
+                            <span class="fw-bold">Address:</span>
+                            <div class="mt-1">{{ patient.address|linebreaks }}</div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Registered On:</span>
+                            <span>{{ patient.registration_date|date:"M d, Y" }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Emergency Contact Card -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Emergency Contact</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Name:</span>
+                            <span>{{ patient.emergency_contact_name|default:"Not provided" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Relationship:</span>
+                            <span>{{ patient.emergency_contact_relation|default:"Not provided" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Phone:</span>
+                            <span>{{ patient.emergency_contact_phone|default:"Not provided" }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <!-- Current Admission Status Card -->
+            {% if current_admission %}
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Current Admission</h5>
+                    <span class="badge bg-light text-dark">Since: {{ current_admission.admission_date|date:"M d, Y" }}</span>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Room:</span>
+                            <span>{{ current_admission.bed.room.room_number }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Bed:</span>
+                            <span>{{ current_admission.bed.bed_number }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Admitting Doctor:</span>
+                            <span>Dr. {{ current_admission.admitting_doctor.get_full_name }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span class="fw-bold">Diagnosis:</span>
+                            <span>{{ current_admission.diagnosis|truncatechars:40 }}</span>
+                        </li>
+                    </ul>
+                    <div class="mt-3">
+                        <a href="{% url 'admission_detail' current_admission.id %}" class="btn btn-outline-primary">
+                            <i class="bi bi-eye"></i> View Full Admission Details
+                        </a>
+                        {% if request.user.is_doctor %}
+                        <a href="{% url 'admission_discharge' current_admission.id %}" class="btn btn-outline-danger">
+                            <i class="bi bi-box-arrow-right"></i> Discharge
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Medical Records Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Medical Records</h5>
+                    {% if request.user.is_doctor %}
+                    <a href="{% url 'create_medical_record' patient_id=patient.id %}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add Medical Record
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if medical_records %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Doctor</th>
+                                    <th>Diagnosis</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in medical_records %}
+                                <tr>
+                                    <td>{{ record.report_date|date:"M d, Y" }}</td>
+                                    <td>Dr. {{ record.doctor.get_full_name }}</td>
+                                    <td>{{ record.diagnosis|truncatechars:40 }}</td>
+                                    <td>
+                                        <a href="{% url 'view_medical_record' record.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                        {% if request.user == record.doctor %}
+                                        <a href="{% url 'update_medical_record' record.id %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i> Edit
+                                        </a>
+                                        {% endif %}
+                                        <a href="{% url 'medical_record_pdf' record.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-file-pdf"></i> PDF
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="bi bi-info-circle me-2"></i> No medical records available for this patient.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Admission History Card -->
+            {% if admissions and admissions.count > 1 %}
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Admission History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Admission Date</th>
+                                    <th>Discharge Date</th>
+                                    <th>Doctor</th>
+                                    <th>Diagnosis</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for admission in admissions %}
+                                {% if admission != current_admission %}
+                                <tr>
+                                    <td>{{ admission.admission_date|date:"M d, Y" }}</td>
+                                    <td>{{ admission.discharge_date|date:"M d, Y"|default:"N/A" }}</td>
+                                    <td>Dr. {{ admission.admitting_doctor.get_full_name }}</td>
+                                    <td>{{ admission.diagnosis|truncatechars:30 }}</td>
+                                    <td>
+                                        <a href="{% url 'admission_detail' admission.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col text-start">
+            <a href="{% url 'patient_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Patients
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

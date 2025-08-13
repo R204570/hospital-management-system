@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inquiry Management{% endblock %}
+
+{% block page_title %}Inquiry Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .inquiry-tabs .nav-link {
+        border-radius: 10px 10px 0 0;
+        transition: all 0.3s;
+    }
+    
+    .inquiry-tabs .nav-link.active {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border-color: #007bff;
+    }
+    
+    .inquiry-card {
+        border-left: 4px solid;
+        transition: all 0.3s;
+        margin-bottom: 15px;
+    }
+    
+    .inquiry-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+    
+    .inquiry-card.appointment {
+        border-left-color: #007bff;
+    }
+    
+    .inquiry-card.contact {
+        border-left-color: #28a745;
+    }
+    
+    .search-form {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .badge-new {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .priority-high {
+        border-left-color: #dc3545 !important;
+    }
+    
+    .btn-action {
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Search and Filter Form -->
+        <div class="search-form">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search_query }}" placeholder="Name, email, phone, or subject...">
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="PENDING" {% if status_filter == 'PENDING' %}selected{% endif %}>Pending</option>
+                        <option value="READ" {% if status_filter == 'READ' %}selected{% endif %}>Read</option>
+                        <option value="CONTACTED" {% if status_filter == 'CONTACTED' %}selected{% endif %}>Contacted</option>
+                        <option value="REPLIED" {% if status_filter == 'REPLIED' %}selected{% endif %}>Replied</option>
+                        <option value="SCHEDULED" {% if status_filter == 'SCHEDULED' %}selected{% endif %}>Scheduled</option>
+                        <option value="CLOSED" {% if status_filter == 'CLOSED' %}selected{% endif %}>Closed</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="type" class="form-label">Type</label>
+                    <select class="form-select" id="type" name="type">
+                        <option value="all" {% if inquiry_type == 'all' %}selected{% endif %}>All Types</option>
+                        <option value="appointment" {% if inquiry_type == 'appointment' %}selected{% endif %}>Appointment Only</option>
+                        <option value="contact" {% if inquiry_type == 'contact' %}selected{% endif %}>Contact Only</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Inquiry Tabs -->
+        <ul class="nav nav-tabs inquiry-tabs" id="inquiryTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="appointment-tab" data-bs-toggle="tab" 
+                        data-bs-target="#appointment-inquiries" type="button" role="tab">
+                    <i class="fas fa-calendar-plus"></i>
+                    Appointment Inquiries 
+                    <span class="badge bg-warning ms-2">{{ appointment_inquiries|length }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="contact-tab" data-bs-toggle="tab" 
+                        data-bs-target="#contact-inquiries" type="button" role="tab">
+                    <i class="fas fa-envelope"></i>
+                    Contact Inquiries 
+                    <span class="badge bg-success ms-2">{{ contact_inquiries|length }}</span>
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="inquiryTabContent">
+            <!-- Appointment Inquiries Tab -->
+            <div class="tab-pane fade show active" id="appointment-inquiries" role="tabpanel">
+                <div class="card border-0">
+                    <div class="card-body">
+                        {% if appointment_inquiries %}
+                            {% for inquiry in appointment_inquiries %}
+                            <div class="card inquiry-card appointment">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="d-flex align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="card-title mb-1">
+                                                        {{ inquiry.name }}
+                                                        {% if not inquiry.notification_seen %}
+                                                        <span class="badge bg-danger badge-new ms-2">NEW</span>
+                                                        {% endif %}
+                                                    </h6>
+                                                    <div class="row text-muted small mb-2">
+                                                        <div class="col-md-6">
+                                                            <i class="fas fa-envelope"></i> {{ inquiry.email }}
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <i class="fas fa-phone"></i> {{ inquiry.phone }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="row text-muted small mb-2">
+                                                        <div class="col-md-6">
+                                                            <i class="fas fa-user-md"></i> {{ inquiry.get_department_display }}
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <i class="fas fa-calendar"></i> Preferred: {{ inquiry.preferred_date }}
+                                                        </div>
+                                                    </div>
+                                                    <p class="card-text small mb-2">
+                                                        <strong>Message:</strong> {{ inquiry.message|truncatechars:100 }}
+                                                    </p>
+                                                    {% if inquiry.health_records %}
+                                                    <p class="small mb-0">
+                                                        <i class="fas fa-paperclip text-info"></i>
+                                                        <span class="text-info">Health records attached</span>
+                                                    </p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <div class="mb-2">
+                                                <span class="badge {{ inquiry.get_status_badge_class }} mb-2">{{ inquiry.status }}</span>
+                                                <br>
+                                                <small class="text-muted">{{ inquiry.created_at|timesince }} ago</small>
+                                            </div>
+                                            {% if inquiry.assigned_to %}
+                                            <div class="mb-2">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-user"></i> Assigned to: {{ inquiry.assigned_to.get_full_name }}
+                                                </small>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <a href="{% url 'appointment_inquiry_detail' inquiry.id %}" 
+                                                   class="btn btn-sm btn-primary btn-action">
+                                                    <i class="fas fa-eye"></i> View Details
+                                                </a>
+                                                {% if inquiry.status == 'PENDING' %}
+                                                <button class="btn btn-sm btn-success btn-action" 
+                                                        onclick="quickReply('appointment', {{ inquiry.id }}, '{{ inquiry.name }}')">
+                                                    <i class="fas fa-reply"></i> Quick Reply
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No appointment inquiries found</h5>
+                                <p class="text-muted">No appointment inquiries match your current filters.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Inquiries Tab -->
+            <div class="tab-pane fade" id="contact-inquiries" role="tabpanel">
+                <div class="card border-0">
+                    <div class="card-body">
+                        {% if contact_inquiries %}
+                            {% for inquiry in contact_inquiries %}
+                            <div class="card inquiry-card contact">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="d-flex align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="card-title mb-1">
+                                                        {{ inquiry.name }}
+                                                        {% if not inquiry.notification_seen %}
+                                                        <span class="badge bg-danger badge-new ms-2">NEW</span>
+                                                        {% endif %}
+                                                    </h6>
+                                                    <div class="row text-muted small mb-2">
+                                                        <div class="col-md-6">
+                                                            <i class="fas fa-envelope"></i> {{ inquiry.email }}
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <i class="fas fa-phone"></i> {{ inquiry.phone }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <strong class="text-primary">{{ inquiry.subject }}</strong>
+                                                    </div>
+                                                    <p class="card-text small mb-2">
+                                                        <strong>Message:</strong> {{ inquiry.message|truncatechars:100 }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <div class="mb-2">
+                                                <span class="badge {{ inquiry.get_status_badge_class }} mb-2">{{ inquiry.status }}</span>
+                                                <br>
+                                                <small class="text-muted">{{ inquiry.created_at|timesince }} ago</small>
+                                            </div>
+                                            {% if inquiry.assigned_to %}
+                                            <div class="mb-2">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-user"></i> Assigned to: {{ inquiry.assigned_to.get_full_name }}
+                                                </small>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <a href="{% url 'contact_inquiry_detail' inquiry.id %}" 
+                                                   class="btn btn-sm btn-primary btn-action">
+                                                    <i class="fas fa-eye"></i> View Details
+                                                </a>
+                                                {% if inquiry.status == 'PENDING' %}
+                                                <button class="btn btn-sm btn-success btn-action" 
+                                                        onclick="quickReply('contact', {{ inquiry.id }}, '{{ inquiry.name }}')">
+                                                    <i class="fas fa-reply"></i> Quick Reply
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No contact inquiries found</h5>
+                                <p class="text-muted">No contact inquiries match your current filters.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Reply Modal -->
+<div class="modal fade" id="quickReplyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Reply</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="quickReplyForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="quickReplyMessage" class="form-label">Reply Message</label>
+                        <textarea class="form-control" id="quickReplyMessage" name="reply_message" 
+                                  rows="5" placeholder="Type your reply message here..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quickReplyStatus" class="form-label">Update Status</label>
+                        <select class="form-select" id="quickReplyStatus" name="status">
+                            <option value="CONTACTED">Contacted</option>
+                            <option value="REPLIED">Replied</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Reply
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentInquiryType = '';
+let currentInquiryId = '';
+
+function quickReply(type, inquiryId, name) {
+    currentInquiryType = type;
+    currentInquiryId = inquiryId;
+    
+    document.querySelector('#quickReplyModal .modal-title').textContent = `Quick Reply to ${name}`;
+    
+    // Set form action URL
+    if (type === 'appointment') {
+        document.getElementById('quickReplyForm').action = `{% url 'appointment_inquiry_detail' 0 %}`.replace('0', inquiryId);
+    } else {
+        document.getElementById('quickReplyForm').action = `{% url 'contact_inquiry_detail' 0 %}`.replace('0', inquiryId);
+    }
+    
+    // Add hidden action field
+    let actionField = document.querySelector('input[name="action"]');
+    if (!actionField) {
+        actionField = document.createElement('input');
+        actionField.type = 'hidden';
+        actionField.name = 'action';
+        document.getElementById('quickReplyForm').appendChild(actionField);
+    }
+    actionField.value = 'send_reply';
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('quickReplyModal'));
+    modal.show();
+}
+
+// Clear form when modal is hidden
+document.getElementById('quickReplyModal').addEventListener('hidden.bs.modal', function() {
+    document.getElementById('quickReplyForm').reset();
+});
+
+// Auto-refresh for new inquiries
+setInterval(function() {
+    // Check for new inquiries and update badges if needed
+    // This is optional - you might prefer manual refresh
+}, 60000); // Check every minute
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %} 

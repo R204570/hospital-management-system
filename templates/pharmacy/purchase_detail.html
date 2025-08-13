@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Purchase Details | HMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12 mb-3">
+            <a href="{% url 'purchase_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Purchases
+            </a>
+            {% if purchase.status == 'PENDING' %}
+            <a href="{% url 'receive_purchase' purchase.id %}" class="btn btn-success">
+                <i class="fas fa-check"></i> Receive Purchase
+            </a>
+            <a href="{% url 'cancel_purchase' purchase.id %}" class="btn btn-danger">
+                <i class="fas fa-times"></i> Cancel Purchase
+            </a>
+            {% endif %}
+        </div>
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Purchase Details</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Purchase ID:</strong></p>
+                            <p>{{ purchase.id }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Supplier:</strong></p>
+                            <p>{{ purchase.supplier.name }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Invoice Number:</strong></p>
+                            <p>{{ purchase.invoice_number|default:"Not Specified" }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Purchase Date:</strong></p>
+                            <p>{{ purchase.purchase_date|date:"F d, Y" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Status:</strong></p>
+                            {% if purchase.status == 'PENDING' %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% elif purchase.status == 'RECEIVED' %}
+                            <span class="badge bg-success">Received</span>
+                            {% elif purchase.status == 'CANCELLED' %}
+                            <span class="badge bg-danger">Cancelled</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Created By:</strong></p>
+                            <p>{{ purchase.created_by.get_full_name }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            {% if purchase.status == 'RECEIVED' %}
+                            <p class="mb-1"><strong>Received Date:</strong></p>
+                            <p>{{ purchase.received_date|date:"F d, Y" }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <p class="mb-1"><strong>Notes:</strong></p>
+                            <p>{{ purchase.notes|default:"No notes available" }}</p>
+                        </div>
+                    </div>
+                    
+                    <h5 class="mt-4 mb-3">Purchase Items</h5>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Medicine</th>
+                                    <th>Batch #</th>
+                                    <th>Expiry Date</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in purchase_items %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ item.medicine.name }}</td>
+                                    <td>{{ item.batch_number|default:"-" }}</td>
+                                    <td>{{ item.expiry_date|date:"M d, Y" }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>${{ item.unit_price }}</td>
+                                    <td>${{ item.subtotal }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="6" class="text-end"><strong>Total Amount:</strong></td>
+                                    <td>${{ purchase.total_amount }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="6" class="text-end"><strong>Discount:</strong></td>
+                                    <td>${{ purchase.discount|default:"0.00" }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="6" class="text-end"><strong>Final Amount:</strong></td>
+                                    <td>${{ purchase.final_amount }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

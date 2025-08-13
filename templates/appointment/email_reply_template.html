@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartCare Hospital - Reply</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.5;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            padding: 20px;
+            text-align: center;
+        }
+        .header img {
+            max-width: 250px;
+            width: auto;
+            height: auto;
+            margin: 0 auto;
+            border-radius: 6px;
+            background: white;
+            padding: 10px;
+            display: block;
+        }
+        .content {
+            padding: 25px;
+        }
+        .inquiry-box {
+            background-color: #f8fafc;
+            border-left: 4px solid #4f46e5;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .reply-box {
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .footer {
+            background-color: #f9fafb;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <img src="https://ik.imagekit.io/smartcarelogo/smartcare-logo.png?updatedAt=1750880603700" alt="SmartCare Hospital">
+        </div>
+
+        <div class="content">
+            <p>Dear {{ inquiry.name }},</p>
+
+            <p>Thank you for contacting SmartCare Hospital. Here is our response to your inquiry:</p>
+
+            <div class="inquiry-box">
+                <strong>Your Question:</strong> {% if inquiry.subject %}{{ inquiry.subject }}{% else %}{{ inquiry.get_department_display }} Appointment{% endif %}<br>
+                {{ inquiry.message }}
+            </div>
+
+            <div class="reply-box">
+                <strong>Our Response:</strong><br>
+                {{ reply_message|linebreaks }}
+            </div>
+
+            <p>Best regards,<br>
+            {{ replied_by_name }}<br>
+            SmartCare Hospital</p>
+        </div>
+
+        <div class="footer">
+            📧 smart.care.2025.01@gmail.com | for emergency contact 📞 +1 (555) 123-4567<br>
+            🏥 Address: 123 Healthcare Avenue, Medical District | 🌐 Website: www.smartcare-hospital.com
+                
+        </div>
+    </div>
+</body>
+</html> 

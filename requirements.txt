@@ -1,0 +1,9 @@
+django==4.2.9
+pymongo==3.12.3
+pillow
+django-crispy-forms
+crispy-bootstrap5
+channels
+daphne
+xhtml2pdf
+django-widget-tweaks 

@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Assign Room - Request #{{ admission_request.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-house-door"></i> Assign Room - Request #{{ admission_request.id }}
+                    </h4>
+                </div>
+
+                <div class="card-body">
+                    <!-- Patient Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="alert alert-success">
+                                <h6><i class="bi bi-check-circle"></i> Approved Admission Request</h6>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <strong>Patient:</strong> {{ admission_request.patient.full_name }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Doctor:</strong> {{ admission_request.requesting_doctor.get_full_name }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Priority:</strong> 
+                                        {% if admission_request.priority == 'high' %}
+                                            <span class="badge bg-danger">{{ admission_request.get_priority_display }}</span>
+                                        {% elif admission_request.priority == 'medium' %}
+                                            <span class="badge bg-warning">{{ admission_request.get_priority_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ admission_request.get_priority_display }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Diagnosis:</strong> {{ admission_request.primary_diagnosis|truncatechars:30 }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preferences Summary -->
+                    {% if admission_request.preferred_room_type or admission_request.preferred_floor %}
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="bi bi-gear"></i> Patient Preferences</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        {% if admission_request.preferred_room_type %}
+                                        <div class="col-md-6">
+                                            <strong>Preferred Room Type:</strong> {{ admission_request.get_preferred_room_type_display }}
+                                        </div>
+                                        {% endif %}
+                                        {% if admission_request.preferred_floor %}
+                                        <div class="col-md-6">
+                                            <strong>Preferred Floor:</strong> {{ admission_request.preferred_floor }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% if admission_request.special_requirements %}
+                                    <div class="row mt-2">
+                                        <div class="col-md-12">
+                                            <strong>Special Requirements:</strong> {{ admission_request.special_requirements }}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Available Beds -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="bi bi-list"></i> Available Beds</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if available_beds %}
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <div class="table-responsive">
+                                            <table class="table table-striped table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th width="5%">Select</th>
+                                                        <th>Room</th>
+                                                        <th>Floor</th>
+                                                        <th>Type</th>
+                                                        <th>Rate/Day</th>
+                                                        <th>Capacity</th>
+                                                        <th>Amenities</th>
+                                                        <th>Match</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for bed in available_beds %}
+                                                    <tr {% if admission_request.preferred_room_type == bed.room.room_type and admission_request.preferred_floor == bed.room.floor %}class="table-success"{% elif admission_request.preferred_room_type == bed.room.room_type or admission_request.preferred_floor == bed.room.floor %}class="table-warning"{% endif %}>
+                                                        <td>
+                                                            <input type="radio" name="bed_id" value="{{ bed.id }}" class="form-check-input" required>
+                                                        </td>
+                                                        <td>
+                                                            <strong>{{ bed.room.room_number }}-{{ bed.bed_number }}</strong><br>
+                                                            <small class="text-muted">{{ bed.room.department }}</small>
+                                                        </td>
+                                                        <td>Floor {{ bed.room.floor }}</td>
+                                                        <td>
+                                                            <span class="badge bg-secondary">{{ bed.room.get_room_type_display }}</span>
+                                                        </td>
+                                                        <td>₹{{ bed.room.daily_rate|floatformat:0 }}</td>
+                                                        <td>{{ bed.room.bed_count }} bed{% if bed.room.bed_count > 1 %}s{% endif %}</td>
+                                                        <td>
+                                                            <small>{{ bed.room.amenities|truncatechars:50 }}</small>
+                                                        </td>
+                                                        <td>
+                                                            {% if admission_request.preferred_room_type == bed.room.room_type and admission_request.preferred_floor == bed.room.floor %}
+                                                                <span class="badge bg-success">Perfect</span>
+                                                            {% elif admission_request.preferred_room_type == bed.room.room_type %}
+                                                                <span class="badge bg-warning">Room Type</span>
+                                                            {% elif admission_request.preferred_floor == bed.room.floor %}
+                                                                <span class="badge bg-warning">Floor</span>
+                                                            {% else %}
+                                                                <span class="badge bg-secondary">Alternative</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <div class="row mt-4">
+                                            <div class="col-md-12">
+                                                <div class="alert alert-info">
+                                                    <h6><i class="bi bi-info-circle"></i> Legend:</h6>
+                                                    <span class="badge bg-success">Perfect Match</span> - Matches both room type and floor preferences<br>
+                                                    <span class="badge bg-warning">Partial Match</span> - Matches either room type or floor preference<br>
+                                                    <span class="badge bg-secondary">Alternative</span> - Different from preferences but available
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <button type="submit" class="btn btn-primary btn-lg">
+                                                    <i class="bi bi-check-circle"></i> Assign Selected Bed & Admit Patient
+                                                </button>
+                                                <a href="{% url 'admission_request_process' admission_request.id %}" class="btn btn-secondary">
+                                                    <i class="bi bi-arrow-left"></i> Back to Processing
+                                                </a>
+                                                <a href="{% url 'admission_request_detail' admission_request.id %}" class="btn btn-outline-secondary">
+                                                    <i class="bi bi-eye"></i> View Details
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    {% else %}
+                                    <div class="alert alert-danger">
+                                        <h6><i class="bi bi-exclamation-triangle"></i> No Available Beds</h6>
+                                        <p>There are currently no available beds in the hospital. Please check back later or contact the administrator.</p>
+                                        <a href="{% url 'admission_request_detail' admission_request.id %}" class="btn btn-secondary">
+                                            <i class="bi bi-arrow-left"></i> Back to Details
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-select the best matching bed
+document.addEventListener('DOMContentLoaded', function() {
+    const perfectMatch = document.querySelector('tr.table-success input[type="radio"]');
+    if (perfectMatch) {
+        perfectMatch.checked = true;
+    } else {
+        const partialMatch = document.querySelector('tr.table-warning input[type="radio"]');
+        if (partialMatch) {
+            partialMatch.checked = true;
+        }
+    }
+});
+</script>
+{% endblock %} 

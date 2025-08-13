@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Patient Admission Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>
+                {% if admission.admission_type == 'EMERGENCY' %}
+                <span class="badge bg-danger me-2">EMERGENCY</span>
+                {% endif %}
+                Patient Admission
+            </h2>
+            <p class="text-muted">
+                {{ admission.patient.full_name }} - 
+                Admitted on {{ admission.admission_date|date:"F j, Y" }} at {{ admission.admission_date|time:"g:i A" }}
+            </p>
+        </div>
+        <div class="col-auto">
+            {% if not admission.discharge_date %}
+            <a href="{% url 'admission_discharge' admission.id %}" class="btn btn-success">
+                <i class="bi bi-box-arrow-right"></i> Discharge Patient
+            </a>
+            {% endif %}
+            <a href="{% url 'admission_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Admissions
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Patient & Admission Info -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Patient Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex mb-3">
+                        {% if admission.patient.profile_picture %}
+                        <div class="me-3">
+                            <img src="{{ admission.patient.profile_picture.url }}" alt="{{ admission.patient.full_name }}" 
+                                class="img-fluid rounded-circle" style="width: 80px; height: 80px;">
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h4 class="mb-1">{{ admission.patient.full_name }}</h4>
+                            <p class="mb-0 text-muted">ID: {{ admission.patient.patient_id }}</p>
+                            <p class="mb-0 text-muted">
+                                {{ admission.patient.age }} years, {{ admission.patient.get_gender_display }}
+                                {% if admission.patient.blood_group %}
+                                | {{ admission.patient.blood_group }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <table class="table table-striped">
+                        <tr>
+                            <th width="35%">Phone:</th>
+                            <td>{{ admission.patient.phone }}</td>
+                        </tr>
+                        <tr>
+                            <th>Emergency Contact:</th>
+                            <td>{{ admission.patient.emergency_contact_name }} ({{ admission.patient.emergency_contact_relation }}) - {{ admission.patient.emergency_contact_phone }}</td>
+                        </tr>
+                        <tr>
+                            <th>Allergies:</th>
+                            <td>{{ admission.patient.allergies|default:"None recorded" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Chronic Conditions:</th>
+                            <td>{{ admission.patient.chronic_diseases|default:"None recorded" }}</td>
+                        </tr>
+                    </table>
+                    
+                    <div class="mt-3">
+                        <a href="{% url 'patient_detail' admission.patient.id %}" class="btn btn-outline-primary">
+                            <i class="bi bi-person"></i> View Full Patient Record
+                        </a>
+                        <a href="{% url 'create_medical_record' admission.patient.id %}" class="btn btn-outline-success">
+                            <i class="bi bi-journal-medical"></i> Create Medical Record
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Admission Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <span class="badge {% if admission.is_critical %}bg-danger{% else %}bg-warning{% endif %} me-2">
+                            {% if admission.is_critical %}CRITICAL{% else %}STABLE{% endif %}
+                        </span>
+                        <span class="badge bg-primary">{{ admission.get_admission_type_display }}</span>
+                        
+                        {% if admission.discharge_date %}
+                        <span class="badge bg-success">DISCHARGED</span>
+                        {% else %}
+                        <span class="badge bg-info">ACTIVE</span>
+                        {% endif %}
+                    </div>
+                    
+                    <table class="table table-striped">
+                        <tr>
+                            <th width="35%">Admission Date:</th>
+                            <td>{{ admission.admission_date|date:"F j, Y" }} at {{ admission.admission_date|time:"g:i A" }}</td>
+                        </tr>
+                        {% if admission.discharge_date %}
+                        <tr>
+                            <th>Discharge Date:</th>
+                            <td>{{ admission.discharge_date|date:"F j, Y" }} at {{ admission.discharge_date|time:"g:i A" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Length of Stay:</th>
+                            <td>{{ admission.discharge_date|timeuntil:admission.admission_date }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th>Room & Bed:</th>
+                            <td>Room {{ admission.bed.room.room_number }}, Bed {{ admission.bed.bed_number }} (Floor {{ admission.bed.room.floor }})</td>
+                        </tr>
+                        <tr>
+                            <th>Department:</th>
+                            <td>{{ admission.bed.room.get_specialization_display }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Medical Information -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Medical Information</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Diagnosis</h6>
+                    <p class="mb-4">{{ admission.diagnosis }}</p>
+                    
+                    <h6>Notes</h6>
+                    <p>{{ admission.notes|default:"No additional notes." }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Staff Information -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Assigned Staff</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="mb-3">Attending Doctor</h6>
+                    <div class="d-flex mb-4">
+                        {% if admission.admitting_doctor.profile_picture %}
+                        <div class="me-3">
+                            <img src="{{ admission.admitting_doctor.profile_picture.url }}" alt="Dr. {{ admission.admitting_doctor.get_full_name }}" 
+                                class="img-fluid rounded-circle" style="width: 50px; height: 50px;">
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-0">Dr. {{ admission.admitting_doctor.get_full_name }}</h6>
+                            <p class="text-muted mb-0">{{ admission.admitting_doctor.get_specialization_display|default:"General Practice" }}</p>
+                            {% if admission.doctor_availability_time and admission.doctor_availability_time > now %}
+                            <p class="text-danger mb-0"><small>Unavailable until {{ admission.doctor_availability_time|time:"g:i A" }}</small></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if admission.assigned_nurse %}
+                    <h6 class="mb-3">Assigned Nurse</h6>
+                    <div class="d-flex">
+                        {% if admission.assigned_nurse.profile_picture %}
+                        <div class="me-3">
+                            <img src="{{ admission.assigned_nurse.profile_picture.url }}" alt="{{ admission.assigned_nurse.get_full_name }}" 
+                                class="img-fluid rounded-circle" style="width: 50px; height: 50px;">
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-0">{{ admission.assigned_nurse.get_full_name }}</h6>
+                            <p class="text-muted mb-0">Nurse on Floor {{ admission.bed.room.floor }}</p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <p class="mb-0">No nurse has been assigned to this patient yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
