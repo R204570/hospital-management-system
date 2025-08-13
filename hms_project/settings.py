@@ -14,7 +14,9 @@ ALLOWED_HOSTS = [
     'hospital-management-system-yhsp.onrender.com',
     '0.0.0.0:$PORT'
 ]
-
+CSRF_TRUSTED_ORIGINS = [
+    'https://hospital-management-system-yhsp.onrender.com'
+]
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
