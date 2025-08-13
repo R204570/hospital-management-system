@@ -12,7 +12,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'hospital-management-system-yhsp.onrender.com',
-    '0.0.0.0'
+    '0.0.0.0:$PORT'
 ]
 
 # Application definition
