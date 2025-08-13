@@ -11,8 +11,7 @@ SECRET_KEY = 'django-insecure-hms-secret-key-change-in-production'
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'hospital-management-system-yhsp.onrender.com',  # Your Render domain
-    'localhost',
+    'hospital-management-system-yhsp.onrender.com',
     '0.0.0.0'
 ]
 
