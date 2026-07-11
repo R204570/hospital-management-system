@@ -7,3 +7,4 @@ channels
 daphne
 xhtml2pdf
 django-widget-tweaks 
+python-dotenv

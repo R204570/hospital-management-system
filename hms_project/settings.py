@@ -1,8 +1,13 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from the project-root .env file (if present)
+load_dotenv(BASE_DIR / '.env')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-hms-secret-key-change-in-production'
@@ -134,12 +139,15 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # Email configuration for Gmail
+# Credentials are read from the .env file (never commit them):
+#   EMAIL_HOST         -> the Gmail address (maps to Django's EMAIL_HOST_USER)
+#   EMAIL_APP_PASSKEY  -> the Gmail app password (maps to EMAIL_HOST_PASSWORD)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST = 'smtp.gmail.com'  # SMTP server (not the account address)
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'smart.care.2025.01@gmail.com'  # Updated with provided email
-EMAIL_HOST_PASSWORD = 'soip vlre szcg lmwu'  # Updated with provided app password
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST', '')  # Gmail address from .env
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_APP_PASSKEY', '')  # App password from .env
 
 # IMAP configuration for reading emails (same credentials)
 IMAP_HOST = 'imap.gmail.com'
