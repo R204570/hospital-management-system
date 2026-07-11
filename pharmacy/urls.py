@@ -35,4 +35,20 @@ urlpatterns = [
     # Inventory management
     path('low-stock/', views.low_stock_list, name='low_stock_list'),
     path('expired-medicines/', views.expired_medicines, name='expired_medicines'),
+
+    # Hospital inventory (equipment/surgical/consumables) - Head Nurse managed
+    path('inventory/', views.inventory_list, name='inventory_list'),
+    path('inventory/add/', views.inventory_add, name='inventory_add'),
+    path('inventory/<int:pk>/edit/', views.inventory_edit, name='inventory_edit'),
+
+    # Drug request workflow (Nurse <-> Pharmacy)
+    path('drug-requests/', views.drug_request_queue, name='drug_request_queue'),
+    path('drug-requests/new/', views.drug_request_create, name='drug_request_create'),
+    path('drug-requests/new/<int:patient_id>/', views.drug_request_create, name='drug_request_create_for_patient'),
+    path('drug-requests/mine/', views.nurse_drug_request_list, name='nurse_drug_request_list'),
+    path('drug-requests/notifications/', views.drug_request_notifications, name='drug_request_notifications'),
+    path('drug-requests/<int:pk>/', views.drug_request_detail, name='drug_request_detail'),
+    path('drug-requests/<int:pk>/respond/', views.drug_request_respond, name='drug_request_respond'),
+    path('drug-requests/<int:pk>/dispense/', views.drug_request_dispense, name='drug_request_dispense'),
+    path('drug-requests/<int:pk>/cancel/', views.drug_request_cancel, name='drug_request_cancel'),
 ] 

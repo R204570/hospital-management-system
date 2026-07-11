@@ -192,9 +192,11 @@
                             </div>
                         </div>
                         
+                        {% if form.admission_type %}
                         <div class="mb-3">
                             {{ form.admission_type|as_crispy_field }}
                         </div>
+                        {% endif %}
                         
                         <div class="form-check mb-3">
                             {{ form.is_critical }}
@@ -213,9 +215,11 @@
                     <div class="col-md-12 mb-3">
                         {{ form.primary_diagnosis|as_crispy_field }}
                     </div>
+                    {% if form.notes %}
                     <div class="col-md-12 mb-3">
                         {{ form.notes|as_crispy_field }}
                     </div>
+                    {% endif %}
                 </div>
 
                 <div class="row mt-4">

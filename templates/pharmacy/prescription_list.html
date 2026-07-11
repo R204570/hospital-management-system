@@ -50,7 +50,7 @@
                         <td>{{ record.diagnosis|truncatechars:30 }}</td>
                         <td>{{ record.prescription|truncatechars:40 }}</td>
                         <td>
-                            <a href="{% url 'view_medical_record' record.patient.id record.id %}" class="btn btn-sm btn-outline-primary" title="View Detail">
+                            <a href="{% url 'view_medical_record' record.id %}" class="btn btn-sm btn-outline-primary" title="View Detail">
                                 <i class="fas fa-eye"></i>
                             </a>
                             <a href="{% url 'add_sale' %}?medical_record={{ record.id }}" class="btn btn-sm btn-success" title="Dispense Medication">

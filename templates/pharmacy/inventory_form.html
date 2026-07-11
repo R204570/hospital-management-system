@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}{% if item %}Edit{% else %}Add{% endif %} Inventory Item{% endblock %}
+{% block page_title %}{% if item %}Edit Inventory Item{% else %}Add Inventory Item{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white"><strong>{% if item %}Edit{% else %}New{% endif %} Hospital Inventory Item</strong></div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="row">
+              <div class="col-md-8 mb-3">
+                <label class="form-label">Name <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" value="{{ item.name|default:'' }}" required>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Item Code <span class="text-danger">*</span></label>
+                <input type="text" name="item_code" class="form-control" value="{{ item.item_code|default:'' }}" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              <textarea name="description" class="form-control" rows="2">{{ item.description|default:'' }}</textarea>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Category <span class="text-danger">*</span></label>
+                <select name="category" class="form-select" required>
+                  <option value="">-- Select --</option>
+                  {% for c in categories %}
+                  <option value="{{ c.id }}" {% if item and item.category_id == c.id %}selected{% endif %}>{{ c.name }} ({{ c.get_type_display }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Supplier</label>
+                <select name="supplier" class="form-select">
+                  <option value="">-- None --</option>
+                  {% for sup in suppliers %}
+                  <option value="{{ sup.id }}" {% if item and item.supplier_id == sup.id %}selected{% endif %}>{{ sup.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Purchase Price</label>
+                <input type="number" step="0.01" min="0" name="purchase_price" class="form-control" value="{{ item.purchase_price|default:'0' }}">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Stock Quantity</label>
+                <input type="number" min="0" name="stock_quantity" class="form-control" value="{{ item.stock_quantity|default:'0' }}">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Reorder Level</label>
+                <input type="number" min="0" name="reorder_level" class="form-control" value="{{ item.reorder_level|default:'5' }}">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Last Maintenance</label>
+                <input type="date" name="last_maintenance" class="form-control" value="{{ item.last_maintenance|date:'Y-m-d' }}">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Next Maintenance</label>
+                <input type="date" name="next_maintenance" class="form-control" value="{{ item.next_maintenance|date:'Y-m-d' }}">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Warranty Expiry</label>
+                <input type="date" name="warranty_expiry" class="form-control" value="{{ item.warranty_expiry|date:'Y-m-d' }}">
+              </div>
+            </div>
+            <div class="form-check mb-3">
+              <input type="checkbox" name="is_disposable" class="form-check-input" id="disp" {% if item.is_disposable %}checked{% endif %}>
+              <label class="form-check-label" for="disp">Disposable / consumable item</label>
+            </div>
+            <div class="d-flex justify-content-between">
+              <a href="{% url 'inventory_list' %}" class="btn btn-outline-secondary">Cancel</a>
+              <button type="submit" class="btn btn-primary">{% if item %}Save Changes{% else %}Add Item{% endif %}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -4,6 +4,8 @@ import uuid
 from django.urls import reverse
 import json
 
+from core import constants
+
 
 class Patient(models.Model):
     """Patient model for storing patient data"""
@@ -254,32 +256,18 @@ class Room(models.Model):
         }
     }
     
-    # Hospital departments by floor
-    GENERAL_MEDICINE = 'GENERAL_MEDICINE'
-    CARDIOLOGY = 'CARDIOLOGY'
-    ORTHOPEDIC = 'ORTHOPEDIC'
-    NEUROLOGY = 'NEUROLOGY'
-    ONCOLOGY = 'ONCOLOGY'
-    EMERGENCY = 'EMERGENCY'
-    
-    DEPARTMENT_CHOICES = [
-        (GENERAL_MEDICINE, 'General Medicine'),
-        (CARDIOLOGY, 'Cardiology'),
-        (ORTHOPEDIC, 'Orthopedic'),
-        (NEUROLOGY, 'Neurology'),
-        (ONCOLOGY, 'Oncology'),
-        (EMERGENCY, 'Emergency'),
-    ]
-    
+    # Hospital departments by floor (sourced from core.constants)
+    GENERAL_MEDICINE = constants.GENERAL_MEDICINE
+    CARDIOLOGY = constants.CARDIOLOGY
+    ORTHOPEDIC = constants.ORTHOPEDIC
+    NEUROLOGY = constants.NEUROLOGY
+    ONCOLOGY = constants.ONCOLOGY
+    EMERGENCY = constants.EMERGENCY
+
+    DEPARTMENT_CHOICES = constants.DEPARTMENT_CHOICES
+
     # Multi-Specialty Hospital Floor Layout - 6 floors total
-    FLOOR_DEPARTMENT_MAP = {
-        1: GENERAL_MEDICINE,    # Floor 1: General Medicine & Internal Medicine
-        2: CARDIOLOGY,          # Floor 2: Cardiology & Cardiovascular Surgery
-        3: ORTHOPEDIC,          # Floor 3: Orthopedic & Bone Surgery
-        4: NEUROLOGY,           # Floor 4: Neurology & Neurosurgery
-        5: EMERGENCY,           # Floor 5: Emergency & Critical Care
-        6: ONCOLOGY,            # Floor 6: Oncology & Cancer Treatment
-    }
+    FLOOR_DEPARTMENT_MAP = constants.FLOOR_DEPARTMENT_MAP
     
     # Multi-Specialty Hospital Room Distribution (24 rooms per floor)
     # Each floor has 2 Operation Rooms + 2 ICU Rooms + 20 Patient Rooms
@@ -434,14 +422,8 @@ class Nurse(models.Model):
     ]
     
     # Map floor numbers to specializations
-    FLOOR_SPECIALIZATION_MAP = {
-        1: GENERAL_MEDICINE,    # Floor 1: General Medicine & Internal Medicine
-        2: CARDIOLOGY,          # Floor 2: Cardiology & Cardiovascular Surgery
-        3: ORTHOPEDIC,          # Floor 3: Orthopedic & Bone Surgery
-        4: NEUROLOGY,           # Floor 4: Neurology & Neurosurgery
-        5: EMERGENCY,           # Floor 5: Emergency & Critical Care
-        6: ONCOLOGY,            # Floor 6: Oncology & Cancer Treatment
-    }
+    # Floor -> specialization map (matches core department layout)
+    FLOOR_SPECIALIZATION_MAP = constants.FLOOR_DEPARTMENT_MAP
     
     nurse = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='nurse_assignments')
     assigned_floors = models.JSONField(default=list, help_text="List of floor numbers assigned to this nurse")

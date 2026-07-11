@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Drug Request Queue{% endblock %}
+{% block page_title %}Drug Request Queue{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">Nurse Drug Requests
+      <span id="pending-badge" class="badge bg-warning ms-2">{{ pending_count }} pending</span>
+    </h5>
+    <form method="get">
+      <div class="input-group" style="max-width: 320px;">
+        <select name="status" class="form-select" onchange="this.form.submit()">
+          <option value="PENDING" {% if status_filter == 'PENDING' %}selected{% endif %}>Pending</option>
+          <option value="ALL" {% if status_filter == 'ALL' %}selected{% endif %}>All</option>
+          {% for value, label in status_choices %}
+            {% if value != 'PENDING' %}
+            <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th><th>Medicine</th><th>Qty</th><th>Patient</th><th>Requested by</th>
+            <th>Urgency</th><th>Status</th><th>Requested</th><th class="text-end">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in drug_requests %}
+          <tr>
+            <td>DR-{{ r.id }}</td>
+            <td>{{ r.medicine.name }}<br><small class="text-muted">stock: {{ r.medicine.stock_quantity }}</small></td>
+            <td>{{ r.quantity }}</td>
+            <td>{{ r.patient.full_name }}</td>
+            <td>{{ r.requesting_nurse.get_full_name|default:r.requesting_nurse.username }}</td>
+            <td><span class="badge {{ r.urgency_badge_class }}">{{ r.get_urgency_display }}</span></td>
+            <td><span class="badge {{ r.status_badge_class }}">{{ r.get_status_display }}</span></td>
+            <td>{{ r.created_at|date:"M d, H:i" }}</td>
+            <td class="text-end"><a href="{% url 'drug_request_detail' r.id %}" class="btn btn-sm btn-primary">Review</a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="9" class="text-center text-muted py-4">No requests in this view.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Poll pending drug-request count and update the badge (matches app polling pattern)
+(function () {
+  const badge = document.getElementById('pending-badge');
+  if (!badge) return;
+  async function refresh() {
+    try {
+      const res = await fetch("{% url 'drug_request_notifications' %}", {headers: {'X-Requested-With': 'XMLHttpRequest'}});
+      if (!res.ok) return;
+      const data = await res.json();
+      if (typeof data.pending_count !== 'undefined') {
+        badge.textContent = data.pending_count + ' pending';
+      }
+    } catch (e) { /* ignore transient errors */ }
+  }
+  setInterval(refresh, 15000);
+})();
+</script>
+{% endblock %}

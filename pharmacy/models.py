@@ -329,3 +329,103 @@ class PatientLoyalty(models.Model):
             self.loyalty_tier = 'Silver'
         else:
             self.loyalty_tier = 'Standard' 
+
+class DrugRequest(models.Model):
+    """A nurse's request to the pharmacy for medicine, with an approval workflow.
+
+    Workflow: PENDING -> APPROVED/REJECTED -> DISPENSED (approved only).
+    A nurse may CANCEL a request while it is still PENDING.
+    """
+    # Urgency levels
+    ROUTINE = 'ROUTINE'
+    URGENT = 'URGENT'
+    EMERGENCY = 'EMERGENCY'
+    URGENCY_CHOICES = [
+        (ROUTINE, 'Routine'),
+        (URGENT, 'Urgent'),
+        (EMERGENCY, 'Emergency'),
+    ]
+
+    # Request status
+    PENDING = 'PENDING'
+    APPROVED = 'APPROVED'
+    REJECTED = 'REJECTED'
+    DISPENSED = 'DISPENSED'
+    CANCELLED = 'CANCELLED'
+    STATUS_CHOICES = [
+        (PENDING, 'Pending'),
+        (APPROVED, 'Approved'),
+        (REJECTED, 'Rejected'),
+        (DISPENSED, 'Dispensed'),
+        (CANCELLED, 'Cancelled'),
+    ]
+
+    # Who / what / how much
+    requesting_nurse = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='drug_requests',
+        limit_choices_to={'role': 'NURSE'}
+    )
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='drug_requests')
+    medicine = models.ForeignKey(MedicineItem, on_delete=models.PROTECT, related_name='drug_requests')
+    quantity = models.PositiveIntegerField(default=1)
+    urgency = models.CharField(max_length=10, choices=URGENCY_CHOICES, default=ROUTINE)
+    reason = models.TextField(blank=True, help_text="Clinical reason / note for the request")
+
+    # Status + pharmacy response
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)
+    responded_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='drug_request_responses', limit_choices_to={'role': 'PHARMACIST'}
+    )
+    response_notes = models.TextField(blank=True)
+    approved_quantity = models.PositiveIntegerField(
+        null=True, blank=True, help_text="Quantity approved/dispensed by pharmacy"
+    )
+
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    responded_at = models.DateTimeField(null=True, blank=True)
+    dispensed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Drug Request'
+        verbose_name_plural = 'Drug Requests'
+        indexes = [
+            models.Index(fields=['status', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"DR-{self.pk} {self.medicine.name} x{self.quantity} ({self.get_status_display()})"
+
+    @property
+    def is_pending(self):
+        return self.status == self.PENDING
+
+    @property
+    def is_approved(self):
+        return self.status == self.APPROVED
+
+    @property
+    def can_fulfill(self):
+        """True if current stock can cover the requested quantity."""
+        return self.medicine.stock_quantity >= self.quantity
+
+    @property
+    def urgency_badge_class(self):
+        return {
+            self.ROUTINE: 'bg-secondary',
+            self.URGENT: 'bg-warning',
+            self.EMERGENCY: 'bg-danger',
+        }.get(self.urgency, 'bg-secondary')
+
+    @property
+    def status_badge_class(self):
+        return {
+            self.PENDING: 'bg-warning',
+            self.APPROVED: 'bg-info',
+            self.REJECTED: 'bg-danger',
+            self.DISPENSED: 'bg-success',
+            self.CANCELLED: 'bg-secondary',
+        }.get(self.status, 'bg-secondary')

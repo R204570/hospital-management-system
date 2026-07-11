@@ -1,213 +1,187 @@
-# 🏥 Hospital Management System (HMS)
+# Hospital Management System (HMS) - SmartCare
 
-A **Django-based Hospital Management System** that manages core hospital operations such as **patients, appointments, billing, pharmacy, users, and website pages**.  
-The project also includes **utility scripts to populate and normalize database data**, making initial setup and testing easier.
-
-This repository demonstrates a **real-world modular Django project structure** with setup helpers and data seeding support.
-
----
-
-## 🚀 Features
-
-- 🔐 User authentication and role-based access
-- 🧑‍⚕️ Patient management
-- 📅 Appointment scheduling
-- 💳 Billing and invoice records
-- 💊 Pharmacy and medicine inventory
-- 🌐 Website pages (landing, login, dashboard)
-- 📦 Database population & normalization scripts
-- 🎨 Static assets and reusable templates
+A modular **Django 4.2** Hospital Management System for a multi-specialty
+hospital. It manages patients, appointments, admissions & beds, an in-house
+pharmacy (drug requests + retail sales), hospital inventory, staff with
+role-based access, and a public website with a blog and inquiry system.
 
 ---
 
-## 🛠️ Tech Stack
+## Features
 
-- **Backend:** Django (Python)
-- **Database:** SQLite (default)
-- **Frontend:** HTML, CSS, JavaScript, Django Templates
-- **Authentication:** Django Auth System
+- **Role-based access** for 5 roles - Admin, Doctor, Nurse, Receptionist,
+  Pharmacist - plus a **Head Nurse** privilege (a nurse who can manage the
+  hospital inventory).
+- **Patients & medical records** - registration, structured prescriptions,
+  PDF reports.
+- **Appointments** - booking, doctor availability, leave requests & approval.
+- **Admissions** - 6-floor / department layout, rooms & beds, admission
+  requests and discharge, emergency admissions.
+- **In-house pharmacy**
+  - **Nurse -> Pharmacy drug requests**: nurses request medicine, pharmacy
+    approves/rejects and dispenses (internal stock movement).
+  - **Retail sales & billing**: walk-in sales generate an invoice + printable
+    receipt with cash/card/insurance/mobile payment.
+- **Hospital inventory** (equipment / surgical / consumables) - managed by the
+  Head Nurse, view-only for other nurses.
+- **Admin analytics dashboard** - hospital-wide KPIs, bed occupancy by floor,
+  revenue, low stock, and more.
+- **Public website** - landing pages, doctor blogs, contact & appointment
+  inquiries with email replies.
 
 ---
 
-## 📁 Project Structure
+## Tech Stack
+
+- **Backend:** Django 4.2 (Python)
+- **Database:** SQLite
+- **Frontend:** Django Templates, Bootstrap 5, crispy-forms
+- **Auth:** Django auth with a custom `users.User` model + role middleware
+- **PDF:** xhtml2pdf · **Email/OTP:** SMTP + IMAP (Gmail)
+
+---
+
+## Project Structure
 
 ```
 hospital-management-system/
-│
-├── appointment/              # Appointment management
-├── billing/                  # Billing and invoices
-├── patient/                  # Patient records
-├── pharmacy/                 # Pharmacy & medicines
-├── users/                    # Authentication & roles
-├── website/                  # Public website pages
-│
-├── scripts/                  # Database setup & utility scripts
-│   ├── populate_medicines.py
-│   ├── normalize_medicines.py
-│   └── data_setup_helpers.py
-│
-├── static/                   # CSS, JS, images
-├── templates/                # Shared HTML templates
-│
+├── core/            # Shared constants, decorators, mixins, utils
+├── users/           # Auth, roles, profiles, admin analytics
+├── patient/         # Patients, records, rooms/beds, admissions
+├── appointment/     # Appointments, availability, leave, dashboards
+├── pharmacy/        # Medicines, sales, drug requests, hospital inventory
+├── billing/         # Billing models (patient billing - light)
+├── website/         # Public site, blog, inquiries
+├── hms_project/     # Project config
+│   └── settings/    # base.py / dev.py / prod.py (env-selected)
+├── templates/       # Shared HTML templates
+├── static/          # CSS, JS, fonts
+├── setup/           # Data-seeding & maintenance scripts (see setup/README.md)
+├── docs/            # Feature docs (e.g. DRUG_REQUESTS.md)
 ├── manage.py
-├── requirements.txt
-└── db.sqlite3
+└── requirements.txt
 ```
+
+Each app is organized modularly: `views/` and `forms/` are **packages split by
+feature**, with business logic in `services.py` and read queries in
+`selectors.py`.
 
 ---
 
-## ⚙️ Installation & Setup
+## Installation & Setup
 
-### Prerequisites
-- Python 3.8+
-- pip
-
----
-
-### 1️⃣ Clone the Repository
-
-```
-git clone https://github.com/R204570/hospital-management-system.git
+### 1. Clone & create a virtual environment
+```bash
+git clone <repo-url>
 cd hospital-management-system
-```
-
----
-
-### 2️⃣ Create & Activate Virtual Environment
-
-```
 python -m venv venv
 venv\Scripts\activate        # Windows
 source venv/bin/activate     # Linux / macOS
 ```
 
----
-
-### 3️⃣ Install Dependencies
-
-```
+### 2. Install dependencies
+```bash
 pip install -r requirements.txt
 ```
 
----
-
-### 4️⃣ Apply Migrations
-
+### 3. Configure environment variables
+Create a `.env` file in the project root (it is git-ignored):
 ```
-python manage.py makemigrations
+# Email (Gmail address + app password) - required for OTP & inquiry emails
+EMAIL_HOST=your.address@gmail.com
+EMAIL_APP_PASSKEY=your-gmail-app-password
+
+# Optional
+SECRET_KEY=change-me-in-production
+DJANGO_ENV=dev            # 'dev' (default) or 'prod'
+```
+
+### 4. Apply migrations
+```bash
 python manage.py migrate
 ```
 
----
-
-### 5️⃣ Populate Initial Database Data (IMPORTANT)
-
-The project includes scripts to **populate and normalize pharmacy and system data**.
-
-Run them **after migrations**:
-
+### 5. (Optional) Seed demo data
+Utility scripts live in `setup/` - run from the project root:
+```bash
+python setup/data_import.py
 ```
-python manage.py shell
-```
+See **`setup/README.md`** for all available scripts.
 
-Inside shell:
-```python
-exec(open("scripts/populate_medicines.py").read())
-exec(open("scripts/normalize_medicines.py").read())
-```
-
-These scripts:
-- Insert initial medicine data
-- Standardize medicine naming & dosages
-- Prepare pharmacy inventory for use
-
----
-
-### 6️⃣ Create Superuser
-
-```
+### 6. Create an admin user
+```bash
 python manage.py createsuperuser
 ```
+(Then set that user's role to Admin in the Django admin, or use the
+`create_default_users` / `setup_hospital` management commands.)
 
----
-
-### 7️⃣ Run Development Server
-
-```
+### 7. Run the server
+```bash
 python manage.py runserver
 ```
-
-Open:
-```
-http://127.0.0.1:8000/
-```
+Open http://127.0.0.1:8000/  ·  Admin panel: http://127.0.0.1:8000/admin/
 
 ---
 
-## 🔑 Admin Panel
+## Environments
 
-Access Django admin panel:
-```
-http://127.0.0.1:8000/admin/
-```
-
-Admin can:
-- Manage users & roles
-- Control patients, appointments, billing
-- Edit pharmacy inventory
+Settings are split into `hms_project/settings/{base,dev,prod}.py` and selected
+by the `DJANGO_ENV` variable (`dev` by default). `dev` enables DEBUG and local
+hosts; `prod` disables DEBUG, sets allowed hosts, and enables security cookies.
 
 ---
 
-## 🧠 System Workflow Overview
+## Roles & Access
 
-- Patients are registered and managed
-- Appointments are created and tracked
-- Billing is associated with patient visits
-- Pharmacy inventory is preloaded using scripts
-- Admin has full control over all modules
-
----
-
-## 🧪 Utility Scripts Overview
-
-| Script | Purpose |
+| Role | Can do |
 |------|--------|
-| populate_medicines.py | Inserts initial medicine records |
-| normalize_medicines.py | Cleans & standardizes medicine data |
-| data_setup_helpers.py | Common setup utilities |
+| **Admin** | Full access to everything, incl. the analytics dashboard |
+| **Doctor** | Appointments, patients, medical records, admissions, leave, blogs |
+| **Nurse** | Assigned patients, admissions, drug requests, view inventory & medicines |
+| **Head Nurse** | Everything a nurse can, **plus** manage the hospital inventory |
+| **Receptionist** | Register patients, book appointments, handle inquiries |
+| **Pharmacist** | Medicines, purchases, sales/billing, dispense drug requests |
 
-These scripts are intended to **speed up development and testing**.
-
----
-
-## 🚧 Future Enhancements
-
-- REST API support
-- Doctor scheduling module
-- Email & OTP notifications
-- Payment gateway integration
-- Analytics dashboard
-- PostgreSQL / MySQL support
+Access is enforced by `users.middleware.RoleBasedAccessMiddleware` plus
+per-view role decorators in `core.decorators`.
 
 ---
 
-## 🤝 Contributing
+## Key Workflows
 
-1. Fork the repository  
-2. Create a feature branch  
-3. Commit your changes  
-4. Push to your fork  
-5. Open a Pull Request  
-
----
-
-## 📄 License
-
-This project is intended for **educational and learning purposes**.
+- **Nurse <-> Pharmacy drug requests** - a nurse requests medicine for a
+  patient; the pharmacy approves/rejects and dispenses, which deducts pharmacy
+  stock. Full docs in `docs/DRUG_REQUESTS.md`.
+- **Pharmacy retail sale** - `Pharmacy -> Sales -> Add Sale` creates a `Sale`
+  (invoice), deducts stock, and produces a printable receipt.
+- **Hospital inventory** - `Hospital Inventory` in the nurse menu; the Head
+  Nurse sees Add/Edit, other nurses get view + search only.
+- **Admin analytics** - the Admin dashboard shows live hospital-wide metrics.
 
 ---
 
-## 👨‍💻 Author
+## Management Commands
 
-**Raj Patel**  
-GitHub https://github.com/R204570
+- `python manage.py create_default_users` - create default staff accounts
+- `python manage.py setup_hospital` - set up floors, rooms and beds
+- `python manage.py setup_nurse_assignments` - assign nurses to floors
+- `python manage.py setup_test_data` - populate test data
+- `python manage.py check_email_replies` - poll inbound email replies
+
+---
+
+## Setup / Maintenance Scripts
+
+Standalone data-seeding and maintenance utilities live in **`setup/`**
+(run from the project root, e.g. `python setup/data_import.py`). See
+`setup/README.md` for the full list.
+
+---
+
+## License
+
+Intended for **educational and learning purposes**.
+
+## Author
+
+**Raj Patel** - https://github.com/R204570

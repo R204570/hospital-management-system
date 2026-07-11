@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}New Drug Request{% endblock %}
+{% block page_title %}New Drug Request{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0"><i class="fas fa-pills me-2"></i>Request Medicine from Pharmacy</h5>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label">Patient <span class="text-danger">*</span></label>
+              <select name="patient" class="form-select" required>
+                <option value="">-- Select patient --</option>
+                {% for p in patients %}
+                  <option value="{{ p.id }}" {% if selected_patient and selected_patient.id == p.id %}selected{% endif %}>
+                    {{ p.full_name }} ({{ p.patient_id }})
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="row">
+              <div class="col-md-8 mb-3">
+                <label class="form-label">Medicine <span class="text-danger">*</span></label>
+                <select name="medicine" class="form-select" required>
+                  <option value="">-- Select medicine --</option>
+                  {% for m in medicines %}
+                    <option value="{{ m.id }}">{{ m.name }}{% if m.strength %} ({{ m.strength }}){% endif %} &mdash; stock: {{ m.stock_quantity }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Quantity <span class="text-danger">*</span></label>
+                <input type="number" name="quantity" class="form-control" min="1" value="1" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Urgency</label>
+              <select name="urgency" class="form-select">
+                {% for value, label in urgency_choices %}
+                  <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Reason / Clinical Note</label>
+              <textarea name="reason" class="form-control" rows="3" placeholder="Optional note for the pharmacy"></textarea>
+            </div>
+            <div class="d-flex justify-content-between">
+              <a href="{% url 'nurse_drug_request_list' %}" class="btn btn-outline-secondary">Cancel</a>
+              <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane me-1"></i>Submit Request</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}My Drug Requests{% endblock %}
+{% block page_title %}My Drug Requests{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <span class="badge bg-warning">{{ pending_count }} pending</span>
+    </div>
+    <a href="{% url 'drug_request_create' %}" class="btn btn-primary"><i class="fas fa-plus me-1"></i>New Request</a>
+  </div>
+
+  <form method="get" class="mb-3">
+    <div class="input-group" style="max-width: 320px;">
+      <select name="status" class="form-select" onchange="this.form.submit()">
+        <option value="">All statuses</option>
+        {% for value, label in status_choices %}
+          <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-outline-secondary" type="submit">Filter</button>
+    </div>
+  </form>
+
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th><th>Medicine</th><th>Qty</th><th>Patient</th>
+            <th>Urgency</th><th>Status</th><th>Requested</th><th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in drug_requests %}
+          <tr>
+            <td>DR-{{ r.id }}</td>
+            <td>{{ r.medicine.name }}</td>
+            <td>{{ r.quantity }}</td>
+            <td>{{ r.patient.full_name }}</td>
+            <td><span class="badge {{ r.urgency_badge_class }}">{{ r.get_urgency_display }}</span></td>
+            <td><span class="badge {{ r.status_badge_class }}">{{ r.get_status_display }}</span></td>
+            <td>{{ r.created_at|date:"M d, H:i" }}</td>
+            <td class="text-end">
+              <a href="{% url 'drug_request_detail' r.id %}" class="btn btn-sm btn-outline-primary">View</a>
+              {% if r.is_pending %}
+              <form method="post" action="{% url 'drug_request_cancel' r.id %}" class="d-inline" onsubmit="return confirm('Cancel this request?');">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-outline-danger" type="submit">Cancel</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="text-center text-muted py-4">No drug requests yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

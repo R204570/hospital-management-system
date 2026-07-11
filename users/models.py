@@ -5,51 +5,33 @@ from django.urls import reverse
 from django.conf import settings
 import os
 
+from core import constants
+
 
 class User(AbstractUser):
     """Custom User model extending Django's AbstractUser for role-based access"""
     
-    # Roles for HMS staff
-    ADMIN = 'ADMIN'
-    DOCTOR = 'DOCTOR'
-    NURSE = 'NURSE'
-    RECEPTIONIST = 'RECEPTIONIST'
-    PHARMACIST = 'PHARMACIST'
-    
-    ROLE_CHOICES = [
-        (ADMIN, 'Administrator'),
-        (DOCTOR, 'Doctor'),
-        (NURSE, 'Nurse'),
-        (RECEPTIONIST, 'Receptionist'),
-        (PHARMACIST, 'Pharmacist'),
-    ]
-    
+    # Roles for HMS staff (sourced from core.constants - single source of truth)
+    ADMIN = constants.ADMIN
+    DOCTOR = constants.DOCTOR
+    NURSE = constants.NURSE
+    RECEPTIONIST = constants.RECEPTIONIST
+    PHARMACIST = constants.PHARMACIST
+
+    ROLE_CHOICES = constants.ROLE_CHOICES
+
     # Doctor specialization choices for Multi-Specialty Hospital
-    GENERAL_MEDICINE = 'GENERAL_MEDICINE'
-    CARDIOLOGY = 'CARDIOLOGY'
-    ORTHOPEDIC = 'ORTHOPEDIC'
-    NEUROLOGY = 'NEUROLOGY'
-    EMERGENCY = 'EMERGENCY'
-    ONCOLOGY = 'ONCOLOGY'
-    
-    SPECIALIZATION_CHOICES = [
-        (GENERAL_MEDICINE, 'General Medicine & Internal Medicine'),
-        (CARDIOLOGY, 'Cardiology & Cardiovascular Surgery'),
-        (ORTHOPEDIC, 'Orthopedic & Bone Surgery'),
-        (NEUROLOGY, 'Neurology & Neurosurgery'),
-        (EMERGENCY, 'Emergency Medicine & Critical Care'),
-        (ONCOLOGY, 'Oncology & Cancer Treatment'),
-    ]
-    
+    GENERAL_MEDICINE = constants.GENERAL_MEDICINE
+    CARDIOLOGY = constants.CARDIOLOGY
+    ORTHOPEDIC = constants.ORTHOPEDIC
+    NEUROLOGY = constants.NEUROLOGY
+    EMERGENCY = constants.EMERGENCY
+    ONCOLOGY = constants.ONCOLOGY
+
+    SPECIALIZATION_CHOICES = constants.SPECIALIZATION_CHOICES
+
     # Map specialization to floor numbers in Multi-Specialty Hospital
-    SPECIALIZATION_FLOORS = {
-        GENERAL_MEDICINE: 1,        # Floor 1: General Medicine & Internal Medicine
-        CARDIOLOGY: 2,              # Floor 2: Cardiology & Cardiovascular Surgery
-        ORTHOPEDIC: 3,              # Floor 3: Orthopedic & Bone Surgery
-        NEUROLOGY: 4,               # Floor 4: Neurology & Neurosurgery
-        EMERGENCY: 5,               # Floor 5: Emergency & Critical Care
-        ONCOLOGY: 6,                # Floor 6: Oncology & Cancer Treatment
-    }
+    SPECIALIZATION_FLOORS = constants.SPECIALIZATION_FLOORS
     
     role = models.CharField(
         max_length=15,
@@ -74,6 +56,7 @@ class User(AbstractUser):
     # Fields for nurse profile
     nurse_license_number = models.CharField(max_length=50, blank=True, help_text="Nurse's license number")
     nursing_specialty = models.CharField(max_length=100, blank=True, help_text="Nursing specialty (e.g., ICU, ER)")
+    is_head_nurse = models.BooleanField(default=False, help_text="Head nurse: can manage the hospital inventory")
     
     # Fields for pharmacist profile
     pharmacist_license_number = models.CharField(max_length=50, blank=True, help_text="Pharmacist's license number")
@@ -117,6 +100,11 @@ class User(AbstractUser):
     @property
     def is_nurse(self):
         return self.role == self.NURSE
+
+    @property
+    def can_manage_inventory(self):
+        """Head nurses and admins may manage the hospital inventory."""
+        return self.role == self.ADMIN or (self.role == self.NURSE and self.is_head_nurse)
     
     @property
     def is_receptionist(self):

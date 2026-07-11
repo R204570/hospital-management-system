@@ -387,6 +387,26 @@
                     <i class="fas fa-bed"></i> Admitted Patients
                 </a>
             </li>
+            <li>
+                <a href="{% url 'drug_request_create' %}" class="{% if request.resolver_match.url_name == 'drug_request_create' %}active{% endif %}">
+                    <i class="fas fa-pills"></i> Request Drug
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'nurse_drug_request_list' %}" class="{% if request.resolver_match.url_name == 'nurse_drug_request_list' or request.resolver_match.url_name == 'drug_request_detail' %}active{% endif %}">
+                    <i class="fas fa-clipboard-list"></i> My Drug Requests
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'inventory_list' %}" class="{% if 'inventory' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-boxes"></i> Hospital Inventory
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'medicine_list' %}" class="{% if request.resolver_match.url_name == 'medicine_list' or request.resolver_match.url_name == 'medicine_detail' %}active{% endif %}">
+                    <i class="fas fa-capsules"></i> Medicines
+                </a>
+            </li>
             {% endif %}
             
             <!-- Pharmacy Menu -->
@@ -394,6 +414,11 @@
             <li>
                 <a href="{% url 'pharmacy_dashboard' %}" class="{% if request.resolver_match.url_name == 'pharmacy_dashboard' or request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <i class="fas fa-pills"></i> Pharmacy Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'drug_request_queue' %}" class="{% if 'drug_request' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-clipboard-check"></i> Drug Requests
                 </a>
             </li>
             <li>

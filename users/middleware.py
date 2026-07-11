@@ -33,6 +33,10 @@ class RoleBasedAccessMiddleware:
         Check if a user has permission to access a specific URL based on their role.
         Returns True if access is allowed, False otherwise.
         """
+        # Administrators have unrestricted access to every page
+        if user.role == 'ADMIN':
+            return True
+
         # Always allow access to common pages
         common_urls = ['dashboard', 'profile', 'change_password']
         if url_name in common_urls:
@@ -59,7 +63,13 @@ class RoleBasedAccessMiddleware:
                        'admission_request_list', 'admission_request_detail', 'admission_request_process',
                        'admission_request_assign_room',
                        # Add nurse prescription management URLs
-                       'nurse_prescription_list', 'nurse_prescription_detail', 'nurse_medication_administration']
+                       'nurse_prescription_list', 'nurse_prescription_detail', 'nurse_medication_administration',
+                       # Nurse-facing drug request URLs (Nurse <-> Pharmacy)
+                       'drug_request_create', 'drug_request_create_for_patient', 'nurse_drug_request_list',
+                       'drug_request_cancel', 'drug_request_detail', 'drug_request_notifications',
+                       # Hospital inventory (head nurse manages; all nurses view) + medicine viewing
+                       'inventory_list', 'inventory_add', 'inventory_edit',
+                       'medicine_list', 'medicine_detail']
         receptionist_urls = ['receptionist_dashboard', 'book_appointment', 'cancel_appointment', 
                              'patient_list', 'patient_register', 'patient_update', 'patient_detail',
                              'inquiry_list', 'appointment_inquiry_detail', 'contact_inquiry_detail', 
@@ -100,7 +110,9 @@ class RoleBasedAccessMiddleware:
         # For appointment_list and appointment_detail, we'll rely on the view-level permissions
         # since they implement custom filtering based on role
         if url_name in ['appointment_list', 'appointment_detail', 'update_appointment_status',
-                        'get_available_slots']:
+                        'get_available_slots',
+                        # Read-only search/autocomplete APIs used across roles
+                        'patient_search_api', 'bed_search_api', 'medicine_search_api']:
             return True
             
         # If we get here, deny access by default

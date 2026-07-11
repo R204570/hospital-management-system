@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Drug Request DR-{{ dr.id }}{% endblock %}
+{% block page_title %}Drug Request DR-{{ dr.id }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Request DR-{{ dr.id }}</h5>
+          <span class="badge {{ dr.status_badge_class }} fs-6">{{ dr.get_status_display }}</span>
+        </div>
+        <div class="card-body">
+          <dl class="row mb-0">
+            <dt class="col-sm-3">Medicine</dt><dd class="col-sm-9">{{ dr.medicine.name }}{% if dr.medicine.strength %} ({{ dr.medicine.strength }}){% endif %} &mdash; current stock: <strong>{{ dr.medicine.stock_quantity }}</strong></dd>
+            <dt class="col-sm-3">Requested quantity</dt><dd class="col-sm-9">{{ dr.quantity }}</dd>
+            {% if dr.approved_quantity %}<dt class="col-sm-3">Approved quantity</dt><dd class="col-sm-9">{{ dr.approved_quantity }}</dd>{% endif %}
+            <dt class="col-sm-3">Patient</dt><dd class="col-sm-9">{{ dr.patient.full_name }} ({{ dr.patient.patient_id }})</dd>
+            <dt class="col-sm-3">Urgency</dt><dd class="col-sm-9"><span class="badge {{ dr.urgency_badge_class }}">{{ dr.get_urgency_display }}</span></dd>
+            <dt class="col-sm-3">Requested by</dt><dd class="col-sm-9">{{ dr.requesting_nurse.get_full_name|default:dr.requesting_nurse.username }} on {{ dr.created_at|date:"M d, Y H:i" }}</dd>
+            {% if dr.reason %}<dt class="col-sm-3">Reason</dt><dd class="col-sm-9">{{ dr.reason }}</dd>{% endif %}
+            {% if dr.responded_by %}
+              <dt class="col-sm-3">Handled by</dt><dd class="col-sm-9">{{ dr.responded_by.get_full_name|default:dr.responded_by.username }} on {{ dr.responded_at|date:"M d, Y H:i" }}</dd>
+              {% if dr.response_notes %}<dt class="col-sm-3">Pharmacy notes</dt><dd class="col-sm-9">{{ dr.response_notes }}</dd>{% endif %}
+            {% endif %}
+            {% if dr.dispensed_at %}<dt class="col-sm-3">Dispensed</dt><dd class="col-sm-9">{{ dr.dispensed_at|date:"M d, Y H:i" }}</dd>{% endif %}
+          </dl>
+        </div>
+      </div>
+
+      {% if user.role == 'PHARMACIST' or user.role == 'ADMIN' %}
+        {% if dr.status == 'PENDING' %}
+        <div class="card shadow-sm mb-3">
+          <div class="card-header bg-light"><strong>Pharmacy Response</strong></div>
+          <div class="card-body">
+            {% if not dr.can_fulfill %}
+              <div class="alert alert-warning py-2">Requested quantity exceeds current stock ({{ dr.medicine.stock_quantity }} available).</div>
+            {% endif %}
+            <form method="post" action="{% url 'drug_request_respond' dr.id %}">
+              {% csrf_token %}
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Approved quantity</label>
+                  <input type="number" name="approved_quantity" class="form-control" min="1" value="{{ dr.quantity }}">
+                </div>
+                <div class="col-md-8 mb-3">
+                  <label class="form-label">Notes</label>
+                  <input type="text" name="response_notes" class="form-control" placeholder="Optional note to the nurse">
+                </div>
+              </div>
+              <button type="submit" name="action" value="approve" class="btn btn-success"><i class="fas fa-check me-1"></i>Approve</button>
+              <button type="submit" name="action" value="reject" class="btn btn-danger"><i class="fas fa-times me-1"></i>Reject</button>
+            </form>
+          </div>
+        </div>
+        {% elif dr.status == 'APPROVED' %}
+        <div class="card shadow-sm mb-3">
+          <div class="card-header bg-light"><strong>Dispense</strong></div>
+          <div class="card-body">
+            <p>Dispensing will deduct <strong>{{ dr.approved_quantity }}</strong> unit(s) of {{ dr.medicine.name }} from inventory.</p>
+            <form method="post" action="{% url 'drug_request_dispense' dr.id %}" onsubmit="return confirm('Dispense and update inventory?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary"><i class="fas fa-box-open me-1"></i>Dispense &amp; Update Inventory</button>
+            </form>
+          </div>
+        </div>
+        {% endif %}
+      {% endif %}
+
+      {% if user.role == 'NURSE' and dr.is_pending %}
+      <form method="post" action="{% url 'drug_request_cancel' dr.id %}" onsubmit="return confirm('Cancel this request?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger">Cancel Request</button>
+      </form>
+      {% endif %}
+
+      <a href="{% if user.role == 'NURSE' %}{% url 'nurse_drug_request_list' %}{% else %}{% url 'drug_request_queue' %}{% endif %}" class="btn btn-link">&larr; Back to list</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
