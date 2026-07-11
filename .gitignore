@@ -1,1 +1,99 @@
+.DS_Store
+Thumbs.db
+desktop.ini
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*.log
+*.claude/
+############################
+# Python
+############################
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
 venv/
+env/
+.venv/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+############################
+# Flask / Backend
+############################
+instance/
+*.sqlite3
+*.db
+
+############################
+# Node / React
+############################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+
+############################
+# React / Vite
+############################
+.vite/
+
+############################
+# ML / AI / Data
+############################
+data/
+datasets/
+*.h5
+*.pt
+*.pth
+*.onnx
+*.ckpt
+
+# Model outputs
+runs/
+logs/
+outputs/
+
+############################
+# Jupyter
+############################
+.ipynb_checkpoints/
+
+############################
+# Docker
+############################
+.dockerignore
+docker-compose.override.yml
+
+############################
+# Testing / Coverage
+############################
+.coverage
+htmlcov/
+.pytest_cache/
+
+############################
+# Secrets / Keys
+############################
+*.pem
+*.key
+*.crt
+secrets/
+credentials/

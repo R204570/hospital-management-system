@@ -12,7 +12,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'hospital-management-system-yhsp.onrender.com',
-    '0.0.0.0:$PORT'
+    '0.0.0.0:$PORT',
+    '127.0.0.1'
 ]
 CSRF_TRUSTED_ORIGINS = [
     'https://hospital-management-system-yhsp.onrender.com'
