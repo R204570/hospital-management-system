@@ -1,4 +1,4 @@
-# Hospital Management System (HMS) - SmartCare
+# Hospital Management System - SmartCare
 
 A modular **Django 4.2** Hospital Management System for a multi-specialty
 hospital. It manages patients, appointments, admissions & beds, an in-house
