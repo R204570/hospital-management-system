@@ -8,7 +8,7 @@ DEBUG = False
 # Comma-separated extra hosts can be supplied via ALLOWED_HOSTS env var.
 ALLOWED_HOSTS = [
     'hospital-management-system-yhsp.onrender.com',
-    '0.0.0.0.*',
+    '*',
 ]
 ALLOWED_HOSTS += [
     h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()
@@ -16,7 +16,7 @@ ALLOWED_HOSTS += [
 
 CSRF_TRUSTED_ORIGINS = [
     'https://hospital-management-system-yhsp.onrender.com',
-    '0.0.0.0.*',
+    '*',
 ]
 
 # Basic production security hardening.
