@@ -6,5 +6,7 @@ crispy-bootstrap5
 channels
 daphne
 xhtml2pdf
-django-widget-tweaks 
+django-widget-tweaks
 python-dotenv
+gunicorn
+whitenoise

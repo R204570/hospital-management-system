@@ -37,6 +37,9 @@ instance/
 *.sqlite3
 *.db
 
+# Django collectstatic output (regenerated at build time)
+staticfiles/
+
 ############################
 # Node / React
 ############################
