@@ -35,6 +35,12 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # It has to sit directly after SecurityMiddleware.
 MIDDLEWARE = MIDDLEWARE[:1] + ['whitenoise.middleware.WhiteNoiseMiddleware'] + MIDDLEWARE[1:]  # noqa: F405
 
+# Fall back to the staticfiles finders (i.e. serve straight out of STATICFILES_DIRS
+# and each app's static/ dir) so the site still gets its CSS when the host's build
+# command has not run collectstatic. build.sh runs it, which is faster and adds
+# compression, but this keeps a misconfigured build from shipping an unstyled site.
+WHITENOISE_USE_FINDERS = True
+
 STORAGES = {
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
     'staticfiles': {'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage'},
