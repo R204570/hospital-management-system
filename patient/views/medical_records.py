@@ -16,6 +16,7 @@ import uuid
 import base64
 import binascii
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 
 from patient.models import Patient, MedicalRecord, Room, Bed, Nurse, PatientAdmission, AdmissionRequest
 from patient.forms import (
@@ -87,6 +88,11 @@ def view_medical_record(request, record_id):
     """View for displaying a medical record"""
     record = get_object_or_404(MedicalRecord, id=record_id)
     
+    # Doctors may only access records they created; this mirrors the owner
+    # scoping already enforced by the update, delete, and list views.
+    if request.user.is_doctor and record.doctor_id != request.user.id:
+        raise PermissionDenied
+    
     return render(request, 'patient/view_medical_record.html', {'record': record})
 
 
@@ -141,6 +147,11 @@ def update_medical_record(request, record_id):
 def medical_record_pdf(request, record_id):
     """Generate PDF for a medical record"""
     record = get_object_or_404(MedicalRecord, id=record_id)
+    
+    # Doctors may only access records they created; this mirrors the owner
+    # scoping already enforced by the update, delete, and list views.
+    if request.user.is_doctor and record.doctor_id != request.user.id:
+        raise PermissionDenied
     
     # Prepare context for PDF template
     context = {'record': record}
